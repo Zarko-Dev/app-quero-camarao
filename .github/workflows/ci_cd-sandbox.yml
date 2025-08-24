@@ -1,0 +1,82 @@
+name: CI/CD - Prepare Sandbox and Generate apps
+
+on:
+    push:
+        branches:
+            - sandbox
+
+jobs:
+    CI:
+        name: Continuous Integration
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 18.x
+
+            - name: Install dependencies
+              run: yarn install
+
+    CD:
+        name: Continuous Delivery
+        runs-on: ubuntu-latest
+
+        needs: CI
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                node-version: 18.x
+
+            - name: Setup EAS
+              uses: expo/expo-github-action@v8
+              with:
+                eas-version: latest
+                packager: yarn
+                token: ${{ secrets.QUERO_CAMARAO_EAS_ACTION_TOKEN }}
+
+            - name: Install dependencies
+              run: yarn install
+
+            - name: Configure and create .env file
+              env:
+                STATUS_PROJECT: ${{ secrets.STATUS_PROJECT }}
+                API_KEY: ${{ secrets.API_KEY }}
+                AUTHDOMAIN: ${{ secrets.AUTHDOMAIN }}
+                PROJECT_ID: ${{ secrets.PROJECT_ID }}
+                STORAG_EBUCKET: ${{ secrets.STORAG_EBUCKET }}
+                MESSAGING_SENDER_ID: ${{ secrets.MESSAGING_SENDER_ID }}
+                APP_ID: ${{ secrets.APP_ID }}
+                MEASUREMENT_ID: ${{ secrets.MEASUREMENT_ID }}
+                API_TOKEN_DEVELOP: ${{ secrets.API_TOKEN_DEVELOP }}
+                API_TOKEN_PRODUCTION: ${{ secrets.API_TOKEN_PRODUCTION }}
+                SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+                SENTRY_DNS: ${{ secrets.SENTRY_DNS }}
+              run: | 
+                touch .env
+                echo STATUS_PROJECT=production > .env
+                echo STATUS_PROJECT=$STATUS_PROJECT > .env
+                echo API_KEY=$API_KEY > .env
+                echo AUTHDOMAIN=$AUTHDOMAIN > .env
+                echo PROJECT_ID=$PROJECT_ID > .env
+                echo STORAG_EBUCKET=$STORAG_EBUCKET > .env
+                echo MESSAGING_SENDER_ID=$MESSAGING_SENDER_ID > .env
+                echo APP_ID=$APP_ID > .env
+                echo MEASUREMENT_ID=$MEASUREMENT_ID > .env
+                echo API_TOKEN_DEVELOP=$API_TOKEN_DEVELOP > .env
+                echo API_TOKEN_PRODUCTION=$API_TOKEN_PRODUCTION > .env
+                echo SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN > .env
+                echo SENTRY_DNS=$SENTRY_DNS > .env
+                cat .env
+
+            - name: Send Build EAS and Generate apk
+              run: eas build --platform android --profile development --non-interactive --no-wait

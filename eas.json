@@ -1,0 +1,40 @@
+{
+    "cli": {
+        "version": ">= 9.0.10",
+        "appVersionSource": "remote"
+    },
+    "build": {
+        "development": {
+            "channel": "development",
+            "distribution": "internal",
+            "node": "18.18.0",
+            "android": {
+                "buildType": "apk"
+            },
+            "ios": {
+                "buildConfiguration": "Debug"
+            }
+        },
+        "production": {
+            "channel": "production",
+            "autoIncrement": true,
+            "node": "18.18.0",
+            "ios": {
+                "image": "latest"
+            }
+        }
+    },
+    "submit": {
+        "production": {
+            "android": {
+                "track": "production",
+                "serviceAccountKeyPath": "./google-services.json",
+                "releaseStatus": "completed"
+            },
+            "ios": {
+                "appleId": "logicphire@logicphire.com.br",
+                "ascAppId": "6467179239"
+            }
+        }
+    }
+}

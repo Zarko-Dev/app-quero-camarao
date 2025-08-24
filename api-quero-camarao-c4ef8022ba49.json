@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "api-quero-camarao",
+  "private_key_id": "c4ef8022ba4988169c5546288dd2374677e20809",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDZqsMI1pzAoGfA\nuJEtwN8Q0zWAyGy3+eqZ0gGDExvSTexSJYtoV2BD4bMGiq7utCpK/JprnOB4kPFp\nPn6NuW62ptmjdtQrf6j3i0hS8NQ8JTPhVLApRiNr0L3ujw+sRzukFTSS2EhSydId\n3e8rFfVjK54Yh2QSdrN84h4h/PsRqr46QwmbstFSm2ffDArp6s83NjGzsMTnuTSj\nReCquK/BibO0Mw+GR3U9JeNNn1F/nhHpSFKfoDEXv4sNbLLoE9s0wIw82d/q49qr\nIV4c74F9jUvMr7M2zWxjj5Afb8sX8WU91K6k5KWu6iKC4U3ra4oCEI8AXmKTjF6Y\nQEEdJvmrAgMBAAECggEACg1HPXi/u2uM7wr29WBzTLEcRuq6jpJ1gY3/sOBoiAE+\nORrvwa1LTkc1f8dWxcI/M8BPl0mi2h6Db4NJz9yw3rF82n4p1SprkKb3e5EQlAh5\nyV2iVv2ctCVrKAGmTSPq/qxWBbQEPwJ/+A4gNeKpNt+0SNizx+CAcHN2xcYLiCi/\nFNu+r7Vyk8D5i+emOPB6wra470fvnYmqZv2/r+At3gNjPlCDUu147fLWCVgshhBP\n2aeXVldXendIzp3tmwJof/vzZ3dVQhNnm5rz241QOeRGlNbH7nlRajMShYHOy1LY\nZ7afjzrvD8xJMhj+0k+EIwGZ9xQT8z7Ql6iDf20IZQKBgQD4D03iQPDj2clVrv45\nFT4FkI42nWAd1K5rXarayVB8nJ/veOUnn6vdGmVT5/afRzCZsl5r1Iz9405I7PuE\nD2GWRc/4s1jt0MwZdmDAVX6HIUq/RKIOL9gZ0wBCVCc/hB5lWopg4cKIf+nkj7xI\n/2gqT3j/LipZRuHuDShffFqAHQKBgQDgomhw3SLBLI/Qjxy9A9tgtJ1EonFlcBAp\nmi3Oopz2A7EHoTV9tToJRsNv9US5+3R0ia+qJpUDQsHuLu3CdGBDH7U0zsJ7I6Mj\nHRr/8N/DJowu+C8TWSepIxs7pMTRsDDpw3vDeeysU3hwf/biYog4iEdgZTXaPgKM\nwU3ViZPGZwKBgQDirKGAAdXecBIh4SHgKcAeN6Us1QyS1dl4tQQ+nz2UUU949iF4\n3tie19MGJG7hx5zqperQYE9iZYcQ7rU7TQ7g0fSkj8bQsj7/eYQZ3UYc11hFhcMM\ncb3ogz62Xc3rpaBc/6p5s3MfZrvlp07n6bRXDX5EuPvrzvD/pjhhYPIWJQKBgGQD\ni1Ks8ntllsZ54Ya6f+NHpznWxXwvb9LGBZ0Zw565OAm4mfNVS/izW/KuFiJkNY5p\nex/bu77O6z9b/5nzbKSWKnzPjcF7tXe9zrajjUz7DbEf6P3JVSI2MjrU+piNxMlf\nsuvujhSPuXEFWGulCRd6faUKivaXY1U9/6SSc4wDAoGARgi/runRdhBZLTpTwgX9\nIyupMfbn3IPxSJS/Km5hzU7A8DqAb0Kdc9iV37muvAxOsMRG9kHEvcohs/ZxYZWq\ntpiEPLsSfGZM9GdhVoGo4Q/6dkU2+nmDGYhwd/my350ea90Hlo2VgWtXCK6cjnXu\n5G7T2KpuP+o2HI3NQSsLE40=\n-----END PRIVATE KEY-----\n",
+  "client_email": "api-quero-camarao@appspot.gserviceaccount.com",
+  "client_id": "116539493341862027261",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/api-quero-camarao%40appspot.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
