@@ -33,7 +33,6 @@ import {
     TextButtonUseTerms,
     ZonaRuralText,
     Title,
-    theme,
     UseTermsText,
 } from "./styles";
 import { getCity, getState } from "../../utils/getLocation";
@@ -341,7 +340,7 @@ export const Register = ({ navigation, route }) => {
                                 <Checkbox.Android
                                     status={ruralArea ? "checked" : "unchecked"}
                                     onPress={() => setRuralArea(!ruralArea)}
-                                    color={theme.colors.primary}
+                                   
                                 />
                                 <ZonaRuralText>Zona Rural?</ZonaRuralText>
                             </ContentZonaRural>
@@ -502,7 +501,7 @@ export const Register = ({ navigation, route }) => {
                                     <Checkbox.Android
                                         status={ruralArea ? "checked" : "unchecked"}
                                         onPress={() => setRuralArea(!ruralArea)}
-                                        color={theme.colors.primary}
+                                      
                                     />
                                     <ZonaRuralText>Zona Rural?</ZonaRuralText>
                                 </ContentZonaRural>

@@ -47,15 +47,14 @@ export const ContentZonaRural = styled.View`
 
     border-radius: 8px;
     border-width: 1px;
-    border-color: ${({ theme, checked }) =>
-        checked ? theme.colors.primary : theme.colors.borderColor};
+    border-color: #f1967a;
 
     flex-direction: row;
     align-items: center;
 
-    padding: ${({ theme }) => theme.size.dimentionsSize(2)};
+    padding: ${({ theme }) => theme.size.dimentionsSize(1)};
 
-    margin-top: ${({ theme }) => theme.size.dimentionsSize(2)};
+    margin-top: ${({ theme }) => theme.size.dimentionsSize(1)};
 `;
 
 export const UseTermsText = styled(Text)`
@@ -69,7 +68,7 @@ export const TextButtonUseTerms = styled(UseTermsText)`
 `;
 
 export const ZonaRuralText = styled(UseTermsText)`
-    color: ${({ theme }) => theme.colors.primary};
+    color: #000
 `;
 
 export const ButtonRegister = styled.TouchableOpacity`
