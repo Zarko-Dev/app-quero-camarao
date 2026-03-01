@@ -34,18 +34,18 @@ export const Address = ({ route }) => {
     const [isLoadingCep, setIsLoadingCep] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
-    const [cep, setCep] = useState(dataUser?.address?.cep || "");
+    const [cep, setCep] = useState(dataUser?.zipCode || "");
     const [state, setState] = useState(dataUser?.address?.state || undefined);
     const [states, setStates] = useState([]);
     const [city, setCity] = useState(dataUser?.address?.city || undefined);
     const [cities, setCities] = useState([]);
     const [neighborhood, setNeighborhood] = useState(
-        dataUser?.address?.neighborhood || "",
+        dataUser?.neighborhood || "",
     );
-    const [street, setStreet] = useState(dataUser?.address?.street || "");
-    const [number, setNumber] = useState(dataUser?.address?.number || "");
+    const [street, setStreet] = useState(dataUser?.street || "");
+    const [number, setNumber] = useState(dataUser?.number || "");
     const [complement, setComplement] = useState(
-        dataUser?.address?.complement || "",
+        dataUser?.complement || "",
     );
 
     useEffect(() => {

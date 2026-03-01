@@ -264,7 +264,7 @@ export const PaymentButton = ({ loading }) => {
                 paymentLog: {
                     type: "No payment",
                     status: "approved",
-                    message: "Pagamento gartuíto",
+                    message: "Pagamento gratuíto",
                 },
             });
 

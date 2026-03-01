@@ -1,6 +1,6 @@
 /* eslint-disable operator-linebreak */
 
-import { boolean, object, string } from "yup";
+import { boolean, number, object, string } from "yup";
 import Toast from "react-native-toast-message";
 
 const fieldErrorMessages = {
@@ -12,6 +12,9 @@ const fieldErrorMessages = {
     dateBirth: "Data de Aniversário é obrigatório",
     dateBirthValidation: "Data de Aniversário inválida",
     cpf: "CPF é obrigatório",
+    zipCode: "Cep é obrigatório",
+    neighborhood: "Bairro é obrigatório",
+    street: "A rua é obrigatória",
     cpfValidation: "CPF inválido",
     password: "Senha é obrigatório",
     minPassword: "Senha deverá conter no mínimo 6 caracteres",
@@ -94,6 +97,9 @@ export const productroValidationForm = (productorData) => {
             ),
         state: string().required(fieldErrorMessages.state),
         city: string().required(fieldErrorMessages.city),
+        zipCode: string().required("CEP é obrigatório").matches(/^\d{5}-?\d{3}$/, "CEP inválido"), // 12345-678 ou 12345678
+        street: string().required("Rua é obrigatório"),
+        number: string().required("Número é obrigatório"),
         password: string()
             .min(6, fieldErrorMessages.minPassword)
             .required(fieldErrorMessages.password),
@@ -194,6 +200,9 @@ export const clientValidationForm = (clientData) => {
             ),
         state: string().required(fieldErrorMessages.state),
         city: string().required(fieldErrorMessages.city),
+        zipCode: string().required("CEP é obrigatório").matches(/^\d{5}-?\d{3}$/, "CEP inválido"), // 12345-678 ou 12345678
+        street: string().required("Rua é obrigatório"),
+        number: string().required("Número é obrigatório"),
         password: string()
             .min(6, fieldErrorMessages.minPassword)
             .required(fieldErrorMessages.password),

@@ -19,6 +19,7 @@ import { getInvitationByCode } from "../../controllers/Invitations/find";
 import { createUserWallet } from "../../controllers/Wallet/create";
 import { InvitationActions } from "../ValidateInvitation/actions";
 
+
 import {
     ButtonRegister,
     ButtonUseTermsText,
@@ -26,9 +27,11 @@ import {
     Content,
     ContentForm,
     ContentUseTerms,
+    ContentZonaRural,
     SelectComponentStyle,
     TextButton,
     TextButtonUseTerms,
+    ZonaRuralText,
     Title,
     UseTermsText,
 } from "./styles";
@@ -52,8 +55,41 @@ export const Register = ({ navigation, route }) => {
     const [state, setState] = useState("");
     const [cities, setCities] = useState([]);
     const [city, setCity] = useState("");
+    const [neighborhood, setNeighborhood] = useState("");
     const [clearCities, setClearCities] = useState(false);
     const [checked, setChecked] = useState(false);
+    const [ruralArea, setRuralArea] = useState(false);
+
+     // --- NOVOS CAMPOS DE ENDEREÇO ---
+    const [zipCode, setZipCode] = useState("");       
+    const [street, setStreet] = useState("");         
+    const [number, setNumber] = useState("");  
+    const [complement, setComplement] = useState("");        
+
+    const buscarEndereco = async (cepDigitado) => {
+        try {
+            const cepLimpo = cepDigitado.replace(/\D/g, "");
+            if (cepLimpo.length === 8) {
+                const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+                const data = await response.json(); // <- CORREÇÃO AQUI
+                if (!data.erro) {
+                    setState(data.uf)
+                    setCity(data.localidade)
+                    setStreet(data.logradouro);
+                    setNeighborhood(data.bairro);
+                    setComplement(data.complemento);
+                }
+            }
+        } catch (error) {
+            console.log("Erro ao buscar CEP", error);
+        }
+    };
+
+    useEffect(() => {
+        buscarEndereco(zipCode.replace(/\D/g, ""));
+    }, [zipCode]);
+
+    // --- FIM CAMPOS DE ENDEREÇO ---
 
     useEffect(() => {
         getState()
@@ -75,16 +111,24 @@ export const Register = ({ navigation, route }) => {
         navigation.navigate(dataRoutes.useTerms);
     };
 
+    
+
     const clearState = () => {
         setName("");
         setEmail("");
         setPhone("");
         setDateBirth("");
+        setComplement("");
+        setStreet("");
+        setNumber("");
+        setZipCode("");
         setCpf("");
         setPassword("");
         setPonds("");
         setAcre("");
+        setNeighborhood("");
         setChecked(false);
+        setRuralArea(false);
     };
 
     const registerActionUser = async (userType) => {
@@ -106,6 +150,12 @@ export const Register = ({ navigation, route }) => {
             acre,
             state,
             city,
+            neighborhood,
+            number,
+            zipCode,
+            street,
+            complement,
+            ruralArea,
             checked,
             guestData: {
                 wasInvited: invitationCode !== undefined,
@@ -153,6 +203,12 @@ export const Register = ({ navigation, route }) => {
                         cpf,
                         state,
                         city,
+                        neighborhood,
+                        number,
+                        zipCode,
+                        street,
+                        complement,
+                        ruralArea,
                         password,
                         ponds,
                         acre,
@@ -175,6 +231,12 @@ export const Register = ({ navigation, route }) => {
                         cpf,
                         state,
                         city,
+                        neighborhood,
+                        number,
+                        zipCode,
+                        street,
+                        complement,
+                        ruralArea,
                         password,
                         checked,
                     }) &&
@@ -236,6 +298,53 @@ export const Register = ({ navigation, route }) => {
                                     value={phone}
                                     mask="(99) 99999-9999"
                                 />
+                                <Input
+                                    label="CEP"
+                                    icon="map-pin"
+                                    keyboardType="numeric"
+                                    onChange={setZipCode}
+                                    value={zipCode}
+                                    mask="99999-999"
+                                />
+
+                               <Input
+                                    label="Bairro"
+                                    icon="home"
+                                    onChange={setNeighborhood}
+                                    value={neighborhood}
+                                   
+                                />
+
+                                <Input
+                                    label="Rua"
+                                    icon="home"
+                                    onChange={setStreet}
+                                    value={street}
+                                    disable={true}
+                                />
+                                <Input
+                                    label="Número"
+                                    icon="hash"
+                                    keyboardType="numeric"
+                                    onChange={setNumber}
+                                    value={number}
+                                />
+                                <Input
+                                    label="Complemento"
+                                    icon="edit"
+                                    onChange={setComplement}
+                                    value={complement}
+                                />
+
+                             <ContentZonaRural checked={ruralArea}>
+                                <Checkbox.Android
+                                    status={ruralArea ? "checked" : "unchecked"}
+                                    onPress={() => setRuralArea(!ruralArea)}
+                                   
+                                />
+                                <ZonaRuralText>Zona Rural?</ZonaRuralText>
+                            </ContentZonaRural>
+
                                 <Input
                                     label="Data de Nascimento"
                                     icon="calendar"
@@ -348,7 +457,55 @@ export const Register = ({ navigation, route }) => {
                                     onChange={setPhone}
                                     value={phone}
                                     mask="(99) 99999-9999"
+                                />                              
+                                   <Input
+                                    label="CEP"
+                                    icon="map-pin"
+                                    keyboardType="numeric"
+                                    onChange={setZipCode}
+                                    value={zipCode}
+                                    mask="99999-999"
                                 />
+
+
+                                 <Input
+                                    label="Bairro"
+                                    icon="home"
+                                    onChange={setNeighborhood}
+                                    value={neighborhood}
+                                   
+                                />
+
+                                <Input
+                                    label="Rua"
+                                    icon="home"
+                                    onChange={setStreet}
+                                    value={street}
+                                    disable={true}
+                                />
+                                <Input
+                                    label="Número"
+                                    icon="hash"
+                                    keyboardType="numeric"
+                                    onChange={setNumber}
+                                    value={number}
+                                />
+                                <Input
+                                    label="Complemento"
+                                    icon="edit"
+                                    onChange={setComplement}
+                                    value={complement}
+                                />
+
+                               <ContentZonaRural checked={ruralArea}>
+                                    <Checkbox.Android
+                                        status={ruralArea ? "checked" : "unchecked"}
+                                        onPress={() => setRuralArea(!ruralArea)}
+                                      
+                                    />
+                                    <ZonaRuralText>Zona Rural?</ZonaRuralText>
+                                </ContentZonaRural>
+
                                 <Input
                                     label="Data de Nascimento"
                                     icon="calendar"
