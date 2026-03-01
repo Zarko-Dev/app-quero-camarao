@@ -44,10 +44,11 @@ export const AddressCard = () => {
                 <TitleAddress>Endereço de cobrança:</TitleAddress>
                 <TextInfoAddress>{dataUser.name}</TextInfoAddress>
                 <TextInfoAddress>{dataUser.phone}</TextInfoAddress>
-                <TextInfoAddress>{dataUser.address.street}</TextInfoAddress>
                 <TextInfoAddress>
-                    {`${dataUser.address.city}, ${dataUser.address.state}, Brazil, ${dataUser.address.cep}`}
-                </TextInfoAddress>
+                    {`${dataUser.address.city}, ${dataUser.address.state}, Brazil`}
+                </TextInfoAddress>  
+                <TextInfoAddress>{`Cep: ${dataUser.zipCode}`}</TextInfoAddress>
+                <TextInfoAddress>{dataUser.street}</TextInfoAddress>
             </ContentInfo>
             <ContentButtonAddress>
                 <FontAwesome5 name="chevron-right" size={24} color="black" />

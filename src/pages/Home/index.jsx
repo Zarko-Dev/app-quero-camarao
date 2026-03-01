@@ -410,15 +410,9 @@ export const Home = ({ navigation }) => {
     };
 
     const generateInitialBanner = () => {
-        if (isAuthenticated) {
-            if (userType === "client") {
-                return <InitialBannerStyle source={initialBanner} />;
-            }
-
-            return <BannerShrimpSalePrice open={handleRedirecSalesList} />;
-        }
-
-        return <InitialBannerStyle source={initialBanner} />;
+        return (
+        <BannerShrimpSalePrice open={handleRedirecSalesList} />
+    );
     };
 
     return (

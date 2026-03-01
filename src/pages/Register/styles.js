@@ -40,6 +40,23 @@ export const ContentUseTerms = styled.View`
     margin-left: ${({ theme }) => theme.size.dimentionsSize(-2)};
 `;
 
+export const ContentZonaRural = styled.View`
+   width: 100%;
+
+    background-color: ${({ theme }) => theme.colors.inputColor};
+
+    border-radius: 8px;
+    border-width: 1px;
+    border-color: #f1967a;
+
+    flex-direction: row;
+    align-items: center;
+
+    padding: ${({ theme }) => theme.size.dimentionsSize(1)};
+
+    margin-top: ${({ theme }) => theme.size.dimentionsSize(1)};
+`;
+
 export const UseTermsText = styled(Text)`
     font-size: ${({ theme }) => theme.size.fontSize(14)};
 `;
@@ -48,6 +65,10 @@ export const ButtonUseTermsText = styled.TouchableOpacity``;
 
 export const TextButtonUseTerms = styled(UseTermsText)`
     color: ${({ theme }) => theme.colors.primary};
+`;
+
+export const ZonaRuralText = styled(UseTermsText)`
+    color: #000
 `;
 
 export const ButtonRegister = styled.TouchableOpacity`
