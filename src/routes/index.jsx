@@ -29,16 +29,17 @@ import { UserPublications } from "../pages/Admin/UserPublications";
 import { UsersList } from "../pages/Admin/UsersList";
 import { PublicationViewLogs } from "../pages/PublicationViewLogs";
 import { QRCodePix } from "../pages/QRCodePix";
-import { DrawPrizeWinnersResult } from "../pages/Admin/DrawPrizeWinnersResult";
 import { DrawPrizeHistory } from "../pages/Admin/DrawPrizeHistory";
 import { ReceivedNotifications } from "../pages/ReceivedNotifications";
 import { AdsList } from "../pages/AdsList";
 import { UserProductorClientList } from "../pages/Admin/UserProductorClientList";
 import { DrawPrizeLive } from "../pages/Admin/DrawPrizeLive";
 import { DrawPrize } from "../pages/Admin/DrawPrize";
+import { DrawPrizeNew } from "../pages/Admin/DrawPrize/DrawPrizeNew";
 import { SaleShrimps } from "../pages/SaleShrimps";
 import { SalesList } from "../pages/SalesList";
 import { SplashScreen } from "../pages/SplashScreen";
+import { DrawPrizeNewWinnerResult } from "../pages/Admin/DrawPrizeNewWinnerResult";
 
 const { Navigator, Screen } = createNativeStackNavigator();
 
@@ -253,8 +254,8 @@ export const Routes = () => (
                 }}
             />
             <Screen
-                name={dataRoutes.admin.drawPrizeWinnerResult}
-                component={DrawPrizeWinnersResult}
+                name={dataRoutes.admin.drawPrizeNewWinnerResult}
+                component={DrawPrizeNewWinnerResult}
                 options={{
                     title: "Vencedores do Sorteio!",
                     headerStyle: { backgroundColor: theme.colors.primary },
@@ -272,8 +273,8 @@ export const Routes = () => (
                 }}
             />
             <Screen
-                name={dataRoutes.admin.drawPrize}
-                component={DrawPrize}
+                name={dataRoutes.admin.drawPrizeNew}
+                component={DrawPrizeNew}
                 options={{
                     title: "Sorteio!",
                     headerStyle: { backgroundColor: theme.colors.primary },

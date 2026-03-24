@@ -13,7 +13,7 @@ import { dataRoutes } from "../../../routes/dataRoutes";
 export const DrawPrizeSelect = ({ navigation }) => {
     const handleNavigateToDrawPrize = (type) => {
         if (type === "geral") {
-            navigation.navigate(dataRoutes.admin.drawPrize);
+            navigation.navigate(dataRoutes.admin.drawPrizeNew);
         } else {
             navigation.navigate(dataRoutes.admin.drawPrizeLive);
         }
