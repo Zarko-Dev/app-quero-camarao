@@ -7,6 +7,7 @@ import Toast from "react-native-toast-message";
 import { ActivityIndicator } from "react-native-paper";
 import { Entypo } from "@expo/vector-icons";
 import { useTheme } from "styled-components";
+import { getDrawPrizeLiveById } from "../../../controllers/DrawPrizes/live";
 
 import lottieLoadingDrawPrize from "../../../assets/lotties/lottieLoadingDrawPrize.json";
 import lottieWinDrawPrize from "../../../assets/lotties/lottieWinDrawPrize.json";
@@ -37,8 +38,9 @@ import { handleRedirectPage } from "./redirectPageWhatsapp";
 
 export const DrawPrizeWinnersResult = ({ route, navigation }) => {
     const theme = useTheme();
-    const { drawPrizeId, usersWinner, showOnlyResults, drawerPrizeLiveId } =
+    const { drawPrizeId, showOnlyResults, drawerPrizeLiveId, newWinnersCount } =
         route.params;
+    const [usersWinner, setUsersWinner] = useState([]); // 👈 vira estado    
 
     const [isLoading, setIsLoading] = useState(false);
     const [isLoadingDelete, setIsLoadingDelete] = useState(false);
@@ -66,6 +68,28 @@ export const DrawPrizeWinnersResult = ({ route, navigation }) => {
     const [backAfterSave, setBackAfterSave] = useState(false);
 
     const animation = useRef(null);
+
+
+    useEffect(() => {
+    const loadWinners = async () => {
+        console.log('newWinnersCount:', newWinnersCount); // 👈 verifica o valor
+        if (drawerPrizeLiveId) {
+            const response = await getDrawPrizeLiveById(drawerPrizeLiveId);
+            if (!response.error) {
+                const allWinners = response.data.winners ?? [];
+                
+                // 👈 se veio do sorteio agora, pega só os novos
+                if (newWinnersCount) {
+                    setUsersWinner(allWinners.slice(-newWinnersCount));
+                } else {
+                    setUsersWinner(allWinners);
+                }
+            }
+        }
+    };
+
+    loadWinners();
+}, [drawerPrizeLiveId]);
 
     useEffect(() => {
         if (showOnlyResults) {
