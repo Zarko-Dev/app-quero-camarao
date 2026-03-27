@@ -40,6 +40,7 @@ import { SaleShrimps } from "../pages/SaleShrimps";
 import { SalesList } from "../pages/SalesList";
 import { SplashScreen } from "../pages/SplashScreen";
 import { DrawPrizeNewWinnerResult } from "../pages/Admin/DrawPrizeNewWinnerResult";
+import { DrawPrizeWinnersResult } from "../pages/Admin/DrawPrizeWinnersResult";
 
 const { Navigator, Screen } = createNativeStackNavigator();
 
@@ -256,6 +257,16 @@ export const Routes = () => (
             <Screen
                 name={dataRoutes.admin.drawPrizeNewWinnerResult}
                 component={DrawPrizeNewWinnerResult}
+                options={{
+                    title: "Vencedores do Sorteio!",
+                    headerStyle: { backgroundColor: theme.colors.primary },
+                    headerTitleStyle: { color: theme.colors.white },
+                    headerShown: false,
+                }}
+            />
+            <Screen
+                name={dataRoutes.admin.drawPrizeWinnerResult}
+                component={DrawPrizeWinnersResult}
                 options={{
                     title: "Vencedores do Sorteio!",
                     headerStyle: { backgroundColor: theme.colors.primary },
