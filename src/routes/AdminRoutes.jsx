@@ -15,7 +15,7 @@ import { AdminTabNavigation } from "./navigationTabs";
 import { Notification } from "../pages/Admin/Notification";
 import { ListPublishAdsActived } from "../pages/Admin/ListPublishAdsActived";
 import { ShrimpPrice } from "../pages/Admin/ShrimpPrice";
-import { DrawPrizeRules } from "../pages/Admin/DrawPrizeRules";
+import { DrawPrizeRulesNew } from "../pages/Admin/DrawPrizeRules/DrawPrizeRulesNew";
 import { DrawPrizeSelect } from "../pages/Admin/DrawPrizeSelect";
 import { DrawPrizeHistory } from "../pages/Admin/DrawPrizeHistory";
 import { DrawerPrizeLiveClient } from "../pages/DrawerPrizeLiveClient";
@@ -144,8 +144,8 @@ export const NavigationAdminMenu = () => (
             }}
         />
         <Screen
-            name={dataRoutes.admin.drawPrizeRules}
-            component={DrawPrizeRules}
+            name={dataRoutes.admin.drawPrizeRulesNew}
+            component={DrawPrizeRulesNew}
             options={{
                 title: "Regras Sorteio",
                 header: (props) => <Header {...props} />,

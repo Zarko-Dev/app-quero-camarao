@@ -13,7 +13,7 @@ import * as Sentry from "@sentry/react-native";
 import { firestore } from "../../services/Firebase";
 import { models } from "../../services/Firebase/models";
 
-export const createDrawPrizeLiveByCode = async (drawPrizeId, drawPrizeCode) => {
+export const createDrawPrizeLiveByCode = async (drawPrizeId, drawPrizeCode, drawPrizeName) => {
     try {
         const drawPrizeLiveDoc = doc(
             firestore,
@@ -24,6 +24,7 @@ export const createDrawPrizeLiveByCode = async (drawPrizeId, drawPrizeCode) => {
         await setDoc(drawPrizeLiveDoc, {
             id: drawPrizeId,
             code: drawPrizeCode,
+            name: drawPrizeName, // 👈 Felipe pediu campo para nome de sorteio
             status: true,
             participants: [],
             winners: [],

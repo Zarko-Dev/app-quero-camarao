@@ -14,6 +14,7 @@ export const models = {
     notifications: "notifications",
     listSignatures: "listSignatures",
     drawPrizesRules: "drawPrizesRules",
+    newDrawPrizeRules: "newDrawPrizeRules", // Nova regra de sorteio 14/03/2026
     drawPrizesLive: "drawPrizesLive",
     shirimpSale: "shirimpSale",
 };
