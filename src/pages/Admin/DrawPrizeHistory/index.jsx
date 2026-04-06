@@ -22,10 +22,15 @@ const CardDrawPrise = ({ data }) => {
     const navigation = useNavigation();
 
     const hadleRedirectDrawPrizeWinners = () => {
+        console.log('data:', JSON.stringify(data, null, 2)); // 👈
+        console.log('usersWinner:', data.usersWinner); // 👈
+
         navigation.navigate(dataRoutes.admin.drawPrizeWinnerResult, {
             drawPrizeId: data.id,
             usersWinner: data.usersWinner,
             showOnlyResults: true,
+            drawerPrizeLiveId: null, // 👈 força null para não buscar do Firestore
+            newWinnersCount: null,
         });
     };
 
