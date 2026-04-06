@@ -7,6 +7,7 @@ import { ActivityIndicator } from "react-native-paper";
 import { Feather } from "@expo/vector-icons";
 import { View } from "react-native";
 import { Input } from "../../../components/Input";
+import { ScrollView } from "react-native";
 import {
     ButtonEndDrawerPrizeAction,
     ButtonInitDrawerPrizeAction,
@@ -32,7 +33,10 @@ import {
     createDrawPrizeLiveByCode,
     getActiveDrawPrizeLive,
     setWinnerDrawPrizeLive,
+    getDrawPrizeLiveById,
+    updateDrawPrizeLiveNames
 } from "../../../controllers/DrawPrizes/live";
+import { saveDrawPrize} from "../../../controllers/DrawPrizes/create";
 import { getDataUserByIds } from "../../../controllers/User/authentication";
 import { dataRoutes } from "../../../routes/dataRoutes";
 import { ActionCountButton } from "../DrawPrize/styles";
@@ -45,12 +49,14 @@ export const DrawPrizeLive = ({ navigation }) => {
     const [drawerName, setDrawerName] = useState(); 
     const [drawerPrizeLiveId, setDrawerPrizeLiveId] = useState();
     const [showDrawPrizeNameDialog, setShowDrawPrizeNameDialog] = useState(false);
+    const [drawPrizeNames, setDrawPrizeNames] = useState([]);
     const [currentDrawPrizeName, setCurrentDrawPrizeName] = useState("");
     const [participants, setParticipants] = useState([]);
     const [showAlertVisible, setShowAlertVisible] = useState(false);
     const [loadingStartDrawPrize, setLoadingStartDrawPrize] = useState(false);
     const [initialLoading, setInitialLoading] = useState(true);
     const [loadingParticipants, setLoadingParticipants] = useState(false);
+    const [loadingWinners, setLoadingWinners] = useState(false);
     const [countPrizes, setCountPrizes] = useState(0);
     const [loadingInitDrawPrize, setLoadingInitDrawPrize] = useState(false);
     const [
@@ -63,14 +69,13 @@ export const DrawPrizeLive = ({ navigation }) => {
             const getDrawerPriseLive = async () => {
                 const response = await getActiveDrawPrizeLive();
 
-                if (!response.error) {
-                    setDrawerCodeFixed(response.data.code);
-                    setDrawerNameFixed(response.data.name);
-                    setDrawerPrizeLiveId(response.data.id);
-                    setParticipants(response.data?.participants ?? []);
-                    setCountPrizes(
-                        response.data?.participants?.length > 0 ? 1 : 0,
-                    );
+               if (!response.error) {
+                setDrawerCodeFixed(response.data.code);
+                setDrawerNameFixed(response.data.names?.[0] ?? '');
+                setDrawPrizeNames(response.data.names ?? []); // 👈
+                setDrawerPrizeLiveId(response.data.id);
+                setParticipants(response.data?.participants ?? []);
+                setCountPrizes(response.data?.participants?.length > 0 ? 1 : 0);
                 }
 
                 setInitialLoading(false);
@@ -81,15 +86,16 @@ export const DrawPrizeLive = ({ navigation }) => {
     );
 
   const handleStartDrawPrizeLive = async () => {
-    if (drawerCode && drawerName) { // 👈 valida os dois campos
+    if (drawerCode) { // 👈 valida os dois campos
         setLoadingStartDrawPrize(true);
 
         const id = v4();
-        const response = await createDrawPrizeLiveByCode(id, drawerCode, drawerName); // 👈 passa o nome
+        const response = await createDrawPrizeLiveByCode(id, drawerCode); // 👈 passa o nome
 
         if (response) {
             setDrawerCodeFixed(drawerCode);
             setDrawerNameFixed(drawerName); // 👈 seta o nome fixo
+             setDrawPrizeNames([]); // 👈 já inicia o array com o primeiro
             setDrawerPrizeLiveId(id);
 
             setLoadingStartDrawPrize(false);
@@ -148,6 +154,31 @@ export const DrawPrizeLive = ({ navigation }) => {
         });
     };
 
+   // traz os ganhadores dos sorteios  ao clicar em visualizar ganhadores
+ const handleShowWinners = async () => {
+    setLoadingWinners(true);
+
+    const response = await getDrawPrizeLiveById(drawerPrizeLiveId);
+
+    if (!response.error) {
+        const winners = response.data.winners ?? [];
+
+        const fixResponse = winners.map((item) => ({
+            ...item,
+            createdAt: item.createdAt?.toDate?.() ?? null,
+            updatedAt: item.updatedAt?.toDate?.() ?? null,
+        }));
+
+         setLoadingWinners(false); // 👈 para o loading antes de navegar
+
+        navigation.navigate(dataRoutes.admin.usersList, {
+            dataListUsers: fixResponse,
+        });
+    }  else {
+        setLoadingWinners(false); // 👈 para o loading em caso de erro
+    }
+};
+
     const addCountPrizes = () => {
         if (countPrizes < participants.length) {
             setCountPrizes((count) => count + 1);
@@ -161,17 +192,9 @@ export const DrawPrizeLive = ({ navigation }) => {
     };
 
     //Muda o handleInitDrawPrizeLive para abrir o dialog quando já houver sorteios anteriores:
-    const handleInitDrawPrizeLive = async () => {
+const handleInitDrawPrizeLive = async () => {
     if (countPrizes > 0) {
-        const responseActiveDrawPrizeLive = await getActiveDrawPrizeLive();
-        const previousWinners = responseActiveDrawPrizeLive.data.winners ?? [];
-
-        if (previousWinners.length > 0) {
-            setShowDrawPrizeNameDialog(true); // 👈 abre dialog para novo nome
-            return;
-        }
-
-        await executeDrawPrizeLive(drawerNameFixed); // 👈 primeiro sorteio usa o nome já definido
+        setShowDrawPrizeNameDialog(true); // 👈 sempre abre o dialog
     } else {
         Toast.show({
             type: "error",
@@ -180,64 +203,81 @@ export const DrawPrizeLive = ({ navigation }) => {
     }
 };
 
+
+
+
+
    const executeDrawPrizeLive = async (prizeName) => {
     setShowDrawPrizeNameDialog(false);
     setLoadingInitDrawPrize(true);
 
     const responseActiveDrawPrizeLive = await getActiveDrawPrizeLive();
-    const previousWinners = responseActiveDrawPrizeLive.data.winners ?? [];
-    const usersWinner = [];
+    const previousWinners = responseActiveDrawPrizeLive.data.winners ?? []
+    const usersWinner = []
 
     const response = await getDataUserByIds(
         responseActiveDrawPrizeLive.data.participants,
-    );
+    )
     const fixResponse = response.map((item) => ({
         ...item,
         createdAt: item.createdAt.toDate(),
         updatedAt: item.updatedAt.toDate(),
-    }));
+    }))
 
     const dataUsersPrize = fixResponse.filter(
         (user) =>
             ((user.address && user.address.state && user.address.city) ||
             (user.state && user.city)) &&
             !previousWinners.some((winner) => winner.email === user.email),
-    );
+    )
 
-    const shuffledUsers = [...dataUsersPrize];
+    const shuffledUsers = [...dataUsersPrize]
 
     for (let index = 0; index < countPrizes; index++) {
-        if (shuffledUsers.length === 0) break;
-
-        const randomIndex = Math.floor(Math.random() * shuffledUsers.length);
-        const randomElement = shuffledUsers[randomIndex];
-
-        usersWinner.push(randomElement);
-        shuffledUsers.splice(randomIndex, 1);
+        if (shuffledUsers.length === 0) break
+        const randomIndex = Math.floor(Math.random() * shuffledUsers.length)
+        const randomElement = shuffledUsers[randomIndex]
+        usersWinner.push(randomElement)
+        shuffledUsers.splice(randomIndex, 1)
     }
 
     if (usersWinner.length === 0) {
         Toast.show({
             type: "error",
             text1: "Todos os participantes já foram sorteados!",
-        });
-        setLoadingInitDrawPrize(false);
-        return;
+        })
+        setLoadingInitDrawPrize(false)
+        return
     }
 
-    const allWinners = [...previousWinners, ...usersWinner];
+     const usersWinnerWithPrizeName = usersWinner.map((item) => ({
+        ...item,
+        drawName: prizeName,
+    }));
 
-    await setWinnerDrawPrizeLive(drawerPrizeLiveId, allWinners);
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const allWinners = [...previousWinners, ...usersWinnerWithPrizeName]
 
-    setLoadingInitDrawPrize(false);
+    await setWinnerDrawPrizeLive(drawerPrizeLiveId, allWinners)
+
+    // ✅ salva no histórico automaticamente
+    await saveDrawPrize(prizeName,usersWinnerWithPrizeName, drawerPrizeLiveId)
+
+    // 👇 salva o novo nome no array names do Firestore
+    await updateDrawPrizeLiveNames(drawerPrizeLiveId, prizeName)
+
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    setDrawPrizeNames((prev) => [...prev, prizeName]) // 👈 aqui
+    setCurrentDrawPrizeName("") // 👈 faltou isso
+
+    setLoadingInitDrawPrize(false)
 
     navigation.navigate(dataRoutes.admin.drawPrizeWinnerResult, {
         drawerPrizeLiveId,
         newWinnersCount: usersWinner.length,
-        drawPrizeName: prizeName, // 👈 passa o nome
-    });
-};
+        drawPrizeName: prizeName,
+    })
+}
 
     const handleReloadDataDrawerPrizeLive = async () => {
         setLoadingReloadDataDrawerPrizeLive(true);
@@ -267,6 +307,7 @@ export const DrawPrizeLive = ({ navigation }) => {
     return (
         <>
             <Container>
+                 <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
                 {initialLoading ? (
                     <ActivityIndicator
                         animating
@@ -281,7 +322,7 @@ export const DrawPrizeLive = ({ navigation }) => {
                             <Title>
                                 {drawerCodeFixed
                                     ? "Sorteio Ativo"
-                                    : "Informe o códio do sorteio"}
+                                    : "Informe o código do sorteio"}
                             </Title>
                             {drawerCodeFixed && (
                                 <ReloadButton
@@ -310,18 +351,15 @@ export const DrawPrizeLive = ({ navigation }) => {
                                         value={drawerCode}
                                         autoCapitalize="sentences"
                                     />
-                                    <Input
-                                        label="Nome do sorteio"  
-                                        onChange={setDrawerName}
-                                        value={drawerName}
-                                        autoCapitalize="sentences"
-                                    />
+                                  
                                 </>
                             ) : (
-                                <>
-                                     <View style={{ flexDirection: "row", gap: 10, alignItems: "center" }}>
-                                             <TitleCode>{drawerCodeFixed}</TitleCode>
-                                            <TitleCode>{drawerNameFixed}</TitleCode>
+                                <>    
+                                      <TitleCode>{drawerCodeFixed}</TitleCode>
+                                   <View style={{ flexDirection: "row", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                                        {drawPrizeNames.map((name, index) => (
+                                            <TitleCode key={index}>{name}</TitleCode>
+                                        ))}
                                     </View>
                                 </>
                             )}
@@ -365,6 +403,25 @@ export const DrawPrizeLive = ({ navigation }) => {
                                 ) : (
                                     <TextButtonStartDrawerStartAction>
                                         Visualizar Participantes
+                                    </TextButtonStartDrawerStartAction>
+                                )}
+                            </ButtonViewParticipants>
+                        </ContentParticipants>
+
+                            <ContentParticipants>
+                           
+                            <ButtonViewParticipants
+                                disabled={!participants.length}
+                                onPress={handleShowWinners}
+                            >
+                                {loadingWinners? (
+                                    <ActivityIndicator
+                                        animating
+                                        color="white"
+                                    />
+                                ) : (
+                                    <TextButtonStartDrawerStartAction>
+                                        Visualizar Ganhadores
                                     </TextButtonStartDrawerStartAction>
                                 )}
                             </ButtonViewParticipants>
@@ -430,6 +487,7 @@ export const DrawPrizeLive = ({ navigation }) => {
                         </ContentActionDrawerPrizeAction>
                     </>
                 )}
+                </ScrollView>
             </Container>
             <DialogComponent
                 visible={showAlertVisible}
@@ -449,8 +507,10 @@ export const DrawPrizeLive = ({ navigation }) => {
                 actionButton={() => executeDrawPrizeLive(currentDrawPrizeName)}
                 dismissable={false}
                 inputValue={currentDrawPrizeName}
-                actionInputValue={setCurrentDrawPrizeName}
+                actionInputValue={setCurrentDrawPrizeName}                                  
             />
+           
         </>
+        
     );
 };

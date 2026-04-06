@@ -5,10 +5,9 @@ import SelectComponent from "../../../components/SelectComponent";
 import { firestore } from "../../../services/Firebase";
 import { FontAwesome } from "@expo/vector-icons";
 import { Checkbox } from "react-native-paper";
-
-
-
-import { Alert } from "react-native";
+import { Alert, TextInput } from "react-native";
+import { useFocusEffect } from "@react-navigation/native"
+import { useCallback } from "react"
 import {
     ButtonRemoveTag,
     ClearAll,
@@ -20,61 +19,70 @@ import {
     ContentTagParticipant,
     ContentTags,
     TagParticipant,
-    SaveDrawPriseRule,
     Scroll,
     Subtitle,
     ContentCheckboxMode,
     CheckboxModeItem,
     CheckboxAllLabel,
-    Tag,
     TextButton,
     Title,
     TitleSelect,
     TitleTags,
 } from "./styles";
 
-const STORES = [
-  { label: "Ag Ração",   value: "71b69fd9-0075-4442-9fb0-269365324792", cities: ["São João do Jaguaribe"] },
-
-  { label: "Nutrial",    value: "82242fc7-8c5c-40d4-ae89-74445177f0a1", cities: ["Fortim","Beberibe","Aracati","Icapuí","Itaiçaba","Palhano","Jaguaruana","Russas","Quixeré","Limoeiro do Norte","Morada Nova","Tabuleiro do Norte","São João do Jaguaribe","Alto Santo","Jaguaribe"] },
-
-  { label: "Brx",        value: "548ec42e-e32f-4722-8cd8-809ac503f0c0", cities: ["Fortim","Beberibe","Aracati","Icapuí","Itaiçaba","Palhano","Jaguaruana","Russas","Quixeré","Limoeiro do Norte","Morada Nova","Tabuleiro do Norte","São João do Jaguaribe","Alto Santo","Jaguaribe"] },
-
-  { label: "TCP",        value: "d07c2c49-3fb3-458c-be5a-a2c122bd9945", cities: ["Fortim","Beberibe","Aracati","Icapuí","Itaiçaba","Palhano","Jaguaruana","Russas","Quixeré","Limoeiro do Norte","Morada Nova","Tabuleiro do Norte","São João do Jaguaribe","Alto Santo","Jaguaribe"] },
-
-  { label: "Aplicativo", value: "8f692b71-a400-4cdc-b2a4-68b57c173833", cities: ["Fortim","Beberibe","Aracati","Icapuí","Itaiçaba","Palhano","Jaguaruana","Russas","Quixeré","Limoeiro do Norte","Morada Nova","Tabuleiro do Norte","São João do Jaguaribe","Alto Santo","Jaguaribe"] },
-]
-
-// Array de strings para o SelectComponent
-const STORE_NAMES = STORES.map(s => s.label)
-
 const generateId = () => {
   return Date.now().toString(36) + Math.random().toString(36).substr(2)
 }
 
-
 export const DrawPrizeRulesNew = () => {
 
- 
-  const [cityOptions, setCityOptions] = useState([])
-  const [cpfOptions, setCpfOptions] = useState([])
-  const [selectedAll, setSelectedAll] = useState(false)
+  const [ruleName, setRuleName]           = useState("")
+  const [stateOptions, setStateOptions]   = useState([])   // estados vindos do Firestore
+  const [cityOptions, setCityOptions]     = useState([])
+  const [cpfOptions, setCpfOptions]       = useState([])
   const [allUsersLabels, setAllUsersLabels] = useState([])
-  const [modeAll, setModeAll] = useState(false)
-  const [selectedStore, setSelectedStore] = useState(null)
+  const [selectedAll, setSelectedAll]     = useState(false)
+  const [modeAll, setModeAll]             = useState(false)
+  const [selectedStates, setSelectedStates] = useState([])
   const [selectedCities, setSelectedCities] = useState([])
-  const [selectedCpfs, setSelectedCpfs] = useState([])
+  const [selectedCpfs, setSelectedCpfs]   = useState([])
+  const [allClientsLabels, setAllClientsLabels] = useState([])
+  const [allProductorsLabels, setAllProductorsLabels] = useState([])
+  const [loadingStates, setLoadingStates] = useState(false)
+  const [loadingCities, setLoadingCities] = useState(false)
+  const [loadingCpfs, setLoadingCpfs]     = useState(false)
 
-  const [loadingCpfs, setLoadingCpfs] = useState(false)
+  const cpfLabels = cpfOptions
+  .filter(c => c?.label && typeof c.label === "string")
+  .map(c => c.label)
 
-  const cpfLabels = cpfOptions.map(c => c.label)
+  const produtores = selectedCpfs.filter(
+  c => typeof c === "string" && c.includes("(Produtor)")
+)
 
-  // busca todos os usuários ao montar o componente
+const clientes = selectedCpfs.filter(
+  c => typeof c === "string" && c.includes("(Cliente)")
+)
+
+  // Ao montar: busca estados distintos + todos os usuários (para modo "Todos")
   useEffect(() => {
-  loadAllUsers()
+    loadStates()
+    loadAllUsers()
   }, [])
 
-  // Busca CPFs sempre que cidades selecionadas mudarem
+  // Quando estados selecionados mudam → busca cidades
+  useEffect(() => {
+    if (selectedStates.length > 0) {
+      loadCitiesByStates(selectedStates)
+    } else {
+      setCityOptions([])
+      setSelectedCities([])
+      setCpfOptions([])
+      setSelectedCpfs([])
+    }
+  }, [selectedStates])
+
+  // Quando cidades selecionadas mudam → busca CPFs
   useEffect(() => {
     if (selectedCities.length > 0) {
       loadCpfsByCities(selectedCities)
@@ -84,206 +92,235 @@ export const DrawPrizeRulesNew = () => {
     }
   }, [selectedCities])
 
-  useEffect(() => {
-  return () => {
-    handleClearAll()
+ useFocusEffect(
+  useCallback(() => {
+    loadStates()      // ✅ recarrega ao entrar
+    loadAllUsers()    // ✅ recarrega ao entrar
+    return () => { handleClearAll() }
+  }, [])
+)
+
+  // Busca todos os estados distintos dos usuários
+  const loadStates = async () => {
+    setLoadingStates(true)
+    try {
+      const snapshot = await getDocs(collection(firestore, "users"))
+      const states = new Set()
+      snapshot.docs.forEach(doc => {
+        const state = doc.data().state
+        if (state) states.add(state)
+      })
+      setStateOptions([...states].sort())
+    } catch (error) {
+      console.log("Erro ao buscar estados:", error)
+    } finally {
+      setLoadingStates(false)
+    }
   }
-}, [])
 
- const handleSelectStore = (storeName) => {
-  const store = STORES.find(s => s.label === storeName)
+  // Busca cidades distintas dos estados selecionados
+  const loadCitiesByStates = async (states) => {
+    setLoadingCities(true)
+    setSelectedCities([])
+    setCpfOptions([])
+    setSelectedCpfs([])
+    try {
+      const q = query(
+        collection(firestore, "users"),
+        where("state", "in", states)
+      )
+      const snapshot = await getDocs(q)
+      const cities = new Set()
+      snapshot.docs.forEach(doc => {
+        const city = doc.data().city
+        if (city) cities.add(city)
+      })
+      setCityOptions([...cities].sort())
+    } catch (error) {
+      console.log("Erro ao buscar cidades:", error)
+    } finally {
+      setLoadingCities(false)
+    }
+  }
 
-  setSelectedStore(store)
-  setSelectedCities([])
-  setSelectedCpfs([])
-  setCityOptions(store.cities)  // já são strings simples
-}
+  // Busca usuários das cidades selecionadas (excluindo bloqueados)
+  const loadCpfsByCities = async (cities) => {
+    setLoadingCpfs(true)
+    setSelectedCpfs([])
+    try {
+      const [usersSnap, rulesSnap] = await Promise.all([
+        getDocs(query(collection(firestore, "users"), where("city", "in", cities))),
+        getDocs(collection(firestore, "newDrawPrizeRules"))
+      ])
 
-//Traz todos os usuários de uma vez só
-const loadAllUsers = async () => {
+      const blockedCpfs = new Set()
+      rulesSnap.forEach(doc => {
+        const cpfs = doc.data().cpfs || []
+        cpfs.forEach(u => {
+          if (u.blocked) {
+            const until = u.blockedUntil?.toDate ? u.blockedUntil.toDate() : new Date(u.blockedUntil)
+            if (new Date() < until) blockedCpfs.add(u.cpf)
+          }
+        })
+      })
+
+      const seenCpfs = new Set()
+      const options = usersSnap.docs
+        .map(doc => {
+          const data = doc.data()
+          return {
+            label: `${data.name} - ${data.cpf} (${translateUserType(data.userType)})`,
+            value: data.cpf,
+            userType: data.userType
+          }
+        })
+        .filter(u => !blockedCpfs.has(u.value))
+        .filter(u => {
+          if (seenCpfs.has(u.value)) return false
+          seenCpfs.add(u.value)
+          return true
+        })
+
+      setCpfOptions(options)
+    } catch (error) {
+      console.log("Erro ao buscar participantes:", error)
+    } finally {
+      setLoadingCpfs(false)
+    }
+  }
+
+  // Busca todos os usuários para o modo "Todos os Participantes"
+ const loadAllUsers = async () => {
   try {
-    const rulesSnapshot = await getDocs(collection(firestore, "newDrawPrizeRules"))
-    const blockedCpfs = []
-    rulesSnapshot.forEach(doc => {
+    const [usersSnap, rulesSnap] = await Promise.all([
+      getDocs(collection(firestore, "users")),
+      getDocs(collection(firestore, "newDrawPrizeRules"))
+    ])
+
+    const blockedCpfs = new Set()
+    rulesSnap.forEach(doc => {
       const cpfs = doc.data().cpfs || []
       cpfs.forEach(u => {
         if (u.blocked) {
           const until = u.blockedUntil?.toDate ? u.blockedUntil.toDate() : new Date(u.blockedUntil)
-          if (new Date() < until) blockedCpfs.push(u.cpf)
+          if (new Date() < until) blockedCpfs.add(u.cpf)
         }
       })
     })
 
-    const snapshot = await getDocs(collection(firestore, "users"))
-    
-    const seenCpfs = new Set()  // ← controla CPFs já vistos
-
-    const labels = snapshot.docs
+    const seenCpfs = new Set()
+    const allUsers = usersSnap.docs
       .map(doc => doc.data())
-      .filter(u => !blockedCpfs.includes(u.cpf))
+      .filter(u => !blockedCpfs.has(u.cpf))
       .filter(u => {
-        if (seenCpfs.has(u.cpf)) return false  // ← remove duplicata
+        if (seenCpfs.has(u.cpf)) return false
         seenCpfs.add(u.cpf)
         return true
       })
-      .map(u => `${u.name} - ${u.cpf} (${translateUserType(u.userType)})`)
 
-    setAllUsersLabels(labels)
+    setAllUsersLabels(allUsers.map(u => `${u.name} - ${u.cpf} (${translateUserType(u.userType)})`))
+    setAllClientsLabels(allUsers.filter(u => u.userType === "client").map(u => `${u.name} - ${u.cpf} (${translateUserType(u.userType)})`))
+    setAllProductorsLabels(allUsers.filter(u => u.userType === "productor").map(u => `${u.name} - ${u.cpf} (${translateUserType(u.userType)})`))
+
   } catch (error) {
-    console.log("Erro ao buscar todos usuários:", error)
+    console.log("Erro ao buscar todos os usuários:", error)
   }
 }
 
-
-const loadCpfsByCities = async (cities) => {
-  setLoadingCpfs(true)
-  setSelectedCpfs([])
-
-  try {
-    const q = query(
-      collection(firestore, "users"),
-      where("city", "in", cities)
-    )
-
-    const snapshot = await getDocs(q)
-
-    const rulesSnapshot = await getDocs(collection(firestore, "newDrawPrizeRules"))
-    const blockedCpfs = []
-
-    rulesSnapshot.forEach(doc => {
-      const cpfs = doc.data().cpfs || []
-      cpfs.forEach(u => {
-        if (u.blocked) {
-          const until = u.blockedUntil?.toDate ? u.blockedUntil.toDate() : new Date(u.blockedUntil)
-          if (new Date() < until) blockedCpfs.push(u.cpf)
-        }
-      })
-    })
-
-    const options = snapshot.docs
-      .map(doc => {
-        const data = doc.data()
-        return {
-          label: `${data.name} - ${data.cpf} (${translateUserType(data.userType)})`,
-          value: data.cpf,
-          userType: data.userType
-        }
-      })
-      .filter(u => !blockedCpfs.includes(u.value))
-
-    setCpfOptions(options)
-  } catch (error) {
-    console.log("Erro ao buscar usuários:", error)
-  } finally {
-    setLoadingCpfs(false)
+  const translateUserType = (userType) => {
+    const types = { productor: "Produtor", client: "Cliente" }
+    return types[userType] || userType
   }
-}
-// traduz client e productor para cliente e produtor
-const translateUserType = (userType) => {
-  const types = {
-    productor: "Produtor",
-    client: "Cliente"
+
+  const handleClearAll = () => {
+    setRuleName("")
+    setSelectedStates([])
+    setSelectedCities([])
+    setSelectedCpfs([])
+    setCityOptions([])
+    setCpfOptions([])
+    setAllClientsLabels([])
+    setAllProductorsLabels([])
+    setSelectedAll(false)
+    setModeAll(false)
+     loadAllUsers()  // ✅ recarrega os usuários após limpar
+     loadStates()    // ✅ recarrega os estados após limpar
   }
-  return types[userType] || userType
-}
 
- 
-
-
- const handleClearAll = () => {
-  setSelectedStore(null)
-  setSelectedCities([])
-  setSelectedCpfs([])
-  setCityOptions([])
-  setCpfOptions([])
-  setSelectedAll(false)
-  setModeAll(false)
-}
-
-  // Usado pra salvar regra no caso de ser todos os participantes
   const handleSaveAll = async () => {
-  if (selectedCpfs.length === 0) {
-    Alert.alert("Atenção", "Selecione pelo menos um participante.")
-    return
+  
+    if (selectedCpfs.length === 0) {
+      Alert.alert("Atenção", "Selecione pelo menos um participante.")
+      return
+    }
+    try {
+      const cpfsToSave = selectedCpfs.map(label => {
+        const [, rest] = label.split(" - ")
+        const cpf = rest?.split(" ")[0]
+        const userType = rest?.includes("Produtor") ? "productor" : "client"
+        return { cpf, userType, blocked: false, blockedUntil: null }
+      })
+
+      const result = await saveUsersDrawPrizeRules({
+        id: generateId(),
+        store: "Todos",
+        states: [],
+        cities: [],
+        cpfs: cpfsToSave
+      })
+
+      if (result) {
+        Alert.alert("Sucesso!", "Regra salva com sucesso.")
+        handleClearAll()
+      } else {
+        Alert.alert("Erro", "Não foi possível salvar a regra. Tente novamente.")
+      }
+    } catch (error) {
+      Alert.alert("Erro", "Ocorreu um erro ao salvar. Tente novamente.")
+      console.log("Erro ao salvar:", error)
+    }
   }
 
-  try {
-    const cpfsToSave = selectedCpfs.map(label => {
-      const [namePart, rest] = label.split(" - ")
-      const cpf = rest?.split(" ")[0]
-      const userType = rest?.includes("Produtor") ? "productor" : "client"
-      return { cpf, userType, blocked: false, blockedUntil: null }
-    })
-
-    const ruleData = {
-      id: generateId(),
-      store: "Todos",
-      cities: [],
-      cpfs: cpfsToSave
+  const handleSave = async () => {
+    if (!ruleName.trim()) {
+      Alert.alert("Atenção", "Informe um nome para a regra.")
+      return
     }
-
-    const result = await saveUsersDrawPrizeRules(ruleData)
-
-    if (result) {
-      Alert.alert("Sucesso!", "Regra de sorteio salva com sucesso.")
-      handleClearAll()
-    } else {
-      Alert.alert("Erro", "Não foi possível salvar a regra. Tente novamente.")
+    if (selectedStates.length === 0 || selectedCities.length === 0) {
+      Alert.alert("Campos obrigatórios", "Selecione pelo menos um estado e uma cidade.")
+      return
     }
-  } catch (error) {
-    Alert.alert("Erro", "Ocorreu um erro ao salvar. Tente novamente.")
-    console.log("Erro ao salvar:", error)
+    try {
+      const cpfsToSave = selectedCpfs.length > 0
+        ? cpfOptions
+            .filter(c => selectedCpfs.includes(c.label))
+            .map(c => ({ cpf: c.value, userType: c.userType, blocked: false, blockedUntil: null }))
+        : cpfOptions.map(c => ({ cpf: c.value, userType: c.userType, blocked: false, blockedUntil: null }))
+
+      const result = await saveUsersDrawPrizeRules({
+        id: generateId(),
+        name: ruleName.trim(),
+        store: ruleName.trim(), // mantém compatibilidade
+        states: selectedStates,
+        cities: selectedCities,
+        cpfs: cpfsToSave
+      })
+
+      if (result) {
+        Alert.alert("Sucesso!", "Regra salva com sucesso.")
+        handleClearAll()
+      } else {
+        Alert.alert("Erro", "Não foi possível salvar a regra. Tente novamente.")
+      }
+    } catch (error) {
+      Alert.alert("Erro", "Ocorreu um erro ao salvar. Tente novamente.")
+      console.log("Erro ao salvar:", error)
+    }
   }
-}
-
-
- // Usado pra salvar regra no caso de ser a opção loja > cidade > cpfs
- const handleSave = async () => {
-  if (!selectedStore || selectedCities.length === 0) {
-    Alert.alert("Campos obrigatórios", "Selecione a loja e pelo menos uma cidade para continuar.")
-    return
-  }
-
-  try {// pega o cpf de cada usuario produtor ou cliente por loja e coloca um bloqueio caso seja o ganhador
-  const cpfsToSave = selectedCpfs.length > 0
-  ? cpfOptions
-      .filter(c => selectedCpfs.includes(c.label))
-      .map(c => ({ 
-        cpf: c.value, 
-        userType: c.userType,
-        blocked: false,
-        blockedUntil: null
-      }))
-  : cpfOptions.map(c => ({ 
-      cpf: c.value, 
-      userType: c.userType,
-      blocked: false,
-      blockedUntil: null
-    }))
-
-    const ruleData = {
-      id: generateId(), 
-      store: selectedStore.label,
-      cities: selectedCities,
-      cpfs: cpfsToSave
-    }
-
-    const result = await saveUsersDrawPrizeRules(ruleData)
-
-    if (result) {
-      Alert.alert("Sucesso!", "Regra de sorteio salva com sucesso.")
-      handleClearAll()
-    } else {
-      Alert.alert("Erro", "Não foi possível salvar a regra. Tente novamente.")
-    }
-  } catch (error) {
-    Alert.alert("Erro", "Ocorreu um erro ao salvar. Tente novamente.")
-    console.log("Erro ao salvar:", error)
-  }
-}
 
   return (
     <Container>
+    <Scroll>
       <Content>
 
         <Title>Regras de Sorteio</Title>
@@ -296,12 +333,12 @@ const translateUserType = (userType) => {
             setSelectedAll(false)
           }}>
             <Checkbox.Android status={!modeAll ? "checked" : "unchecked"} />
-            <CheckboxAllLabel>Por Loja / Cidade</CheckboxAllLabel>
+            <CheckboxAllLabel>Por Estado / Cidade</CheckboxAllLabel>
           </CheckboxModeItem>
 
           <CheckboxModeItem onPress={() => {
             setModeAll(true)
-            setSelectedStore(null)
+            setSelectedStates([])
             setSelectedCities([])
             setCityOptions([])
             setCpfOptions([])
@@ -316,41 +353,97 @@ const translateUserType = (userType) => {
         {modeAll && (
           <>
             <Subtitle>Selecione todos os participantes de uma vez só</Subtitle>
-            <TitleSelect>Todos os Participantes</TitleSelect>
-            <SelectComponent
-              title="Selecionar Todos"
-              options={allUsersLabels}
-              action={(values) => {
-                setSelectedAll(values.length > 0)
-                setSelectedCpfs([...new Set(values)])
-              }}
-              multipleSelect
-              clear={!selectedAll}
-            />
+
+           <TitleSelect>Todos os Participantes</TitleSelect>
+              <SelectComponent
+                title="Selecionar Todos"
+                options={allUsersLabels}
+                action={(values) => {
+                  const arr = Array.isArray(values) ? values : typeof values === "string" ? [values] : []
+                  setSelectedAll(arr.length > 0)
+                  setSelectedCpfs([...new Set(arr)])
+                }}
+                multipleSelect
+                clear={!selectedAll}
+              />
+
+           <TitleSelect>Somente Clientes</TitleSelect>
+              <SelectComponent
+                title="Selecionar Clientes"
+                options={allClientsLabels}
+                action={(values) => {
+                  const arr = Array.isArray(values) ? values : typeof values === "string" ? [values] : []
+                  setSelectedCpfs(prev => {
+                    const withoutClients = prev.filter(v => !allClientsLabels.includes(v))
+                    return [...new Set([...withoutClients, ...arr])]
+                  })
+                }}
+                multipleSelect
+                clear={allClientsLabels.length === 0}
+              />
+
+          <TitleSelect>Somente Produtores</TitleSelect>
+                <SelectComponent
+                  title="Selecionar Produtores"
+                  options={allProductorsLabels}
+                  action={(values) => {
+                    const arr = Array.isArray(values) ? values : typeof values === "string" ? [values] : []
+                    setSelectedCpfs(prev => {
+                      const withoutProductors = prev.filter(v => !allProductorsLabels.includes(v))
+                      return [...new Set([...withoutProductors, ...arr])]
+                    })
+                  }}
+                  multipleSelect
+                  clear={allProductorsLabels.length === 0}
+                />
           </>
         )}
 
-        {/* MODO LOJA/CIDADE */}
+        {/* MODO ESTADO / CIDADE */}
         {!modeAll && (
           <>
-            <Subtitle>Selecione a loja, cidades e participantes do sorteio</Subtitle>
-
-            <TitleSelect>Loja</TitleSelect>
-            <SelectComponent
-              title="Selecionar Loja"
-              options={STORE_NAMES}
-              action={handleSelectStore}
-              clear={!selectedStore}
+            <TitleSelect>Nome da Regra</TitleSelect>
+            <TextInput
+              placeholder="Ex: Sorteio Setembro 2025"
+              value={ruleName}
+              onChangeText={setRuleName}
+              style={{
+                borderWidth: 1,
+                borderColor: "#ccc",
+                borderRadius: 8,
+                padding: 10,
+                marginBottom: 12,
+                fontSize: 14,
+              }}
             />
+            <Subtitle>Selecione o estado, cidades e participantes do sorteio</Subtitle>
+
+            <TitleSelect>Estado</TitleSelect>
+            {loadingStates ? (
+              <Subtitle>Carregando estados...</Subtitle>
+            ) : (
+              <SelectComponent
+                title="Selecionar Estado"
+                options={stateOptions}
+                action={(values) => setSelectedStates([...new Set(values)])}
+                multipleSelect
+                clear={selectedStates.length === 0}
+              />
+            )}
 
             <TitleSelect>Cidades</TitleSelect>
-            <SelectComponent
-              title="Selecionar Cidades"
-              options={cityOptions}
-              action={setSelectedCities}
-              multipleSelect
-              disabled={!selectedStore}
-            />
+            {loadingCities ? (
+              <Subtitle>Carregando cidades...</Subtitle>
+            ) : (
+              <SelectComponent
+                title="Selecionar Cidades"
+                options={cityOptions}
+                action={setSelectedCities}
+                multipleSelect
+                disabled={selectedStates.length === 0}
+                clear={selectedCities.length === 0}
+              />
+            )}
 
             <TitleSelect>Participantes</TitleSelect>
             {loadingCpfs ? (
@@ -362,45 +455,77 @@ const translateUserType = (userType) => {
                 action={(values) => setSelectedCpfs([...new Set(values)])}
                 multipleSelect
                 disabled={selectedCities.length === 0}
+                clear={cpfLabels.length === 0}
               />
             )}
           </>
         )}
 
-        {/* Tags dos CPFs selecionados */}
-        <TitleTags>Participantes Selecionados</TitleTags>
-        {selectedCpfs.length === 0 ? (
-          <Subtitle>Nenhum participante selecionado</Subtitle>
-        ) : (
-          <Scroll>
-            <ContentTags>
-              {selectedCpfs.map((cpf, index) => (
-                <ContentTagParticipant key={`${cpf}-${index}`}>
-                  <TagParticipant>{cpf}</TagParticipant>
-                  <ButtonRemoveTag
-                    onPress={() => setSelectedCpfs(prev => prev.filter(c => c !== cpf))}
-                  >
-                    <FontAwesome name="remove" size={18} color="white" />
-                  </ButtonRemoveTag>
-                </ContentTagParticipant>
-              ))}
-            </ContentTags>
-          </Scroll>
-        )}
+        {/* Tags dos participantes selecionados */}
+<TitleTags>Participantes Selecionados</TitleTags>
+
+{selectedCpfs.length === 0 ? (
+  <Subtitle>Nenhum participante selecionado</Subtitle>
+) : (
+  <>
+    {/* PRODUTORES */}
+    {produtores.length > 0 && (
+      <>
+        <TitleSelect>Produtores</TitleSelect>
+        <ContentTags>
+          {produtores.map((cpf, index) => (
+            <ContentTagParticipant key={`${cpf}-${index}`}>
+              <TagParticipant>{String(cpf || "")}</TagParticipant>
+              <ButtonRemoveTag
+                onPress={() =>
+                  setSelectedCpfs(prev => prev.filter(c => c !== cpf))
+                }
+              >
+                <FontAwesome name="remove" size={18} color="white" />
+              </ButtonRemoveTag>
+            </ContentTagParticipant>
+          ))}
+        </ContentTags>
+      </>
+    )}
+
+    {/* CLIENTES */}
+    {clientes.length > 0 && (
+      <>
+        <TitleSelect>Clientes</TitleSelect>
+        <ContentTags>
+          {clientes.map((cpf, index) => (
+            <ContentTagParticipant key={`${cpf}-${index}`}>
+              <TagParticipant>{String(cpf || "")}</TagParticipant>
+              <ButtonRemoveTag
+                onPress={() =>
+                  setSelectedCpfs(prev => prev.filter(c => c !== cpf))
+                }
+              >
+                <FontAwesome name="remove" size={18} color="white" />
+              </ButtonRemoveTag>
+            </ContentTagParticipant>
+          ))}
+        </ContentTags>
+      </>
+    )}
+  </>
+)}
+
+        {/* BOTÕES SEMPRE VISÍVEIS NO FINAL */}
+        <ContentButtons>
+          <ContentActions>
+            <ClearAll onPress={handleClearAll}>
+              <TextButton>Limpar Tudo</TextButton>
+            </ClearAll>
+            <ConfirmeButtom onPress={modeAll ? handleSaveAll : handleSave}>
+              <TextButton>Salvar Regra</TextButton>
+            </ConfirmeButtom>
+          </ContentActions>
+        </ContentButtons>
 
       </Content>
-
-      <ContentButtons>
-        <ContentActions>
-          <ClearAll onPress={handleClearAll}>
-            <TextButton>Limpar Tudo</TextButton>
-          </ClearAll>
-          <ConfirmeButtom onPress={modeAll ? handleSaveAll : handleSave}>
-            <TextButton>Salvar Regra</TextButton>
-          </ConfirmeButtom>
-        </ContentActions>
-      </ContentButtons>
-
-    </Container>
-  )
+    </Scroll>
+  </Container>
+)
 }

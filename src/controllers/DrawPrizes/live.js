@@ -13,7 +13,11 @@ import * as Sentry from "@sentry/react-native";
 import { firestore } from "../../services/Firebase";
 import { models } from "../../services/Firebase/models";
 
-export const createDrawPrizeLiveByCode = async (drawPrizeId, drawPrizeCode, drawPrizeName) => {
+export const createDrawPrizeLiveByCode = async (
+    drawPrizeId,
+    drawPrizeCode,
+    drawPrizeName,
+) => {
     try {
         const drawPrizeLiveDoc = doc(
             firestore,
@@ -21,21 +25,34 @@ export const createDrawPrizeLiveByCode = async (drawPrizeId, drawPrizeCode, draw
             drawPrizeId,
         );
 
-        await setDoc(drawPrizeLiveDoc, {
-            id: drawPrizeId,
-            code: drawPrizeCode,
-            name: drawPrizeName, // 👈 Felipe pediu campo para nome de sorteio
-            status: true,
-            participants: [],
-            winners: [],
-            createdAt: new Date(),
-            updatedAt: new Date(),
-        });
+        const response = await getDoc(drawPrizeLiveDoc);
+
+        const existingData = response.exists() ? response.data() : {};
+
+        const existingNames = existingData.names ?? [];
+
+        await setDoc(
+            drawPrizeLiveDoc,
+            {
+                id: drawPrizeId,
+                code: drawPrizeCode,
+
+                // 🔥 agora vira ARRAY
+                names: [],
+
+                status: true,
+                participants: existingData.participants ?? [],
+                winners: existingData.winners ?? [],
+
+                createdAt: existingData.createdAt ?? new Date(),
+                updatedAt: new Date(),
+            },
+            { merge: true },
+        );
 
         return true;
     } catch (error) {
         Sentry.captureException(error);
-
         return true;
     }
 };
@@ -227,11 +244,15 @@ export const getAllDrawPrizesLiveWhereParticipant = async (
         const querySnapshot = await getDocs(queryConfig);
 
         if (!querySnapshot.empty) {
-            const data = querySnapshot.docs.map((dataDoc) => dataDoc.data());
-            return {
-                error: false,
-                data,
-            };
+            const data = querySnapshot.docs
+                .map((dataDoc) => dataDoc.data())
+                .filter(item => item.status === true)  // ← filtra só ativos
+
+            if (data.length === 0) {
+                return { error: true, data: [] };
+            }
+
+            return { error: false, data };
         }
 
         return {
@@ -245,6 +266,26 @@ export const getAllDrawPrizesLiveWhereParticipant = async (
             error: true,
             data: [],
         };
+    }
+};
+
+// Criada para atualizar o array names no Firestore quando executar um novo sorteio.
+export const updateDrawPrizeLiveNames = async (drawPrizeId, prizeName) => {
+    try {
+        const drawPrizeLiveDoc = doc(firestore, models.drawPrizesLive, drawPrizeId);
+        const snapshot = await getDoc(drawPrizeLiveDoc);
+        const existingNames = snapshot.data()?.names ?? [];
+
+        await setDoc(
+            drawPrizeLiveDoc,
+            { names: [...existingNames, prizeName] },
+            { merge: true }
+        );
+
+        return true;
+    } catch (error) {
+        Sentry.captureException(error);
+        return false;
     }
 };
 
