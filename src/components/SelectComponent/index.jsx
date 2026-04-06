@@ -7,6 +7,7 @@ import { FlatList, Modal, SafeAreaView } from "react-native";
 
 import { theme } from "../../styles/Theme";
 import { SearchBarSelect } from "./components/SearchBarSelect";
+import { View } from "react-native";
 
 import {
     ButtonHeader,
@@ -115,21 +116,21 @@ const SelectComponent = ({
         }
     };
 
-    const renderOptions = (item) => (
-        <>
-            <ButtonOption onPress={() => handleSelectOption(item)}>
-                <ButtonOptionText>{`${item}${sufix || ""}`}</ButtonOptionText>
-                {multipleSelect && dataMultipleSelect.includes(item) && (
-                    <Feather
-                        name="check"
-                        size={20}
-                        color={theme.colors.primary}
-                    />
-                )}
-            </ButtonOption>
-            <DividerOptions />
-        </>
-    );
+  const renderOptions = (item) => (
+    <View>
+        <ButtonOption onPress={() => handleSelectOption(item)}>
+            <ButtonOptionText>{typeof item === "string" ? item : ""}</ButtonOptionText>
+            {multipleSelect && dataMultipleSelect.includes(item) && (
+                <Feather
+                    name="check"
+                    size={20}
+                    color={theme.colors.primary}
+                />
+            )}
+        </ButtonOption>
+        <DividerOptions />
+    </View>
+);
 
     return (
         <Container style={style}>

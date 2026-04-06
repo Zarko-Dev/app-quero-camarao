@@ -8,6 +8,7 @@ import { ActivityIndicator } from "react-native-paper";
 import { Entypo } from "@expo/vector-icons";
 import { useTheme } from "styled-components";
 import { getDrawPrizeLiveById } from "../../../controllers/DrawPrizes/live";
+import { Linking } from "react-native";
 
 import lottieLoadingDrawPrize from "../../../assets/lotties/lottieLoadingDrawPrize.json";
 import lottieWinDrawPrize from "../../../assets/lotties/lottieWinDrawPrize.json";
@@ -70,21 +71,20 @@ export const DrawPrizeWinnersResult = ({ route, navigation }) => {
     const animation = useRef(null);
 
 
-    useEffect(() => {
+useEffect(() => {
     const loadWinners = async () => {
-        console.log('newWinnersCount:', newWinnersCount); // 👈 verifica o valor
         if (drawerPrizeLiveId) {
             const response = await getDrawPrizeLiveById(drawerPrizeLiveId);
             if (!response.error) {
                 const allWinners = response.data.winners ?? [];
-                
-                // 👈 se veio do sorteio agora, pega só os novos
                 if (newWinnersCount) {
                     setUsersWinner(allWinners.slice(-newWinnersCount));
                 } else {
                     setUsersWinner(allWinners);
                 }
             }
+        } else {
+            setUsersWinner(route.params.usersWinner ?? []); // 👈 usa os do histórico
         }
     };
 
@@ -125,6 +125,28 @@ export const DrawPrizeWinnersResult = ({ route, navigation }) => {
     const handleRedirectUserDetailed = (dataUser) => {
         navigation.navigate(dataRoutes.admin.userDetailed, { dataUser });
     };
+    
+    //Compartilha para o zap do ganhador do sorteio
+        const shareOnWhatsApp = (user) => {
+            if (!user?.phone) {
+                alert("Usuário não possui telefone!");
+                return;
+            }
+
+            // 👇 cria variável nova (não mexe no user)
+            let phoneFormatted = user.phone.replace(/\D/g, "");
+
+            if (!phoneFormatted.startsWith("55")) {
+                phoneFormatted = "55" + phoneFormatted;
+            }
+
+            const text = `🎉 Parabéns ${user.name}!
+        Você foi um dos ganhadores do sorteio! 🏆`;
+
+            const url = `https://wa.me/${phoneFormatted}?text=${encodeURIComponent(text)}`;
+
+            Linking.openURL(url);
+        };
 
     const handleActionButton = () => {
         if (showOnlyResults || backAfterSave) {
@@ -134,6 +156,7 @@ export const DrawPrizeWinnersResult = ({ route, navigation }) => {
         }
     };
 
+    //Não está sendo usado pois salva agora direto após a digitação do nome do sorteio no input
     const hadleSaveDrawPrizeHistory = async () => {
         setIsLoading(true);
 
@@ -197,84 +220,69 @@ export const DrawPrizeWinnersResult = ({ route, navigation }) => {
                 <>
                     <Header>
                         <Title>Vencedores do Sorteio</Title>
-                        <DrawPizeShare
-                            onPress={() =>
-                                handleRedirectPage(usersWinner, navigation)
-                            }
-                        >
-                            <Entypo
-                                name="share"
-                                color={theme.colors.white}
-                                size={28}
-                            />
-                        </DrawPizeShare>
+                   <DrawPizeShare
+                        onPress={() =>
+                            handleRedirectPage(usersWinner, navigation)
+                        }
+                    >
+                        <Entypo
+                            name="share"
+                            color={theme.colors.white}
+                            size={28}
+                        />
+                    </DrawPizeShare>
+                     
                     </Header>
                     <ContainerCards>
-                        <ContentCards>
-                            {usersWinner.map((user) => (
-                                <CardUser
-                                    key={user.email}
-                                    onPress={() =>
-                                        handleRedirectUserDetailed(user)
-                                    }
-                                >
-                                    <ContentShareUser>
-                                        <DrawPizeShare
-                                            onPress={() =>
-                                                handleRedirectPage(
-                                                    [user],
-                                                    navigation,
-                                                )
-                                            }
-                                        >
-                                            <Entypo
-                                                name="share"
-                                                color={theme.colors.white}
-                                                size={28}
-                                            />
-                                        </DrawPizeShare>
-                                    </ContentShareUser>
-                                    <UserImage
-                                        source={{
-                                            uri: user?.userImage
-                                                ? user.userImage
-                                                : `https://ui-avatars.com/api/?background=random&rounded=true&bold=true&size=200&name=${
-                                                      user.name.split(" ")[0]
-                                                  }`,
-                                        }}
-                                    />
-                                    <UserNameTitle>{user.name}</UserNameTitle>
-                                    <PhoneTitle>
-                                        Tel:{" "}
-                                        {`(**) ****${user?.phone?.substring(user.phone.length - 6)}`}
-                                    </PhoneTitle>
-                                    <LocationTitle>
-                                        {user.userType === "productor"
-                                            ? user.address.city
-                                            : user.city}{" "}
-                                        -{" "}
-                                        {user.userType === "productor"
-                                            ? user.address.state
-                                            : user.state}
-                                    </LocationTitle>
-                                </CardUser>
-                            ))}
-                        </ContentCards>
+                        <ContainerCards>
+                    <ContentCards>
+                        {usersWinner.map((user) => (
+                            <CardUser
+                                key={user.email}
+                                onPress={() => handleRedirectUserDetailed(user)}
+                            >
+                                <ContentShareUser>
+                                    <DrawPizeShare
+                                        onPress={() => shareOnWhatsApp(user)}
+                                    >
+                                        <Entypo
+                                            name="share"
+                                            color={theme.colors.white}
+                                            size={28}
+                                        />
+                                    </DrawPizeShare>
+                                </ContentShareUser>
+                                <UserImage
+                                    source={{
+                                        uri: user?.userImage
+                                            ? user.userImage
+                                            : `https://ui-avatars.com/api/?background=random&rounded=true&bold=true&size=200&name=${
+                                                user.name.split(" ")[0]
+                                            }`,
+                                    }}
+                                />
+                                <UserNameTitle>{user.name}</UserNameTitle>
+                                <PhoneTitle>
+                                    Tel:{" "}
+                                    {`(**) ****${user?.phone?.substring(user.phone.length - 6)}`}
+                                </PhoneTitle>
+                                <PhoneTitle>
+                                    CPF: {user?.cpf ?? "Não informado"}
+                                </PhoneTitle>
+                             <LocationTitle>
+                            {user.userType === "productor"
+                                ? user?.address?.city ?? "Cidade não informada"
+                                : user?.city ?? "Cidade não informada"}{" "}
+                            -{" "}
+                            {user.userType === "productor"
+                                ? user?.address?.state ?? "Estado não informado"
+                                : user?.state ?? "Estado não informado"}
+                        </LocationTitle>
+                            </CardUser>
+                        ))}
+                    </ContentCards>
+                </ContainerCards>
                     </ContainerCards>
-                    <SaveDrawPrize
-                        onPress={handleActionButton}
-                        changeColor={showOnlyResults || backAfterSave}
-                    >
-                        {!isLoading ? (
-                            <TextButton>
-                                {showOnlyResults || backAfterSave
-                                    ? "Voltar"
-                                    : "Salvar Sorteio"}
-                            </TextButton>
-                        ) : (
-                            <ActivityIndicator animating color="white" />
-                        )}
-                    </SaveDrawPrize>
                     {showOnlyResults && (
                         <SaveDrawPrize onPress={hadleDeleteDrawPrizeHistory}>
                             {!isLoadingDelete ? (
