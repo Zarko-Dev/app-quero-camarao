@@ -25,59 +25,73 @@ export const AlertNewVersion = () => {
 
     useEffect(() => {
         const getConfig = async () => {
-            console.log(process.env.STATUS_PROJECT);
-            if (process.env.STATUS_PROJECT === "production") {
+            try {
+                if (process.env.STATUS_PROJECT !== "production") {
+                    return;
+                }
+
                 const resultConfig = await getConfigData();
 
-                if (!resultConfig.error) {
-                    setUrls({
-                        android: resultConfig.data.androidUri,
-                        ios: resultConfig.data.iosUri,
-                    });
-
-                    dispatch({
-                        type: ConfigDataActions.SET_CONFIG_DATA_ACTION,
-                        configData: resultConfig.data,
-                    });
-
-                    if (
-                        `${resultConfig.data.versionNumber}` !==
-                        `${nativeApplicationVersion}`
-                    ) {
-                        setDialogVersionVisible(true);
-                    }
-
-                    if (resultConfig.data.notificationAlertMessage !== "") {
-                        setDialogNotificationVisible(true);
-                        setDialogNotificationMessage(
-                            resultConfig.data.notificationAlertMessage,
-                        );
-                    }
+                if (resultConfig.error || !resultConfig.data) {
+                    return;
                 }
+
+                setUrls({
+                    android: resultConfig.data.androidUri ?? "",
+                    ios: resultConfig.data.iosUri ?? "",
+                });
+
+                dispatch({
+                    type: ConfigDataActions.SET_CONFIG_DATA_ACTION,
+                    configData: resultConfig.data,
+                });
+
+                if (
+                    `${resultConfig.data.versionNumber}` !==
+                    `${nativeApplicationVersion ?? ""}`
+                ) {
+                    setDialogVersionVisible(true);
+                }
+
+                if (resultConfig.data.notificationAlertMessage) {
+                    setDialogNotificationVisible(true);
+                    setDialogNotificationMessage(
+                        resultConfig.data.notificationAlertMessage,
+                    );
+                }
+            } catch (error) {
+                console.error(
+                    "Erro ao buscar configuracoes de inicializacao:",
+                    error,
+                );
             }
         };
 
         getConfig();
-    }, []);
+    }, [dispatch]);
 
     const handleRedirectUpdateApp = () => {
         const platform = Platform.OS;
 
         switch (platform) {
             case "android":
-                Linking.openURL(urls.android);
+                if (urls.android) {
+                    Linking.openURL(urls.android);
+                }
                 setDialogVersionVisible(false);
                 break;
 
             case "ios":
-                Linking.openURL(urls.ios);
+                if (urls.ios) {
+                    Linking.openURL(urls.ios);
+                }
                 setDialogVersionVisible(false);
                 break;
 
             default:
                 Toast.show({
                     type: "error",
-                    text1: "Plataforma inválida para atualização!",
+                    text1: "Plataforma invalida para atualizacao!",
                 });
                 break;
         }
@@ -87,8 +101,8 @@ export const AlertNewVersion = () => {
         <Container>
             <DialogComponent
                 visible={dialogVersionVisible && !dialogNotificationVisible}
-                title="Nova versão disponível!"
-                text="Atualize a Quero Camarão e não perca nenhuma novidade!"
+                title="Nova versao disponivel!"
+                text="Atualize a Quero Camarao e nao perca nenhuma novidade!"
                 textActionButton="Atualizar"
                 actionButton={() => handleRedirectUpdateApp()}
                 textSecondaryActionButton="Continuar"
@@ -98,7 +112,7 @@ export const AlertNewVersion = () => {
             />
             <DialogComponent
                 visible={dialogNotificationVisible}
-                title="Atenção!"
+                title="Atencao!"
                 text={dialogNotificationMessage}
                 textActionButton="OK"
                 actionButton={() => setDialogNotificationVisible(false)}

@@ -1,46 +1,9 @@
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
-import { NavigationMenu } from "./navigationMenu";
 import { dataRoutes, linking } from "./dataRoutes";
 
 import { theme } from "../styles/Theme";
-
-import { Login } from "../pages/Login";
-import { Register } from "../pages/Register";
-import { UseTerms } from "../pages/UseTerms";
-import { Publication } from "../pages/Publication";
-import { Redirect } from "../pages/Redirect";
-import { Camera } from "../pages/Camera";
-import { Payment } from "../pages/Payment";
-import { Address } from "../pages/Address";
-import { RegisterDiscountCupom } from "../pages/RegisterDiscountCupom";
-import { RestPassowrd } from "../pages/RestPassowrd";
-import { PersonalData } from "../pages/PersonalData";
-import { PaymentEnd } from "../pages/PaymentEnd";
-import { PaymentWeb } from "../pages/PaymentWeb";
-import { ValidateInvitation } from "../pages/ValidateInvitation";
-import { RegisterMyAds } from "../pages/RegisterMyAds";
-import { DeleteUser } from "../pages/DeleteUser";
-import { DetailsTransactionPayment } from "../pages/Admin/DetailsTransactionPayment";
-import { PublicationViewLogsList } from "../pages/Admin/PublicationViewLogsList";
-import { UserDetailed } from "../pages/Admin/UserDetailed";
-import { UserPublications } from "../pages/Admin/UserPublications";
-import { UsersList } from "../pages/Admin/UsersList";
-import { PublicationViewLogs } from "../pages/PublicationViewLogs";
-import { QRCodePix } from "../pages/QRCodePix";
-import { DrawPrizeHistory } from "../pages/Admin/DrawPrizeHistory";
-import { ReceivedNotifications } from "../pages/ReceivedNotifications";
-import { AdsList } from "../pages/AdsList";
-import { UserProductorClientList } from "../pages/Admin/UserProductorClientList";
-import { DrawPrizeLive } from "../pages/Admin/DrawPrizeLive";
-import { DrawPrize } from "../pages/Admin/DrawPrize";
-import { DrawPrizeNew } from "../pages/Admin/DrawPrize/DrawPrizeNew";
-import { SaleShrimps } from "../pages/SaleShrimps";
-import { SalesList } from "../pages/SalesList";
-import { SplashScreen } from "../pages/SplashScreen";
-import { DrawPrizeNewWinnerResult } from "../pages/Admin/DrawPrizeNewWinnerResult";
-import { DrawPrizeWinnersResult } from "../pages/Admin/DrawPrizeWinnersResult";
 
 const { Navigator, Screen } = createNativeStackNavigator();
 
@@ -54,22 +17,24 @@ export const Routes = () => (
         >
             <Screen
                 name={dataRoutes.splash}
-                component={SplashScreen}
+                getComponent={() =>
+                    require("../pages/SplashScreen").SplashScreen
+                }
                 options={{ headerShown: false }}
             />
             <Screen
                 name={dataRoutes.navigation}
-                component={NavigationMenu}
+                getComponent={() => require("./navigationMenu").NavigationMenu}
                 options={{ headerShown: false }}
             />
             <Screen
                 name={dataRoutes.login}
-                component={Login}
+                getComponent={() => require("../pages/Login").Login}
                 options={{ headerShown: false }}
             />
             <Screen
                 name={dataRoutes.register}
-                component={Register}
+                getComponent={() => require("../pages/Register").Register}
                 options={{
                     title: "Cadastro",
                     headerStyle: { backgroundColor: theme.colors.primary },
@@ -78,7 +43,7 @@ export const Routes = () => (
             />
             <Screen
                 name={dataRoutes.useTerms}
-                component={UseTerms}
+                getComponent={() => require("../pages/UseTerms").UseTerms}
                 options={{
                     title: "Termos de uso",
                     headerStyle: { backgroundColor: theme.colors.primary },
@@ -87,7 +52,7 @@ export const Routes = () => (
             />
             <Screen
                 name={dataRoutes.publication}
-                component={Publication}
+                getComponent={() => require("../pages/Publication").Publication}
                 options={{
                     title: "Publicar meu Camarão",
                     headerStyle: { backgroundColor: theme.colors.primary },
@@ -96,17 +61,17 @@ export const Routes = () => (
             />
             <Screen
                 name={dataRoutes.redirect}
-                component={Redirect}
+                getComponent={() => require("../pages/Redirect").Redirect}
                 options={{ headerShown: false }}
             />
             <Screen
                 name={dataRoutes.camera}
-                component={Camera}
+                getComponent={() => require("../pages/Camera").Camera}
                 options={{ headerShown: false }}
             />
             <Screen
                 name={dataRoutes.payment}
-                component={Payment}
+                getComponent={() => require("../pages/Payment").Payment}
                 options={{
                     title: "Pagamento",
                     headerStyle: { backgroundColor: theme.colors.primary },
@@ -115,7 +80,7 @@ export const Routes = () => (
             />
             <Screen
                 name={dataRoutes.address}
-                component={Address}
+                getComponent={() => require("../pages/Address").Address}
                 options={{
                     title: "Endereço",
                     headerStyle: { backgroundColor: theme.colors.primary },
@@ -124,7 +89,10 @@ export const Routes = () => (
             />
             <Screen
                 name={dataRoutes.registerDiscountCupon}
-                component={RegisterDiscountCupom}
+                getComponent={() =>
+                    require("../pages/RegisterDiscountCupom")
+                        .RegisterDiscountCupom
+                }
                 options={{
                     title: "Cadastrar Cupom",
                     headerStyle: { backgroundColor: theme.colors.primary },
@@ -133,7 +101,9 @@ export const Routes = () => (
             />
             <Screen
                 name={dataRoutes.resetPassword}
-                component={RestPassowrd}
+                getComponent={() =>
+                    require("../pages/RestPassowrd").RestPassowrd
+                }
                 options={{
                     title: "Recuperar Senha",
                     headerStyle: { backgroundColor: theme.colors.primary },
@@ -142,7 +112,9 @@ export const Routes = () => (
             />
             <Screen
                 name={dataRoutes.personalData}
-                component={PersonalData}
+                getComponent={() =>
+                    require("../pages/PersonalData").PersonalData
+                }
                 options={{
                     title: "Meus Dados Pessoais",
                     headerStyle: { backgroundColor: theme.colors.primary },
@@ -151,22 +123,26 @@ export const Routes = () => (
             />
             <Screen
                 name={dataRoutes.paymentWeb}
-                component={PaymentWeb}
+                getComponent={() => require("../pages/PaymentWeb").PaymentWeb}
                 options={{ headerShown: false }}
             />
             <Screen
                 name={dataRoutes.paymentEnd}
-                component={PaymentEnd}
+                getComponent={() => require("../pages/PaymentEnd").PaymentEnd}
                 options={{ headerShown: false }}
             />
             <Screen
                 name={dataRoutes.validateInvitation}
-                component={ValidateInvitation}
+                getComponent={() =>
+                    require("../pages/ValidateInvitation").ValidateInvitation
+                }
                 options={{ headerShown: false }}
             />
             <Screen
                 name={dataRoutes.registerMyAds}
-                component={RegisterMyAds}
+                getComponent={() =>
+                    require("../pages/RegisterMyAds").RegisterMyAds
+                }
                 options={{
                     title: "Nova Publicidade",
                     headerStyle: { backgroundColor: theme.colors.primary },
@@ -175,7 +151,7 @@ export const Routes = () => (
             />
             <Screen
                 name={dataRoutes.deleteUser}
-                component={DeleteUser}
+                getComponent={() => require("../pages/DeleteUser").DeleteUser}
                 options={{
                     title: "Não nos deixe!",
                     headerStyle: { backgroundColor: theme.colors.primary },
@@ -184,7 +160,10 @@ export const Routes = () => (
             />
             <Screen
                 name={dataRoutes.admin.detailsTransactionPayment}
-                component={DetailsTransactionPayment}
+                getComponent={() =>
+                    require("../pages/Admin/DetailsTransactionPayment")
+                        .DetailsTransactionPayment
+                }
                 options={{
                     title: "Detalhes da transação!",
                     headerStyle: { backgroundColor: theme.colors.primary },
@@ -193,7 +172,10 @@ export const Routes = () => (
             />
             <Screen
                 name={dataRoutes.admin.publicationViewLogsList}
-                component={PublicationViewLogsList}
+                getComponent={() =>
+                    require("../pages/Admin/PublicationViewLogsList")
+                        .PublicationViewLogsList
+                }
                 options={{
                     title: "Visualizar por Publicações!",
                     headerStyle: { backgroundColor: theme.colors.primary },
@@ -202,7 +184,9 @@ export const Routes = () => (
             />
             <Screen
                 name={dataRoutes.admin.usersList}
-                component={UsersList}
+                getComponent={() =>
+                    require("../pages/Admin/UsersList").UsersList
+                }
                 options={{
                     title: "Usuários!",
                     headerStyle: { backgroundColor: theme.colors.primary },
@@ -211,7 +195,10 @@ export const Routes = () => (
             />
             <Screen
                 name={dataRoutes.admin.userProductorClientList}
-                component={UserProductorClientList}
+                getComponent={() =>
+                    require("../pages/Admin/UserProductorClientList")
+                        .UserProductorClientList
+                }
                 options={{
                     title: "Usuários!",
                     headerStyle: { backgroundColor: theme.colors.primary },
@@ -220,7 +207,9 @@ export const Routes = () => (
             />
             <Screen
                 name={dataRoutes.admin.userDetailed}
-                component={UserDetailed}
+                getComponent={() =>
+                    require("../pages/Admin/UserDetailed").UserDetailed
+                }
                 options={{
                     title: "Detalhes do usuário!",
                     headerStyle: { backgroundColor: theme.colors.primary },
@@ -229,7 +218,9 @@ export const Routes = () => (
             />
             <Screen
                 name={dataRoutes.admin.userPublications}
-                component={UserPublications}
+                getComponent={() =>
+                    require("../pages/Admin/UserPublications").UserPublications
+                }
                 options={{
                     title: "Publicações do usuário!",
                     headerStyle: { backgroundColor: theme.colors.primary },
@@ -238,7 +229,9 @@ export const Routes = () => (
             />
             <Screen
                 name={dataRoutes.publicationViewLogs}
-                component={PublicationViewLogs}
+                getComponent={() =>
+                    require("../pages/PublicationViewLogs").PublicationViewLogs
+                }
                 options={{
                     title: "Listagem de Visualizações!",
                     headerStyle: { backgroundColor: theme.colors.primary },
@@ -247,7 +240,7 @@ export const Routes = () => (
             />
             <Screen
                 name={dataRoutes.qrCodePix}
-                component={QRCodePix}
+                getComponent={() => require("../pages/QRCodePix").QRCodePix}
                 options={{
                     title: "Pagamento via PIX!",
                     headerStyle: { backgroundColor: theme.colors.primary },
@@ -256,7 +249,10 @@ export const Routes = () => (
             />
             <Screen
                 name={dataRoutes.admin.drawPrizeNewWinnerResult}
-                component={DrawPrizeNewWinnerResult}
+                getComponent={() =>
+                    require("../pages/Admin/DrawPrizeNewWinnerResult")
+                        .DrawPrizeNewWinnerResult
+                }
                 options={{
                     title: "Vencedores do Sorteio!",
                     headerStyle: { backgroundColor: theme.colors.primary },
@@ -266,7 +262,10 @@ export const Routes = () => (
             />
             <Screen
                 name={dataRoutes.admin.drawPrizeWinnerResult}
-                component={DrawPrizeWinnersResult}
+                getComponent={() =>
+                    require("../pages/Admin/DrawPrizeWinnersResult")
+                        .DrawPrizeWinnersResult
+                }
                 options={{
                     title: "Vencedores do Sorteio!",
                     headerStyle: { backgroundColor: theme.colors.primary },
@@ -276,7 +275,9 @@ export const Routes = () => (
             />
             <Screen
                 name={dataRoutes.admin.drawPrizeHistory}
-                component={DrawPrizeHistory}
+                getComponent={() =>
+                    require("../pages/Admin/DrawPrizeHistory").DrawPrizeHistory
+                }
                 options={{
                     title: "Histórico de Sorteios!",
                     headerStyle: { backgroundColor: theme.colors.primary },
@@ -285,7 +286,9 @@ export const Routes = () => (
             />
             <Screen
                 name={dataRoutes.admin.drawPrizeNew}
-                component={DrawPrizeNew}
+                getComponent={() =>
+                    require("../pages/Admin/DrawPrize/DrawPrizeNew").DrawPrizeNew
+                }
                 options={{
                     title: "Sorteio!",
                     headerStyle: { backgroundColor: theme.colors.primary },
@@ -294,7 +297,9 @@ export const Routes = () => (
             />
             <Screen
                 name={dataRoutes.admin.drawPrizeLive}
-                component={DrawPrizeLive}
+                getComponent={() =>
+                    require("../pages/Admin/DrawPrizeLive").DrawPrizeLive
+                }
                 options={{
                     title: "Sorteio ao Vivo!",
                     headerStyle: { backgroundColor: theme.colors.primary },
@@ -303,7 +308,10 @@ export const Routes = () => (
             />
             <Screen
                 name={dataRoutes.receivedNotifications}
-                component={ReceivedNotifications}
+                getComponent={() =>
+                    require("../pages/ReceivedNotifications")
+                        .ReceivedNotifications
+                }
                 options={{
                     title: "Minhas Notificações!",
                     headerStyle: { backgroundColor: theme.colors.primary },
@@ -312,7 +320,7 @@ export const Routes = () => (
             />
             <Screen
                 name={dataRoutes.adsList}
-                component={AdsList}
+                getComponent={() => require("../pages/AdsList").AdsList}
                 options={{
                     title: "Publicidades!",
                     headerStyle: { backgroundColor: theme.colors.primary },
@@ -321,7 +329,7 @@ export const Routes = () => (
             />
             <Screen
                 name={dataRoutes.salesShrimps}
-                component={SaleShrimps}
+                getComponent={() => require("../pages/SaleShrimps").SaleShrimps}
                 options={{
                     title: "Venda de Camarões!",
                     headerStyle: { backgroundColor: theme.colors.primary },
@@ -330,7 +338,7 @@ export const Routes = () => (
             />
             <Screen
                 name={dataRoutes.salesList}
-                component={SalesList}
+                getComponent={() => require("../pages/SalesList").SalesList}
                 options={{
                     title: "Camarões Vendidos!",
                     headerStyle: { backgroundColor: theme.colors.primary },

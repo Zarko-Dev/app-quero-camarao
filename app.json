@@ -3,7 +3,8 @@
         "name": "Quero Camarao",
         "slug": "mobile-quero-camarao",
         "scheme": "querocamarao",
-        "version": "1.1.12",
+        "owner": "querocamarao",
+        "version": "1.1.17",
         "orientation": "portrait",
         "icon": "./assets/icon.png",
         "userInterfaceStyle": "light",
@@ -14,7 +15,7 @@
         },
         "assetBundlePatterns": ["**/*"],
         "ios": {
-            "buildNumber": "47",
+            "buildNumber": "59",
             "supportsTablet": true,
             "infoPlist": {
                 "NSFaceIDUsageDescription": "Permitir que a Quero Camarão use seu Face ID para acessar o aplicativo.",

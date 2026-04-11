@@ -4,11 +4,7 @@ import { FontAwesome } from "@expo/vector-icons";
 import { dataRoutes } from "./dataRoutes";
 
 import { Header } from "../components/Header";
-
-import { Home } from "../pages/Admin/Home";
 import { theme } from "../styles/Theme";
-import { Charts } from "../pages/Admin/Charts";
-import { Users } from "../pages/Admin/Users";
 
 const { Navigator, Screen } = createBottomTabNavigator();
 
@@ -57,7 +53,7 @@ export const AdminTabNavigation = () => (
     >
         <Screen
             name={dataRoutes.admin.home}
-            component={Home}
+            getComponent={() => require("../pages/Admin/Home").Home}
             options={{
                 title: "Início",
                 header: (props) => <Header {...props} />,
@@ -65,7 +61,7 @@ export const AdminTabNavigation = () => (
         />
         <Screen
             name={dataRoutes.admin.charts}
-            component={Charts}
+            getComponent={() => require("../pages/Admin/Charts").Charts}
             options={{
                 title: "Gráficos",
                 header: (props) => <Header {...props} />,
@@ -73,7 +69,7 @@ export const AdminTabNavigation = () => (
         />
         <Screen
             name={dataRoutes.admin.users}
-            component={Users}
+            getComponent={() => require("../pages/Admin/Users").Users}
             options={{
                 title: "Usuários",
                 header: (props) => <Header {...props} />,

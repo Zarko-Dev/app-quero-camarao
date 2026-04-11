@@ -16,7 +16,7 @@ let storage;
 let firestoreInstance;
 
 try {
-    if (!getApps.length) {
+    if (!getApps().length) {
         firebaseApp = initializeApp(config);
 
         initializeAuth(firebaseApp, {
@@ -31,12 +31,15 @@ try {
 
         storage = getStorage(firebaseApp);
     } else {
-        firestore = null;
-        firestoreInstance = null;
+        firebaseApp = getApps()[0];
+        firestore = getFirestore(firebaseApp);
+        firestoreInstance = firestore;
+        storage = getStorage(firebaseApp);
     }
 } catch (error) {
     Sentry.captureException(error);
 
+    firebaseApp = null;
     firestore = null;
     storage = null;
     firestoreInstance = null;

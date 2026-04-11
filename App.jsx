@@ -1,8 +1,8 @@
 import "react-native-gesture-handler";
 import "react-native-get-random-values";
 
-import { useEffect } from "react";
-import { Platform } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { AppState, InteractionManager, Platform } from "react-native";
 import { pt, registerTranslation } from "react-native-paper-dates";
 import { ThemeProvider } from "styled-components/native";
 import { Provider as PaperProvider } from "react-native-paper";
@@ -43,9 +43,11 @@ Notifications.setNotificationHandler({
 
 ignoreLogs();
 
+let translationInitialized = false;
+
 Sentry.init({
     dsn: process.env.SENTRY_DNS,
-    debug: !process.env.STATUS_PROJECT === "production",
+    debug: process.env.STATUS_PROJECT !== "production",
     tracesSampleRate: process.env.STATUS_PROJECT === "production" ? 0.5 : 1.0,
     _experiments: {
         profilesSampleRate: 1.0,
@@ -53,49 +55,112 @@ Sentry.init({
 });
 
 const App = () => {
-    registerTranslation("pt", pt);
-    const isConnected = useInternetConnection();
+    if (!translationInitialized) {
+        registerTranslation("pt", pt);
+        translationInitialized = true;
+    }
 
-    // Configurar as cores do sistema UI
+    const [startupReady, setStartupReady] = useState(false);
+    const bootstrapExecutedRef = useRef(false);
+    const isConnected = useInternetConnection(startupReady);
+
     useSystemUI();
 
     useEffect(() => {
-        (async () => {
-            // Configurar as cores do sistema UI
-            if (Platform.OS === "android") {
-                await SystemUI.setBackgroundColorAsync("#F05829");
+        let isMounted = true;
+
+        const bootstrapApplication = async () => {
+            if (bootstrapExecutedRef.current || !isMounted) {
+                return;
             }
 
-            await Notifications.setBadgeCountAsync(0);
+            bootstrapExecutedRef.current = true;
 
-            if (Platform.OS === "ios") {
-                const { status } = await requestTrackingPermissionsAsync();
-
-                if (status !== "granted") {
-                    Toast.show({
-                        type: "error",
-                        text1: "Permissão de rasterio de dados é necessário!",
-                        text2: "Precisamos de acesso ao seu email e informações de pagamento somente dentro do aplicativo!",
-                    });
+            try {
+                if (Platform.OS === "android") {
+                    await SystemUI.setBackgroundColorAsync("#F05829");
                 }
 
-                await Notifications.requestPermissionsAsync({
-                    ios: {
-                        allowAlert: true,
-                        allowBadge: true,
-                        allowSound: true,
-                    },
+                await new Promise((resolve) => {
+                    InteractionManager.runAfterInteractions(() => resolve());
                 });
-            } else {
-                await Notifications.requestPermissionsAsync({
-                    android: {
-                        allowAlert: true,
-                        allowBadge: true,
-                        allowSound: true,
-                    },
+
+                await new Promise((resolve) => {
+                    setTimeout(resolve, 500);
                 });
+
+                if (Platform.OS === "ios") {
+                    try {
+                        const { status } = await requestTrackingPermissionsAsync();
+
+                        if (status !== "granted") {
+                            Toast.show({
+                                type: "error",
+                                text1: "Permissao de rastreio e necessaria!",
+                                text2: "Precisamos do acesso apenas para recursos internos do aplicativo.",
+                            });
+                        }
+                    } catch (error) {
+                        console.error(
+                            "Erro ao solicitar permissao de rastreio:",
+                            error,
+                        );
+                    }
+                }
+
+                try {
+                    const currentPermissions = await Notifications.getPermissionsAsync();
+
+                    if (currentPermissions.status !== "granted") {
+                        if (Platform.OS === "ios") {
+                            await Notifications.requestPermissionsAsync({
+                                ios: {
+                                    allowAlert: true,
+                                    allowBadge: true,
+                                    allowSound: true,
+                                },
+                            });
+                        } else {
+                            await Notifications.requestPermissionsAsync({
+                                android: {
+                                    allowAlert: true,
+                                    allowBadge: true,
+                                    allowSound: true,
+                                },
+                            });
+                        }
+                    }
+
+                    await Notifications.setBadgeCountAsync(0);
+                } catch (error) {
+                    console.error(
+                        "Erro ao solicitar permissao de notificacoes:",
+                        error,
+                    );
+                }
+            } catch (error) {
+                console.error("Erro durante a inicializacao do app:", error);
+            } finally {
+                if (isMounted) {
+                    setStartupReady(true);
+                }
             }
-        })();
+        };
+
+        if (AppState.currentState === "active") {
+            bootstrapApplication();
+        }
+
+        const subscription = AppState.addEventListener("change", (status) => {
+            if (status === "active") {
+                bootstrapApplication();
+            }
+        });
+
+        return () => {
+            isMounted = false;
+            subscription.remove();
+        };
     }, []);
 
     const [fontLoad] = useFonts({
@@ -119,7 +184,7 @@ const App = () => {
                             {isConnected ? <Routes /> : <InternetInfo />}
                         </KeyboardSafeContent>
                         <Toast />
-                        <AlertNewVersion />
+                        {startupReady && <AlertNewVersion />}
                     </ProviderRedux>
                 </PaperProvider>
             </ThemeProvider>

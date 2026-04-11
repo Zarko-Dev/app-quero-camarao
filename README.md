@@ -89,3 +89,13 @@ Após a instalação das dependências e configuração do `.env`, siga os passo
 
 4.  **Aguarde o Build**
     Na primeira vez que executar, o processo de build pode levar alguns minutos. Aguarde a instalação do aplicativo no dispositivo/emulador.
+
+
+
+
+    Para buildar para IOS é:
+    eas build --platform ios --profile production
+    eas submit --platform ios
+
+    ou de uma vez toda:
+    eas build --platform ios --profile production --auto-submit

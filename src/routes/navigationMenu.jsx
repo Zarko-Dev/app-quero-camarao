@@ -11,17 +11,6 @@ import { DrawerContent } from "../components/DrawerContent";
 
 import { theme } from "../styles/Theme";
 
-import { Home } from "../pages/Home";
-import { Profile } from "../pages/Profile";
-import { MyPublications } from "../pages/MyPublications";
-import { UseTerms } from "../pages/UseTerms";
-import { PaymentOrders } from "../pages/PaymentOrders";
-import { Help } from "../pages/Help";
-import { Invitations } from "../pages/Invitations";
-import { MyAds } from "../pages/MyAds";
-import { NavigationAdminMenu } from "./AdminRoutes";
-import { DrawerPrizeLiveClient } from "../pages/DrawerPrizeLiveClient";
-
 const { Navigator, Screen } = createDrawerNavigator();
 
 export const NavigationMenu = () => {
@@ -51,7 +40,7 @@ export const NavigationMenu = () => {
         >
             <Screen
                 name={dataRoutes.home}
-                component={Home}
+                getComponent={() => require("../pages/Home").Home}
                 options={{
                     title: "Início",
                     header: (props) => <Header {...props} />,
@@ -63,7 +52,7 @@ export const NavigationMenu = () => {
             {isAuthenticated && (
                 <Screen
                     name={dataRoutes.profile}
-                    component={Profile}
+                    getComponent={() => require("../pages/Profile").Profile}
                     options={{
                         title: "Meus dados",
                         header: (props) => <Header {...props} />,
@@ -76,7 +65,9 @@ export const NavigationMenu = () => {
             {isAuthenticated && userType === "productor" && (
                 <Screen
                     name={dataRoutes.myPublications}
-                    component={MyPublications}
+                    getComponent={() =>
+                        require("../pages/MyPublications").MyPublications
+                    }
                     options={{
                         title: "Meus camarões",
                         header: (props) => <Header {...props} />,
@@ -89,7 +80,9 @@ export const NavigationMenu = () => {
             {isAuthenticated && userType === "productor" && (
                 <Screen
                     name={dataRoutes.paymentOrders}
-                    component={PaymentOrders}
+                    getComponent={() =>
+                        require("../pages/PaymentOrders").PaymentOrders
+                    }
                     options={{
                         title: "Meus Pagamentos",
                         header: (props) => <Header {...props} />,
@@ -106,7 +99,7 @@ export const NavigationMenu = () => {
             {isAuthenticated && (
                 <Screen
                     name={dataRoutes.myAds}
-                    component={MyAds}
+                    getComponent={() => require("../pages/MyAds").MyAds}
                     options={{
                         title: "Minhas Publicidades",
                         header: (props) => <Header {...props} />,
@@ -123,7 +116,9 @@ export const NavigationMenu = () => {
             {isAuthenticated && (
                 <Screen
                     name={dataRoutes.invitations}
-                    component={Invitations}
+                    getComponent={() =>
+                        require("../pages/Invitations").Invitations
+                    }
                     options={{
                         title: "Indique e ganhe",
                         header: (props) => <Header {...props} />,
@@ -140,7 +135,10 @@ export const NavigationMenu = () => {
             {isAuthenticated && (
                 <Screen
                     name={dataRoutes.drawerPrizeLiveClient}
-                    component={DrawerPrizeLiveClient}
+                    getComponent={() =>
+                        require("../pages/DrawerPrizeLiveClient")
+                            .DrawerPrizeLiveClient
+                    }
                     options={{
                         title: "Sorteio ao vivo",
                         header: (props) => <Header {...props} />,
@@ -153,7 +151,9 @@ export const NavigationMenu = () => {
             {userRules?.includes("Admin") && (
                 <Screen
                     name={dataRoutes.admin.navigation}
-                    component={NavigationAdminMenu}
+                    getComponent={() =>
+                        require("./AdminRoutes").NavigationAdminMenu
+                    }
                     options={{
                         title: "Administrador",
                         headerShown: false,
@@ -170,7 +170,7 @@ export const NavigationMenu = () => {
             )}
             <Screen
                 name={dataRoutes.useTerms}
-                component={UseTerms}
+                getComponent={() => require("../pages/UseTerms").UseTerms}
                 options={{
                     title: "Termos de Uso",
                     header: (props) => <Header {...props} />,
@@ -181,7 +181,7 @@ export const NavigationMenu = () => {
             />
             <Screen
                 name={dataRoutes.help}
-                component={Help}
+                getComponent={() => require("../pages/Help").Help}
                 options={{
                     title: "Ajuda",
                     header: (props) => <Header {...props} />,

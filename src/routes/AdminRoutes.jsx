@@ -8,18 +8,6 @@ import { DrawerContent } from "../components/DrawerContent";
 
 import { theme } from "../styles/Theme";
 
-import { DiscountCupons } from "../pages/DiscountCupons";
-import { RequestExtensionPublicationDate } from "../pages/Admin/RequestExtensionPublicationDate";
-import { ListPublishAds } from "../pages/Admin/ListPublishAds";
-import { AdminTabNavigation } from "./navigationTabs";
-import { Notification } from "../pages/Admin/Notification";
-import { ListPublishAdsActived } from "../pages/Admin/ListPublishAdsActived";
-import { ShrimpPrice } from "../pages/Admin/ShrimpPrice";
-import { DrawPrizeRulesNew } from "../pages/Admin/DrawPrizeRules/DrawPrizeRulesNew";
-import { DrawPrizeSelect } from "../pages/Admin/DrawPrizeSelect";
-import { DrawPrizeHistory } from "../pages/Admin/DrawPrizeHistory";
-import { DrawerPrizeLiveClient } from "../pages/DrawerPrizeLiveClient";
-
 const { Navigator, Screen } = createDrawerNavigator();
 
 export const NavigationAdminMenu = () => (
@@ -34,7 +22,7 @@ export const NavigationAdminMenu = () => (
     >
         <Screen
             name={dataRoutes.admin.navigationTab}
-            component={AdminTabNavigation}
+            getComponent={() => require("./navigationTabs").AdminTabNavigation}
             options={{
                 title: "Início Administrador",
                 header: (props) => <Header {...props} />,
@@ -46,7 +34,7 @@ export const NavigationAdminMenu = () => (
         />
         <Screen
             name={dataRoutes.admin.shrimpPrice}
-            component={ShrimpPrice}
+            getComponent={() => require("../pages/Admin/ShrimpPrice").ShrimpPrice}
             options={{
                 title: "Preço do Camarão",
                 header: (props) => <Header {...props} />,
@@ -57,7 +45,9 @@ export const NavigationAdminMenu = () => (
         />
         <Screen
             name={dataRoutes.discountCupons}
-            component={DiscountCupons}
+            getComponent={() =>
+                require("../pages/DiscountCupons").DiscountCupons
+            }
             options={{
                 title: "Cupons de Desconto",
                 header: (props) => <Header {...props} />,
@@ -68,7 +58,10 @@ export const NavigationAdminMenu = () => (
         />
         <Screen
             name={dataRoutes.admin.requestExtensionPublicationDate}
-            component={RequestExtensionPublicationDate}
+            getComponent={() =>
+                require("../pages/Admin/RequestExtensionPublicationDate")
+                    .RequestExtensionPublicationDate
+            }
             options={{
                 title: "Estenção de Data",
                 header: (props) => <Header {...props} />,
@@ -79,7 +72,9 @@ export const NavigationAdminMenu = () => (
         />
         <Screen
             name={dataRoutes.admin.listPublishAds}
-            component={ListPublishAds}
+            getComponent={() =>
+                require("../pages/Admin/ListPublishAds").ListPublishAds
+            }
             options={{
                 title: "Solici. de Publicidade",
                 header: (props) => <Header {...props} />,
@@ -90,7 +85,10 @@ export const NavigationAdminMenu = () => (
         />
         <Screen
             name={dataRoutes.admin.listPublishAdsActived}
-            component={ListPublishAdsActived}
+            getComponent={() =>
+                require("../pages/Admin/ListPublishAdsActived")
+                    .ListPublishAdsActived
+            }
             options={{
                 title: "Publicidades Ativas",
                 header: (props) => <Header {...props} />,
@@ -101,7 +99,9 @@ export const NavigationAdminMenu = () => (
         />
         <Screen
             name={dataRoutes.admin.notification}
-            component={Notification}
+            getComponent={() =>
+                require("../pages/Admin/Notification").Notification
+            }
             options={{
                 title: "Envio de Notificações",
                 header: (props) => <Header {...props} />,
@@ -112,7 +112,9 @@ export const NavigationAdminMenu = () => (
         />
         <Screen
             name={dataRoutes.admin.drawPrizeSelect}
-            component={DrawPrizeSelect}
+            getComponent={() =>
+                require("../pages/Admin/DrawPrizeSelect").DrawPrizeSelect
+            }
             options={{
                 title: "Sorteio",
                 header: (props) => <Header {...props} />,
@@ -123,7 +125,9 @@ export const NavigationAdminMenu = () => (
         />
         <Screen
             name={dataRoutes.admin.drawPrizeHistory}
-            component={DrawPrizeHistory}
+            getComponent={() =>
+                require("../pages/Admin/DrawPrizeHistory").DrawPrizeHistory
+            }
             options={{
                 title: "Histórico de Sorteios",
                 header: (props) => <Header {...props} />,
@@ -134,7 +138,10 @@ export const NavigationAdminMenu = () => (
         />
         <Screen
             name={dataRoutes.drawerPrizeLiveClient}
-            component={DrawerPrizeLiveClient}
+            getComponent={() =>
+                require("../pages/DrawerPrizeLiveClient")
+                    .DrawerPrizeLiveClient
+            }
             options={{
                 title: "Lista Sorteios ao Vivo",
                 header: (props) => <Header {...props} />,
@@ -145,7 +152,10 @@ export const NavigationAdminMenu = () => (
         />
         <Screen
             name={dataRoutes.admin.drawPrizeRulesNew}
-            component={DrawPrizeRulesNew}
+            getComponent={() =>
+                require("../pages/Admin/DrawPrizeRules/DrawPrizeRulesNew")
+                    .DrawPrizeRulesNew
+            }
             options={{
                 title: "Regras Sorteio",
                 header: (props) => <Header {...props} />,
