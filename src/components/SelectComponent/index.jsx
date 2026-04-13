@@ -110,7 +110,9 @@ const SelectComponent = ({
         } else {
             setDataOptions(
                 options.filter((item) =>
-                    item.toLowerCase().includes(value.toLowerCase()),
+                    (typeof item === "string" ? item : "")
+                        .toLowerCase()
+                        .includes((value || "").toLowerCase()),
                 ),
             );
         }

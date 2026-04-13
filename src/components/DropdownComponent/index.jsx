@@ -134,7 +134,9 @@ const DropdownComponent = ({
         } else {
             setDataOptions(
                 options.filter((item) =>
-                    item.label.toLowerCase().includes(value.toLowerCase()),
+                    (item?.label || "")
+                        .toLowerCase()
+                        .includes((value || "").toLowerCase()),
                 ),
             );
         }

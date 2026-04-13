@@ -35,6 +35,7 @@ export const SalesList = ({ navigation }) => {
     const [saleShrimpsList, setSaleShrimpsList] = useState([]);
     const [showSalePondsDialog, setShowSalePondsDialog] = useState(false);
     const [selectedSale, setSelectedSale] = useState();
+    const isAdmin = (dataUser?.rules || []).includes("Admin");
 
     useFocusEffect(
         useCallback(() => {
@@ -105,7 +106,7 @@ Vi que vendeu camarão recentemente e gostaria de algumas informações adiciona
                         data={dataSales}
                         renderItem={({ item }) => (
                             <CardItemSale
-                                isAdmin={dataUser.rules.includes("Admin")}
+                                isAdmin={isAdmin}
                             >
                                 <Header>
                                     <TitleHeader>Macau/RN</TitleHeader>
@@ -128,7 +129,7 @@ Vi que vendeu camarão recentemente e gostaria de algumas informações adiciona
                                         </ContentGrammage>
                                     ))}
                                 </Body>
-                                {dataUser.rules.includes("Admin") && (
+                                {isAdmin && (
                                     <Footer>
                                         <ButtonChatProductor
                                             onPress={() =>

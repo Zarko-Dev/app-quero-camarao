@@ -101,8 +101,8 @@ export const FilterContent = ({
         const dataCity = [
             ...new Set(
                 dataFilter.flatMap((data) =>
-                    data.location.includes(value)
-                        ? [data.location.split("/")[0]]
+                    (data?.location || "").includes(value)
+                        ? [(data?.location || "").split("/")[0]]
                         : [],
                 ),
             ),
