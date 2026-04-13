@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Linking, Platform } from "react-native";
 import Toast from "react-native-toast-message";
-import { nativeApplicationVersion } from "expo-application";
+import { nativeApplicationVersion, nativeBuildVersion } from "expo-application";
 import { useDispatch } from "react-redux";
 
 import { getConfigData } from "../../controllers/Config/find";
@@ -12,6 +12,49 @@ import { DialogComponent } from "../Dialog";
 
 import { Container } from "./styles";
 import { ConfigDataActions } from "./actions";
+
+const sanitizeVersion = (value) => `${value ?? ""}`.trim();
+
+const isNumericVersion = (value) => /^[0-9]+(\.[0-9]+)*$/.test(value);
+
+const compareDotVersions = (remote, local) => {
+    const remoteParts = remote.split(".").map((item) => Number(item));
+    const localParts = local.split(".").map((item) => Number(item));
+    const maxLength = Math.max(remoteParts.length, localParts.length);
+
+    for (let index = 0; index < maxLength; index += 1) {
+        const remoteValue = remoteParts[index] ?? 0;
+        const localValue = localParts[index] ?? 0;
+
+        if (remoteValue > localValue) return 1;
+        if (remoteValue < localValue) return -1;
+    }
+
+    return 0;
+};
+
+const shouldForceUpdate = ({ remoteVersion, appVersion, buildVersion }) => {
+    const remote = sanitizeVersion(remoteVersion);
+    const app = sanitizeVersion(appVersion);
+    const build = sanitizeVersion(buildVersion);
+
+    if (!remote) return false;
+    if (remote === app || remote === build) return false;
+
+    const remoteIsNumeric = isNumericVersion(remote);
+    const appIsNumeric = isNumericVersion(app);
+    const buildIsNumeric = isNumericVersion(build);
+
+    if (remoteIsNumeric && buildIsNumeric && !remote.includes(".")) {
+        return Number(remote) > Number(build);
+    }
+
+    if (remoteIsNumeric && appIsNumeric) {
+        return compareDotVersions(remote, app) > 0;
+    }
+
+    return false;
+};
 
 export const AlertNewVersion = () => {
     const dispatch = useDispatch();
@@ -41,8 +84,11 @@ export const AlertNewVersion = () => {
                     });
 
                     if (
-                        `${resultConfig.data.versionNumber}` !==
-                        `${nativeApplicationVersion}`
+                        shouldForceUpdate({
+                            remoteVersion: resultConfig.data.versionNumber,
+                            appVersion: nativeApplicationVersion,
+                            buildVersion: nativeBuildVersion,
+                        })
                     ) {
                         setDialogVersionVisible(true);
                     }

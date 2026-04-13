@@ -62,20 +62,22 @@ export const DrawerPrizeLiveClient = ({ navigation }) => {
 
         const user = await GetUserStorage();
         setDataUser(user);
+        const rules = Array.isArray(user?.rules) ? user.rules : [];
+        const isAdmin = rules.includes("Admin");
 
         const response = await getAllDrawPrizesLiveWhereParticipant(
-            user.email,
-            user.rules.includes("Admin"),
+            user?.email,
+            isAdmin,
         );
-        setUserRules(user.rules);
+        setUserRules(rules);
 
         if (response.error) {
             Toast.show({
                 type: "error",
-                text1: user.rules.includes("Admin")
+                text1: isAdmin
                     ? "Não há sorteios a serem listados!"
                     : "Você não possui sorteios ao vivo",
-                text2: user.rules.includes("Admin")
+                text2: isAdmin
                     ? "Realize a criação de um sorteio ao vivo!"
                     : "Participe de sorteios para visualizá-los aqui",
             });
@@ -209,8 +211,8 @@ export const DrawerPrizeLiveClient = ({ navigation }) => {
                                         ))}
                                         <BodyCardDrawerPrize>
                                             {item.status ? (
-                                                item.participants.includes(
-                                                    dataUser.email,
+                                                (item?.participants || []).includes(
+                                                    dataUser?.email,
                                                 ) ? (
                                                     <ContentTitleParticipating>
                                                         <TitleParticipating>
@@ -249,7 +251,7 @@ export const DrawerPrizeLiveClient = ({ navigation }) => {
                                                 Criado em: 20/10/2021
                                             </TitleDateDrawPrize>
                                         </FooterCardDrawerPrize>
-                                        {userRules.includes("Admin") && (
+                                        {(userRules || []).includes("Admin") && (
                                             <ContentActionButton>
                                                 <ButtonDeleteDrawPrizeLive
                                                     onPress={() => {

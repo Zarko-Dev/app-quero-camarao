@@ -330,7 +330,8 @@ export const Home = ({ navigation }) => {
                     }
                 } else {
                     filterByLocation =
-                        location === "/" || item.location.includes(location);
+                        location === "/" ||
+                        (item?.location || "").includes(location);
                 }
 
                 return (
