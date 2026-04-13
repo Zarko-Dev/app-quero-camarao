@@ -33,7 +33,10 @@ export function useInternetConnection() {
 
     useEffect(() => {
         const unsubscribe = NetInfo.addEventListener(async (state) => {
-            setIsConnected(state.isConnected);
+            const connected =
+                Boolean(state.isConnected) &&
+                state.isInternetReachable !== false;
+            setIsConnected(connected);
             checkConnectionQuality();
         });
 
@@ -41,10 +44,18 @@ export function useInternetConnection() {
     }, []);
 
     const updateNetwork = useCallback(async () => {
-        if (isConnected) {
-            await enableNetwork(firestoreInstance);
-        } else {
-            await disableNetwork(firestoreInstance);
+        if (!firestoreInstance) {
+            return;
+        }
+
+        try {
+            if (isConnected) {
+                await enableNetwork(firestoreInstance);
+            } else {
+                await disableNetwork(firestoreInstance);
+            }
+        } catch (error) {
+            console.log("Falha ao atualizar rede do Firestore:", error);
         }
     }, [isConnected]);
 

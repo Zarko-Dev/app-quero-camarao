@@ -1,5 +1,5 @@
 import "react-native-gesture-handler";
-import "react-native-get-random-values";
+import "./src/polyfills/cryptoRandom";
 
 import { useEffect } from "react";
 import { Platform } from "react-native";
