@@ -18,18 +18,14 @@ export const getAllDrawPrizes = async () => {
 
         const datDrawPrizes = [];
 
-     querySnapshot.forEach((document) => {
-        const data = document.data();
-        datDrawPrizes.push({
-            id: document.id,
-            ...data,
-            createdAt: convertSecondsToDate(data.createdAt.seconds),
-            usersWinner: (data.usersWinner ?? []).map((user) => ({
-                ...user,
-                createdAt: user.createdAt?.toDate?.() ?? null,
-                updatedAt: user.updatedAt?.toDate?.() ?? null,
-            })), // 👈 converte os timestamps dos ganhadores
-                });
+        querySnapshot.forEach((document) => {
+            datDrawPrizes.push({
+                id: document.id,
+                ...document.data(),
+                createdAt: convertSecondsToDate(
+                    document.data().createdAt.seconds,
+                ),
+            });
         });
 
         return datDrawPrizes;

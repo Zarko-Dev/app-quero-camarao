@@ -194,19 +194,20 @@ export const DrawerPrizeLiveClient = ({ navigation }) => {
                                 keyExtractor={(item) => item.id}
                                 renderItem={({ item }) => (
                                     <CardDrawerPrize>
-                                   <HeaderCardDrawerPrize>
-                                        <BadgeCardDrawerPrize status={item.status}>
-                                            <TitleBadgeCardDrawerPrize>
-                                                {item.status ? "Ativo" : "Encerrado"}
-                                            </TitleBadgeCardDrawerPrize>
-                                        </BadgeCardDrawerPrize>
-                                    </HeaderCardDrawerPrize>
-
-                                   {item.names?.map((name, index) => (
-                                        <TitleCardDrawerPrize key={index}>
-                                            Nome Sorteio: {name}
-                                        </TitleCardDrawerPrize>
-                                        ))}
+                                        <HeaderCardDrawerPrize>
+                                            <TitleCardDrawerPrize>
+                                                Sorteio: {item.code}
+                                            </TitleCardDrawerPrize>
+                                            <BadgeCardDrawerPrize
+                                                status={item.status}
+                                            >
+                                                <TitleBadgeCardDrawerPrize>
+                                                    {item.status
+                                                        ? "Ativo"
+                                                        : "Encerrado"}
+                                                </TitleBadgeCardDrawerPrize>
+                                            </BadgeCardDrawerPrize>
+                                        </HeaderCardDrawerPrize>
                                         <BodyCardDrawerPrize>
                                             {item.status ? (
                                                 item.participants.includes(

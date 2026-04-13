@@ -116,19 +116,16 @@ export const UsersList = ({ navigation, route }) => {
                               }`,
                     }}
                 />
-                    <ContentUserInfo>
-                        <UserName>{truncateName(dataUser.name, 23)}</UserName>
-                        {dataUser?.drawName ? (
-                            <UserDate>Sorteio: {dataUser.drawName}</UserDate>
-                        ) : null}
-                        <UserDate>
-                            {dataUser?.address?.city ?? dataUser?.city}/
-                            {dataUser?.address?.state ?? dataUser?.state}
-                        </UserDate>
-                        <UserDate>
-                            Desde: {convertDate(dataUser.createdAt, true)}
-                        </UserDate>
-                    </ContentUserInfo>
+                <ContentUserInfo>
+                    <UserName>{truncateName(dataUser.name, 23)}</UserName>
+                    <UserDate>
+                        {dataUser?.address?.city ?? dataUser?.city}/
+                        {dataUser?.address?.state ?? dataUser?.state}
+                    </UserDate>
+                    <UserDate>
+                        Desde: {convertDate(dataUser.createdAt, true)}
+                    </UserDate>
+                </ContentUserInfo>
             </ContentData>
             {dataUser.noDetail && (
                 <ContentWhatsapp>
