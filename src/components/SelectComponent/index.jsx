@@ -36,14 +36,16 @@ const SelectComponent = ({
     clear,
     style,
     disabled = false,
+    selectedValues = []
 }) => {
     const [dataOptions, setDataOptions] = useState();
     const [text, setText] = useState(title);
     const [initialSelectedTitle, setinitialSelectedTitle] =
         useState(initialTitle);
     const [modalVisible, setModalVisible] = useState(false);
-    const [dataMultipleSelect, setDataMultipleSelect] = useState([]);
+    const [dataMultipleSelect, setDataMultipleSelect] = useState(selectedValues);
     const [searchData, setSearchData] = useState();
+
 
     useEffect(() => {
         setinitialSelectedTitle(initialTitle);
@@ -56,6 +58,14 @@ const SelectComponent = ({
         setDataMultipleSelect([]);
         setSearchData();
     }, [clear]);
+
+        useEffect(() => {
+    setDataMultipleSelect(selectedValues)
+    if (selectedValues.length > 0) {
+        setText(selectedValues.map(v => sufix ? v + sufix : v).join(', '))
+    }
+}, [selectedValues.length])
+
 
     const handleSelectOption = (item) => {
         setinitialSelectedTitle(undefined);

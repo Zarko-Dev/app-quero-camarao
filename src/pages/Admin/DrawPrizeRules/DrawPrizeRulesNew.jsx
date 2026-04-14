@@ -52,8 +52,8 @@ export const DrawPrizeRulesNew = () => {
   const [loadingCities, setLoadingCities] = useState(false)
   const [loadingCpfs, setLoadingCpfs]     = useState(false)
 
-  const cpfLabels = cpfOptions
-  .filter(c => c?.label && typeof c.label === "string")
+const cpfLabels = cpfOptions
+  .filter(c => c?.label && typeof c.label === "string" && c.userType === 'productor')
   .map(c => c.label)
 
   const produtores = selectedCpfs.filter(
@@ -182,6 +182,12 @@ const clientes = selectedCpfs.filter(
         })
 
       setCpfOptions(options)
+
+      // Marca produtores automaticamente
+      const produtores = options
+        .filter(u => u.userType === 'productor') // ajusta o valor conforme seu sistema
+        .map(u => u.label)
+      setSelectedCpfs(produtores)
     } catch (error) {
       console.log("Erro ao buscar participantes:", error)
     } finally {
@@ -456,6 +462,7 @@ const clientes = selectedCpfs.filter(
                 multipleSelect
                 disabled={selectedCities.length === 0}
                 clear={cpfLabels.length === 0}
+                selectedValues={selectedCpfs}
               />
             )}
           </>

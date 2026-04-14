@@ -320,7 +320,7 @@ export const Register = ({ navigation, route }) => {
                                     icon="home"
                                     onChange={setStreet}
                                     value={street}
-                                    disable={true}
+                                   
                                 />
                                 <Input
                                     label="Número"
@@ -481,7 +481,6 @@ export const Register = ({ navigation, route }) => {
                                     icon="home"
                                     onChange={setStreet}
                                     value={street}
-                                    disable={true}
                                 />
                                 <Input
                                     label="Número"
