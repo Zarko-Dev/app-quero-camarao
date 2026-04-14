@@ -1,131 +1,136 @@
 {
-    "expo": {
-        "name": "Quero Camarao",
-        "slug": "mobile-quero-camarao",
-        "scheme": "querocamarao",
-        "version": "1.1.12",
-        "orientation": "portrait",
-        "icon": "./assets/icon.png",
-        "userInterfaceStyle": "light",
-        "splash": {
+  "expo": {
+    "name": "Quero Camarao",
+    "slug": "mobile-quero-camarao",
+    "owner": "querocamarao",
+    "scheme": "querocamarao",
+    "version": "1.1.19",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFE2CC"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "buildNumber": "60",
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "Permitir que a Quero Camarão use seu Face ID para acessar o aplicativo.",
+        "NSCameraUsageDescription": "Permitir que a Quero Camarão acesse sua camera? Esta ação permite que seja tirado fotos que serão utilizadas no aplicativo, como fotos dos produtos.",
+        "NSUserTrackingUsageDescription": "Para proporcionar uma experiência personalizada e segura, coletamos informações, como seu endereço de e-mail e informações de pagamento. Esses dados são usados exclusivamente para fins de autenticação, pagamento e comunicação.",
+        "NSDocumentsFolderUsageDescription": "Permitir que a Quero Camarão salve arquivos no dispositivo.",
+        "NSDownloadsFolderUsageDescription": "Permitir que a Quero Camarão salve arquivos no dispositivo.",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "bundleIdentifier": "com.logicphire.querocamarao"
+    },
+    "android": {
+      "versionCode": 49,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FFE2CC"
+      },
+      "package": "com.logicphire.querocamarao",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT",
+        "RECEIVE_BOOT_COMPLETED",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "com.google.android.gms.permission.AD_ID"
+      ],
+      "googleServicesFile": "./google-services.json",
+      "runtimeVersion": {
+        "policy": "appVersion"
+      },
+      "edgeToEdgeEnabled": true,
+      "statusBar": {
+        "backgroundColor": "#F05829",
+        "barStyle": "light-content"
+      },
+      "softwareKeyboardLayoutMode": "pan"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#FFE2CC",
+          "image": "./assets/splash.png",
+          "resizeMode": "contain",
+          "dark": {
             "image": "./assets/splash.png",
             "resizeMode": "contain",
             "backgroundColor": "#FFE2CC"
-        },
-        "assetBundlePatterns": ["**/*"],
-        "ios": {
-            "buildNumber": "47",
-            "supportsTablet": true,
-            "infoPlist": {
-                "NSFaceIDUsageDescription": "Permitir que a Quero Camarão use seu Face ID para acessar o aplicativo.",
-                "NSCameraUsageDescription": "Permitir que a Quero Camarão acesse sua camera? Esta ação permite que seja tirado fotos que serão utilizadas no aplicativo, como fotos dos produtos.",
-                "NSUserTrackingUsageDescription": "Para proporcionar uma experiência personalizada e segura, coletamos informações, como seu endereço de e-mail e informações de pagamento. Esses dados são usados exclusivamente para fins de autenticação, pagamento e comunicação.",
-                "NSDocumentsFolderUsageDescription": "Permitir que a Quero Camarão salve arquivos no dispositivo.",
-                "NSDownloadsFolderUsageDescription": "Permitir que a Quero Camarão salve arquivos no dispositivo.",
-                "ITSAppUsesNonExemptEncryption": false
-            },
-            "bundleIdentifier": "com.logicphire.querocamarao"
-        },
-        "android": {
-            "versionCode": 47,
-            "adaptiveIcon": {
-                "foregroundImage": "./assets/adaptive-icon.png",
-                "backgroundColor": "#FFE2CC"
-            },
-            "package": "com.logicphire.querocamarao",
-            "permissions": [
-                "android.permission.CAMERA",
-                "android.permission.RECORD_AUDIO",
-                "android.permission.USE_BIOMETRIC",
-                "android.permission.USE_FINGERPRINT",
-                "RECEIVE_BOOT_COMPLETED",
-                "android.permission.READ_EXTERNAL_STORAGE",
-                "android.permission.WRITE_EXTERNAL_STORAGE",
-                "com.google.android.gms.permission.AD_ID"
-            ],
-            "googleServicesFile": "./google-services.json",
-            "runtimeVersion": {
-                "policy": "appVersion"
-            },
-            "edgeToEdgeEnabled": true,
-            "statusBar": {
-                "backgroundColor": "#F05829",
-                "barStyle": "light-content"
-            },
-            "softwareKeyboardLayoutMode": "pan"
-        },
-        "web": {
-            "favicon": "./assets/favicon.png"
-        },
-        "plugins": [
-            [
-                "expo-splash-screen",
-                {
-                    "backgroundColor": "#FFE2CC",
-                    "image": "./assets/splash.png",
-                    "resizeMode": "contain",
-                    "dark": {
-                        "image": "./assets/splash.png",
-                        "resizeMode": "contain",
-                        "backgroundColor": "#FFE2CC"
-                    },
-                    "imageWidth": 200
-                }
-            ],
-            ["./plugins/withDisableForcedDarkModeAndroid.js", {}],
-            [
-                "expo-camera",
-                {
-                    "cameraPermission": "Permitir que a Quero Camarão acesse sua camera? Esta ação permite que seja tirado fotos que serão utilizadas no aplicativo, como fotos dos produtos."
-                }
-            ],
-            [
-                "expo-tracking-transparency",
-                {
-                    "userTrackingPermission": "Para proporcionar uma experiência personalizada e segura, coletamos informações, como seu endereço de e-mail e informações de pagamento. Esses dados são usados exclusivamente para fins de autenticação, pagamento e comunicação. "
-                }
-            ],
-            [
-                "expo-notifications",
-                {
-                    "icon": "./assets/notificationicon.png",
-                    "color": "#F05829"
-                }
-            ],
-            "expo-font",
-            [
-                "@sentry/react-native/expo",
-                {
-                    "url": "https://sentry.io/",
-                    "organization": "logicphire-logic",
-                    "project": "mobile-quero-camarao"
-                }
-            ],
-            [
-                "expo-build-properties",
-                {
-                    "android": {
-                        "compileSdkVersion": 35,
-                        "targetSdkVersion": 35,
-                        "buildToolsVersion": "35.0.0"
-                    }
-                }
-            ],
-            [
-                "expo-document-picker",
-                {
-                    "iCloudContainerEnvironment": "Production"
-                }
-            ],
-            "expo-asset"
-        ],
-        "extra": {
-            "eas": {
-                "projectId": "9b561f08-e352-4697-940d-bca41e1c5cc6"
-            }
-        },
-        "updates": {
-            "url": "https://u.expo.dev/9b561f08-e352-4697-940d-bca41e1c5cc6"
+          },
+          "imageWidth": 200
         }
+      ],
+      [
+        "./plugins/withDisableForcedDarkModeAndroid.js",
+        {}
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Permitir que a Quero Camarão acesse sua camera? Esta ação permite que seja tirado fotos que serão utilizadas no aplicativo, como fotos dos produtos."
+        }
+      ],
+      [
+        "expo-tracking-transparency",
+        {
+          "userTrackingPermission": "Para proporcionar uma experiência personalizada e segura, coletamos informações, como seu endereço de e-mail e informações de pagamento. Esses dados são usados exclusivamente para fins de autenticação, pagamento e comunicação. "
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notificationicon.png",
+          "color": "#F05829"
+        }
+      ],
+      "expo-font",
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "organization": "logicphire-logic",
+          "project": "mobile-quero-camarao"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enablePageSize16KB": true,
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "buildToolsVersion": "35.0.0"
+          }
+        }
+      ],
+      [
+        "expo-document-picker",
+        {
+          "iCloudContainerEnvironment": "Production"
+        }
+      ],
+      "expo-asset"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "9b561f08-e352-4697-940d-bca41e1c5cc6"
+      }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/9b561f08-e352-4697-940d-bca41e1c5cc6"
     }
+  }
 }
