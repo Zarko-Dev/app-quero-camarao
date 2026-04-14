@@ -40,7 +40,7 @@ export const DrawPrizeNew = ({ navigation }) => {
     const [participantsWithNames, setParticipantsWithNames] = useState([])
     const [countPrizes, setCountPrizes] = useState(1)
 
-    const limitDrawPrizes = 10
+    const limitDrawPrizes = 99
 
     useFocusEffect(
         useCallback(() => {

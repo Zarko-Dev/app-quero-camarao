@@ -267,7 +267,7 @@ useEffect(() => {
                                     {`(**) ****${user?.phone?.substring(user.phone.length - 6)}`}
                                 </PhoneTitle>
                                 <PhoneTitle>
-                                    CPF: {user?.cpf ?? "Não informado"}
+                                    CPF: ***.***.{user?.cpf?.substring(user.cpf.length - 6) ?? "Não informado"}
                                 </PhoneTitle>
                              <LocationTitle>
                             {user.userType === "productor"
