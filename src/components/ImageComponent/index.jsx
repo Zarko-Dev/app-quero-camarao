@@ -56,6 +56,7 @@ export const ImageComponent = ({ uri, resizeMode = "cover", style }) => {
                     uri
                         ? {
                               uri,
+                              cache: "force-cache",
                           }
                         : imageEmpty
                 }

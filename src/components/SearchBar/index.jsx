@@ -1,9 +1,6 @@
-/* eslint-disable react/jsx-wrap-multilines */
-
 import { Feather } from "@expo/vector-icons";
-import { ActivityIndicator, TextInput } from "react-native-paper";
-
-import { Container, SearchInput } from "./styles";
+import { ActivityIndicator, View } from "react-native";
+import { Container, SearchInputContainer, StyledInput } from "./styles";
 import { theme } from "../../styles/Theme";
 
 export const SearchBar = ({
@@ -12,36 +9,18 @@ export const SearchBar = ({
     isLoadingSearch = false,
 }) => (
     <Container>
-        <SearchInput
-            label="Busque aqui..."
-            mode="outlined"
-            left={
-                <TextInput
-                    icon={() => (
-                        <Feather
-                            name="search"
-                            size={20}
-                            color={theme.colors.black}
-                            style={{ marginTop: 11 }}
-                        />
-                    )}
-                />
-            }
-            right={
-                isLoadingSearch && (
-                    <TextInput
-                        icon={() => (
-                            <ActivityIndicator color={theme.colors.primary} />
-                        )}
-                    />
-                )
-            }
-            outlineColor={theme.colors.quaternary}
-            activeOutlineColor={theme.colors.text}
-            textColor={theme.colors.text}
-            autoCapitalize="none"
-            value={searchText}
-            onChangeText={onChange}
-        />
+        <SearchInputContainer>
+            <Feather name="search" size={20} color="#888" />
+            <StyledInput
+                placeholder="Busque aqui..."
+                placeholderTextColor="#888"
+                value={searchText}
+                onChangeText={onChange}
+                autoCapitalize="none"
+            />
+            {isLoadingSearch && (
+                <ActivityIndicator color={theme.colors.primary} size="small" />
+            )}
+        </SearchInputContainer>
     </Container>
 );

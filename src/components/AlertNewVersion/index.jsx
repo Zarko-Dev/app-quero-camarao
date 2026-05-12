@@ -23,6 +23,40 @@ export const AlertNewVersion = () => {
         useState("");
     const [urls, setUrls] = useState({ android: "", ios: "" });
 
+    const normalizeVersion = (value) =>
+        String(value ?? "")
+            .trim()
+            .replace(/^v/i, "")
+            .replace(/[^0-9.]/g, "");
+
+    const isRemoteVersionNewer = (remoteVersion, localVersion) => {
+        const remote = normalizeVersion(remoteVersion)
+            .split(".")
+            .map((part) => Number(part || 0));
+        const local = normalizeVersion(localVersion)
+            .split(".")
+            .map((part) => Number(part || 0));
+
+        const size = Math.max(remote.length, local.length);
+
+        for (let index = 0; index < size; index++) {
+            const remoteValue = Number.isFinite(remote[index])
+                ? remote[index]
+                : 0;
+            const localValue = Number.isFinite(local[index]) ? local[index] : 0;
+
+            if (remoteValue > localValue) {
+                return true;
+            }
+
+            if (remoteValue < localValue) {
+                return false;
+            }
+        }
+
+        return false;
+    };
+
     useEffect(() => {
         const getConfig = async () => {
             try {
@@ -47,8 +81,10 @@ export const AlertNewVersion = () => {
                 });
 
                 if (
-                    `${resultConfig.data.versionNumber}` !==
-                    `${nativeApplicationVersion ?? ""}`
+                    isRemoteVersionNewer(
+                        resultConfig.data.versionNumber,
+                        nativeApplicationVersion,
+                    )
                 ) {
                     setDialogVersionVisible(true);
                 }

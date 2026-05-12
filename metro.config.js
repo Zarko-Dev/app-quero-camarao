@@ -1,3 +1,7 @@
 const { getSentryExpoConfig } = require("@sentry/react-native/metro");
 
-module.exports = getSentryExpoConfig(__dirname);
+const config = getSentryExpoConfig(__dirname);
+
+config.resolver.unstable_enablePackageExports = false;
+
+module.exports = config;

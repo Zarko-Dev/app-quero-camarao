@@ -1,8 +1,18 @@
 import styled from "styled-components/native";
-import { LinearGradient } from "expo-linear-gradient";
 
 export const BannerContainer = styled.TouchableOpacity`
-    margin-top: ${({ theme }) => theme.size.dimentionsSize(1)};
+    width: 100%;
+    min-height: 186px;
+    background-color: #fff7ee;
+    border-radius: 16px;
+    padding: 12px;
+    border-width: 1px;
+    border-color: #ffe2cc;
+    elevation: 3;
+    shadow-color: #000;
+    shadow-offset: 0px 2px;
+    shadow-opacity: 0.1;
+    shadow-radius: 4px;
 `;
 
 export const BannerTitle = styled.Text`
@@ -10,93 +20,86 @@ export const BannerTitle = styled.Text`
     font-weight: bold;
     color: ${({ theme }) => theme.colors.primary};
     text-align: center;
-    margin-bottom: ${({ theme }) => theme.size.dimentionsSize(1)};
+    margin-bottom: 10px;
 `;
 
 export const BannerBody = styled.View`
     width: 100%;
-    justify-content: flex-start;
-    align-items: center;
     flex-direction: row;
-
-    height: ${({ theme }) => theme.size.componentSize(140)};
-
-    border-top-width: 3px;
-    border-bottom-width: 3px;
-    border-color: ${({ theme }) => theme.colors.primary};
-
-    padding: 5px 0;
+    align-items: stretch;
 `;
 
-export const ContentShrimpInfo = styled.View`
-    width: 50%;
-
-    justify-content: flex-start;
-    align-items: center;
-    flex-direction: row;
-`;
-
-export const ContentShirimpImage = styled(LinearGradient).attrs(
-    ({ theme }) => ({
-        colors: [theme.colors.primary, theme.colors.white],
-        start: { x: 0, y: 1.5 },
-        end: { x: 0, y: 0 },
-    }),
-)`
-    position: absolute;
+export const ContentShirimpImage = styled.View`
+    width: 116px;
     justify-content: center;
     align-items: center;
+    padding-right: 10px;
+`;
 
-    width: ${({ theme }) => theme.size.componentSize(110)};
-    height: ${({ theme }) => theme.size.componentSize(115)};
-
-    margin-left: ${({ theme }) => theme.size.dimentionsSize(-2.5)};
-
-    border-radius: ${({ theme }) => theme.size.componentSize(80)};
+export const ShrimpImageCircle = styled.View`
+    width: 112px;
+    height: 112px;
+    border-radius: 56px;
+    background-color: #fff;
+    border-width: 1px;
+    border-color: #ffe2cc;
+    justify-content: center;
+    align-items: center;
 `;
 
 export const ShrimpImage = styled.Image`
-    width: ${({ theme }) => theme.size.componentSize(80)};
-    height: ${({ theme }) => theme.size.componentSize(100)};
+    width: 95px;
+    height: 95px;
 `;
 
 export const ContentDataInfo = styled.View`
-    width: 100%;
-    gap: 4px;
-`;
-
-export const InfoTag = styled(LinearGradient).attrs(({ theme }) => ({
-    colors: [theme.colors.primary, theme.colors.secondary],
-    start: { x: 0, y: 0.6 },
-    end: { x: 0, y: 0 },
-}))`
-    height: ${({ theme }) => theme.size.componentSize(30)};
-
-    align-items: flex-end;
-    padding: 5px 0;
-
-    background-color: ${({ theme }) => theme.colors.primary};
-`;
-
-export const InfoTagText = styled.Text`
-    font-size: ${({ theme }) => theme.size.fontSize(15)};
-    font-weight: bold;
-    color: ${({ theme }) => theme.colors.white};
-`;
-
-export const ContantData = styled.View`
-    width: 100%;
-    height: 100%;
-
+    flex: 1;
+    min-width: 0px;
     justify-content: center;
-    align-items: flex-start;
-
-    margin-left: ${({ theme }) => theme.size.dimentionsSize(1)};
 `;
 
-export const DataText = styled.Text`
-    font-size: ${({ theme, textSize }) => theme.size.fontSize(textSize)};
-    font-weight: 900;
-    color: ${({ theme }) => theme.colors.black};
-    margin-bottom: 8px;
+export const DataRowsGroup = styled.View`
+    min-height: 122px;
+    justify-content: center;
+`;
+
+export const DataRow = styled.View`
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    border-bottom-width: ${({ $withDivider }) => ($withDivider ? "1px" : "0px")};
+    border-bottom-color: #f0d9c8;
+    min-height: ${({ $isLocation }) => ($isLocation ? "44px" : "24px")};
+    margin-top: ${({ $isLocation }) => ($isLocation ? "4px" : "0px")};
+`;
+
+export const IconContainer = styled.View`
+    width: 24px;
+    height: 24px;
+    justify-content: center;
+    align-items: center;
+`;
+
+export const ShrimpMiniIcon = styled.Image`
+    width: 16px;
+    height: 16px;
+`;
+
+export const LabelText = styled.Text`
+    width: 78px;
+    font-size: ${({ theme }) => theme.size.fontSize(12)};
+    color: #6f6f6f;
+    margin-left: 5px;
+`;
+
+export const ValueText = styled.Text`
+    flex: 1;
+    min-width: 0px;
+    font-size: ${({ theme, $fontSize }) =>
+        theme.size.fontSize($fontSize ?? 15)};
+    line-height: 22px;
+    font-weight: bold;
+    color: #333;
+    text-align: right;
+    flex-wrap: wrap;
 `;
