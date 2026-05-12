@@ -1,5 +1,5 @@
 /* eslint-disable operator-linebreak */
-import { useMemo, useCallback } from "react";
+import { useMemo, useCallback, useRef } from "react";
 import { ActivityIndicator, FlatList } from "react-native";
 
 import { CardPublicationShrimp } from "../../../../components/CardPublicationShrimp";
@@ -79,6 +79,30 @@ export const ShrimpCardList = ({
     }, [isNextLoading, isNestEnd]);
 
     const keyExtractor = useCallback((item) => item.id.toString(), []);
+    const viewabilityConfigRef = useRef({
+        itemVisiblePercentThreshold: 40,
+    });
+
+    const onViewableItemsChanged = useCallback(
+        ({ viewableItems }) => {
+            if (!viewableItems?.length) return;
+
+            let maxIndex = -1;
+            viewableItems.forEach((viewable) => {
+                if (
+                    typeof viewable.index === "number" &&
+                    viewable.index > maxIndex
+                ) {
+                    maxIndex = viewable.index;
+                }
+            });
+
+            if (maxIndex >= combinedList.length - 8) {
+                onEndReached();
+            }
+        },
+        [combinedList.length, onEndReached],
+    );
 
     return (
         <Container>
@@ -87,19 +111,16 @@ export const ShrimpCardList = ({
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}
                 showsVerticalScrollIndicator={false}
-                initialNumToRender={5}
-                maxToRenderPerBatch={10}
+                initialNumToRender={10}
+                maxToRenderPerBatch={12}
                 updateCellsBatchingPeriod={50}
-                windowSize={10}
+                windowSize={14}
                 removeClippedSubviews
                 onEndReached={onEndReached}
-                onEndReachedThreshold={0.5}
+                onEndReachedThreshold={0.9}
+                onViewableItemsChanged={onViewableItemsChanged}
+                viewabilityConfig={viewabilityConfigRef.current}
                 ListFooterComponent={renderFooter}
-                getItemLayout={(data, index) => ({
-                    length: 200,
-                    offset: 200 * index,
-                    index,
-                })}
             />
         </Container>
     );

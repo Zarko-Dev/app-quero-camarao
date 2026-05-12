@@ -1,18 +1,24 @@
-import { TextInput } from "react-native-paper";
 import styled from "styled-components/native";
 
 export const Container = styled.View`
-    width: 75%;
+    width: 100%;
 `;
 
-export const SearchInput = styled(TextInput)`
-    height: ${({ theme }) => theme.size.componentSize(35)};
+export const SearchInputContainer = styled.View`
+    width: 100%;
+    height: 50px;
+    background-color: #fff;
+    border-radius: 12px;
+    flex-direction: row;
+    align-items: center;
+    padding: 0 15px;
+    border-width: 1px;
+    border-color: #ffe2cc;
+`;
 
-    justify-content: center;
-
-    font-size: 15px;
-    color: ${({ theme }) => theme.colors.black};
-    background-color: ${({ theme }) => theme.colors.inputColor};
-
-    border-radius: 4px;
+export const StyledInput = styled.TextInput`
+    flex: 1;
+    margin-left: 10px;
+    font-size: ${({ theme }) => theme.size.fontSize(16)};
+    color: #333;
 `;

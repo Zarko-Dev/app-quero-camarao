@@ -340,9 +340,7 @@ export const Routes = () => (
                 name={dataRoutes.salesList}
                 getComponent={() => require("../pages/SalesList").SalesList}
                 options={{
-                    title: "Camarões Vendidos!",
-                    headerStyle: { backgroundColor: theme.colors.primary },
-                    headerTitleStyle: { color: theme.colors.white },
+                    headerShown: false,
                 }}
             />
         </Navigator>
