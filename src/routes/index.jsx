@@ -41,6 +41,8 @@ import { SalesList } from "../pages/SalesList";
 import { SplashScreen } from "../pages/SplashScreen";
 import { DrawPrizeNewWinnerResult } from "../pages/Admin/DrawPrizeNewWinnerResult";
 import { DrawPrizeWinnersResult } from "../pages/Admin/DrawPrizeWinnersResult";
+import { PlanQRCodePix } from "../pages/PlanQRCodePix";
+import { PondManagement } from "../pages/PondManagement";
 
 const { Navigator, Screen } = createNativeStackNavigator();
 
@@ -333,6 +335,24 @@ export const Routes = () => (
                 component={SalesList}
                 options={{
                     title: "Camarões Vendidos!",
+                    headerStyle: { backgroundColor: theme.colors.primary },
+                    headerTitleStyle: { color: theme.colors.white },
+                }}
+            />
+            <Screen
+                name={dataRoutes.planQrCodePix}
+                component={PlanQRCodePix}
+                options={{
+                    title: "Pagamento do Plano!",
+                    headerStyle: { backgroundColor: theme.colors.primary },
+                    headerTitleStyle: { color: theme.colors.white },
+                }}
+            />
+            <Screen
+                name={dataRoutes.pondManagement}
+                component={PondManagement}
+                options={{
+                    title: "Gestão de Viveiros",
                     headerStyle: { backgroundColor: theme.colors.primary },
                     headerTitleStyle: { color: theme.colors.white },
                 }}

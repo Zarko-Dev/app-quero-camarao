@@ -8,6 +8,7 @@ import { InvitationReducer } from "../pages/ValidateInvitation/reducer";
 import { PaymentWalletReducer } from "../pages/Payment/components/ResumeCrad/reducer";
 import { ConfigDataReducer } from "../components/AlertNewVersion/reducer";
 import { NotificationExecuteReducer } from "../components/Header/reducer";
+import { planReducer } from "../pages/MonthlyPlan/planReducer";
 
 export const rootReducer = combineReducers({
     login: LoginReducer,
@@ -18,4 +19,5 @@ export const rootReducer = combineReducers({
     paymentWallet: PaymentWalletReducer,
     configSystem: ConfigDataReducer,
     notificationExecute: NotificationExecuteReducer,
+    planState: planReducer,
 });

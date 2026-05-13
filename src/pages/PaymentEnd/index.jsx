@@ -9,10 +9,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { FontAwesome } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
 
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { paymentActions } from "../Payment/actions";
+import { planActions } from "../MonthlyPlan/planActions";
 import { dataRoutes } from "../../routes/dataRoutes";
 import { updateOrder } from "../../controllers/Payment/order";
 import { saveShrimpPonds } from "../../controllers/Publication/saveShrimpPonds";
+import { saveUserPlan } from "../../controllers/Plans/savePlan";
 import {
     GetUserStorage,
     SetUserStorage,
@@ -49,6 +52,7 @@ export const PaymentEnd = ({ route, navigation }) => {
     const { dataOrder } = useSelector((state) => state.payment);
     const { dataWallet } = useSelector((state) => state.paymentWallet);
     const { configData } = useSelector((state) => state.configSystem);
+    const { pendingOrderId } = useSelector((state) => state.planState);
 
     const { params } = route;
     const animation = useRef(null);
@@ -214,9 +218,62 @@ export const PaymentEnd = ({ route, navigation }) => {
     };
 
     const actions = async () => {
+        const storedPlanOrderId = await AsyncStorage.getItem(
+            "@PENDING_PLAN_ORDER",
+        );
+        const resolvedPlanOrderId = pendingOrderId || storedPlanOrderId;
+
         switch (params.status) {
             case "approved":
-                if (dataOrder.idOrder) {
+                if (resolvedPlanOrderId) {
+                    const dataUser = await GetUserStorage();
+                    const resultSavePlan = await saveUserPlan(
+                        dataUser.email,
+                        resolvedPlanOrderId,
+                    );
+
+                    if (!resultSavePlan.error) {
+                        const startDate = new Date();
+                        const endDate = new Date(startDate);
+                        endDate.setDate(endDate.getDate() + 30);
+
+                        await updateOrder(resolvedPlanOrderId, {
+                            status: params.status,
+                            paymentLog: params,
+                            planActivated: true,
+                        });
+
+                        await SetUserStorage({
+                            ...dataUser,
+                            activePlan: {
+                                active: true,
+                                planId: "monthly",
+                                startDate,
+                                endDate,
+                                orderId: resolvedPlanOrderId,
+                            },
+                        });
+
+                        await AsyncStorage.removeItem("@PENDING_PLAN_ORDER");
+                        dispatch({ type: planActions.PLAN_ACTIVATED });
+
+                        setTimeout(() => {
+                            Toast.show({
+                                type: "success",
+                                text1: "Plano mensal ativado com sucesso!",
+                            });
+                            navigation.navigate(dataRoutes.navigation);
+                        }, 1500);
+                    } else {
+                        await AsyncStorage.removeItem("@PENDING_PLAN_ORDER");
+                        Toast.show({
+                            type: "error",
+                            text1: "Não foi possível ativar seu plano!",
+                            text2: "Entre em contato conosco!",
+                        });
+                        navigation.navigate(dataRoutes.help);
+                    }
+                } else if (dataOrder.idOrder) {
                     const dataUser = await GetUserStorage();
 
                     const resultSavePond = await saveShrimpPonds(
@@ -407,7 +464,7 @@ export const PaymentEnd = ({ route, navigation }) => {
                 }
 
                 setTimeout(async () => {
-                    if (params.status === "approved") {
+                    if (params.status === "approved" && !pendingOrderId) {
                         setAnimationStatus((data) => ({
                             ...data,
                             duration: 0.8,

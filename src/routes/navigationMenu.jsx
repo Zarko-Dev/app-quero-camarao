@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import { Feather, FontAwesome } from "@expo/vector-icons";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
-import { GetUserStorage } from "../services/Storage/UserStorage";
+import { GetUserStorage, SetUserStorage } from "../services/Storage/UserStorage";
+import { expireUserPlan } from "../controllers/Plans/expirePlan";
+import { planActions } from "../pages/MonthlyPlan/planActions";
 import { dataRoutes } from "./dataRoutes";
 
 import { Header } from "../components/Header";
@@ -21,23 +23,54 @@ import { Invitations } from "../pages/Invitations";
 import { MyAds } from "../pages/MyAds";
 import { NavigationAdminMenu } from "./AdminRoutes";
 import { DrawerPrizeLiveClient } from "../pages/DrawerPrizeLiveClient";
+import { MonthlyPlan } from "../pages/MonthlyPlan";
+import { PondManagement } from "../pages/PondManagement";
 
 const { Navigator, Screen } = createDrawerNavigator();
 
 export const NavigationMenu = () => {
+    const dispatch = useDispatch();
     const [userRules, setUserRules] = useState([]);
     const [userType, setUserType] = useState([]);
+    const [hasActivePlan, setHasActivePlan] = useState(false);
 
     const { isAuthenticated } = useSelector((state) => state.login);
+    const { activated: planActivated } = useSelector(
+        (state) => state.planState,
+    );
 
     useEffect(() => {
-        GetUserStorage()
-            .then((data) => {
+        const checkPlanAndLoad = async () => {
+            try {
+                const data = await GetUserStorage();
+                if (!data) return;
+
                 setUserRules(data.rules);
                 setUserType(data.userType);
-            })
-            .catch();
-    }, [isAuthenticated]);
+
+                if (data.activePlan?.active === true) {
+                    const endDate = new Date(data.activePlan.endDate);
+                    if (endDate < new Date()) {
+                        await expireUserPlan(data.email);
+                        await SetUserStorage({
+                            ...data,
+                            activePlan: { ...data.activePlan, active: false },
+                        });
+                        dispatch({ type: planActions.PLAN_EXPIRED });
+                        setHasActivePlan(false);
+                    } else {
+                        setHasActivePlan(true);
+                    }
+                } else {
+                    setHasActivePlan(false);
+                }
+            } catch {
+                // silently ignore storage errors
+            }
+        };
+
+        checkPlanAndLoad();
+    }, [isAuthenticated, planActivated]);
 
     return (
         <Navigator
@@ -164,6 +197,36 @@ export const NavigationMenu = () => {
                                 size={20}
                                 color={color}
                             />
+                        ),
+                    }}
+                />
+            )}
+            {isAuthenticated && !hasActivePlan && (
+                <Screen
+                    name={dataRoutes.monthlyPlan}
+                    component={MonthlyPlan}
+                    options={{
+                        title: "Assinar Plano Mensal",
+                        header: (props) => <Header {...props} />,
+                        drawerIcon: ({ color }) => (
+                            <FontAwesome
+                                name="star"
+                                size={20}
+                                color={color}
+                            />
+                        ),
+                    }}
+                />
+            )}
+            {isAuthenticated && hasActivePlan && (
+                <Screen
+                    name={dataRoutes.pondManagement}
+                    component={PondManagement}
+                    options={{
+                        title: "Gestão de Viveiros",
+                        header: (props) => <Header {...props} />,
+                        drawerIcon: ({ color }) => (
+                            <Feather name="cpu" size={20} color={color} />
                         ),
                     }}
                 />
