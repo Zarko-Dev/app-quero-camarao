@@ -1,6 +1,7 @@
 /* eslint-disable operator-linebreak */
 import { useMemo, useCallback } from "react";
-import { ActivityIndicator, FlatList } from "react-native";
+import { ActivityIndicator, Platform } from "react-native";
+import { FlashList } from "@shopify/flash-list";
 
 import { CardPublicationShrimp } from "../../../../components/CardPublicationShrimp";
 import { CardPublicationShrimpSkeleton } from "../../../../components/Skeleton/CardPublicationShrimpSkeleton";
@@ -16,7 +17,12 @@ export const ShrimpCardList = ({
     isNextLoading,
     isNestEnd,
     onEndReached,
+    isScrolling = false,
+    onScrollStart = () => {},
+    onScrollEnd = () => {},
 }) => {
+    const hasDataPublication = dataPublication.length > 0;
+
     const publicationItens = [
         { id: 1 },
         { id: 2 },
@@ -45,23 +51,31 @@ export const ShrimpCardList = ({
     }, [dataPublication]);
 
     const renderItem = useCallback(
-        ({ item }) => {
+        ({ item, index }) => {
             if (item.type === "ad") {
                 return <Ads />;
             }
 
-            return dataPublication.length > 0 ? (
+            return hasDataPublication ? (
                 <CardPublicationShrimp
                     item={item}
+                    index={index}
                     dataAdvertising={dataAdvertising}
                     sharedRef={sharedRef}
                     openModal={openModal}
+                    isScrolling={isScrolling}
                 />
             ) : (
                 <CardPublicationShrimpSkeleton />
             );
         },
-        [dataPublication, dataAdvertising, sharedRef, openModal],
+        [
+            hasDataPublication,
+            dataAdvertising,
+            sharedRef,
+            openModal,
+            isScrolling,
+        ],
     );
 
     const renderFooter = useCallback(() => {
@@ -79,27 +93,29 @@ export const ShrimpCardList = ({
     }, [isNextLoading, isNestEnd]);
 
     const keyExtractor = useCallback((item) => item.id.toString(), []);
+    const getItemType = useCallback((item) => item.type, []);
 
     return (
         <Container>
-            <FlatList
+            <FlashList
                 data={combinedList}
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}
+                getItemType={getItemType}
                 showsVerticalScrollIndicator={false}
-                initialNumToRender={5}
-                maxToRenderPerBatch={10}
-                updateCellsBatchingPeriod={50}
-                windowSize={10}
-                removeClippedSubviews
+                estimatedItemSize={230}
+                initialNumToRender={Platform.OS === "android" ? 6 : 10}
+                maxToRenderPerBatch={Platform.OS === "android" ? 6 : 12}
+                updateCellsBatchingPeriod={Platform.OS === "android" ? 80 : 50}
+                windowSize={Platform.OS === "android" ? 9 : 14}
                 onEndReached={onEndReached}
-                onEndReachedThreshold={0.5}
+                onEndReachedThreshold={0.6}
                 ListFooterComponent={renderFooter}
-                getItemLayout={(data, index) => ({
-                    length: 200,
-                    offset: 200 * index,
-                    index,
-                })}
+                scrollEventThrottle={16}
+                onScrollBeginDrag={onScrollStart}
+                onMomentumScrollBegin={onScrollStart}
+                onScrollEndDrag={onScrollEnd}
+                onMomentumScrollEnd={onScrollEnd}
             />
         </Container>
     );

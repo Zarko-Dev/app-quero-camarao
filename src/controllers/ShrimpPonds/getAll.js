@@ -3,7 +3,6 @@
 import {
     collection,
     getDocs,
-    onSnapshot,
     orderBy,
     query,
     startAfter,
@@ -15,7 +14,7 @@ import * as Sentry from "@sentry/react-native";
 import { firestore } from "../../services/Firebase";
 import { models } from "../../services/Firebase/models";
 
-export const getAllShrimpPondsRealTime = (actionCallback) => {
+export const getAllShrimpPondsRealTime = async (actionCallback) => {
     try {
         const ShrimpPondsRef = collection(firestore, models.shrimpPonds);
         const shrimpPondsQuery = query(
@@ -23,26 +22,65 @@ export const getAllShrimpPondsRealTime = (actionCallback) => {
             orderBy("createdAt", "desc"),
             orderBy("views", "asc"),
             where("expirationDate", ">=", new Date()),
-            limit(6),
+            limit(10),
         );
 
-        onSnapshot(shrimpPondsQuery, (querySnapshot) => {
-            const dataShrimpPonds = [];
+        const querySnapshot = await getDocs(shrimpPondsQuery);
+        const dataShrimpPonds = [];
 
-            querySnapshot.forEach((document) => {
-                dataShrimpPonds.push(document.data());
+        querySnapshot.forEach((document) => {
+            dataShrimpPonds.push({
+                ...document.data(),
+                id: document.id,
             });
-
-            const dataShrimpPondsFilterNotSale = dataShrimpPonds.filter(
-                (item) => item.shrimps.some((shrimp) => !shrimp?.sale),
-            );
-
-            actionCallback(dataShrimpPondsFilterNotSale);
         });
+
+        const dataShrimpPondsFilterNotSale = dataShrimpPonds.filter(
+            (item) => item.shrimps.some((shrimp) => !shrimp?.sale),
+        );
+
+        actionCallback(dataShrimpPondsFilterNotSale);
     } catch (error) {
         Sentry.captureException(error);
 
         actionCallback([]);
+    }
+};
+
+export const getLatestShrimpPonds = async (lastVisible = null) => {
+    try {
+        const ShrimpPondsRef = collection(firestore, models.shrimpPonds);
+        let shrimpPondsQuery;
+
+        if (lastVisible && lastVisible.createdAt) {
+            shrimpPondsQuery = query(
+                ShrimpPondsRef,
+                orderBy("createdAt", "desc"),
+                startAfter(lastVisible.createdAt),
+                limit(15),
+            );
+        } else {
+            shrimpPondsQuery = query(
+                ShrimpPondsRef,
+                orderBy("createdAt", "desc"),
+                limit(15),
+            );
+        }
+
+        const querySnapshot = await getDocs(shrimpPondsQuery);
+        const dataShrimpPonds = [];
+
+        querySnapshot.forEach((document) => {
+            dataShrimpPonds.push({
+                ...document.data(),
+                id: document.id,
+            });
+        });
+
+        return dataShrimpPonds;
+    } catch (error) {
+        Sentry.captureException(error);
+        return [];
     }
 };
 
@@ -54,8 +92,8 @@ export const getMoreShrimpPonds = async (lastVisible) => {
             orderBy("createdAt", "desc"),
             orderBy("views", "asc"),
             where("expirationDate", ">=", new Date()),
-            startAfter(lastVisible.createdAt),
-            limit(6),
+            startAfter(lastVisible.createdAt, lastVisible.views ?? 0),
+            limit(10),
         );
 
         const querySnapshot = await getDocs(shrimpPondsQuery);
@@ -63,12 +101,16 @@ export const getMoreShrimpPonds = async (lastVisible) => {
         const dataShrimpPonds = [];
 
         querySnapshot.forEach((document) => {
-            dataShrimpPonds.push(document.data());
+            dataShrimpPonds.push({
+                ...document.data(),
+                id: document.id,
+            });
         });
 
         return dataShrimpPonds;
     } catch (error) {
         Sentry.captureException(error);
+        console.error("Erro na paginacao de viveiros:", error);
 
         return [];
     }

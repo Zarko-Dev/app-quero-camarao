@@ -3,14 +3,14 @@
 /* eslint-disable function-paren-newline */
 
 import { useFocusEffect } from "@react-navigation/native";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Fuse from "fuse.js";
 import { Easing, useSharedValue, withSpring } from "react-native-reanimated";
 import * as Notifications from "expo-notifications";
 import Toast from "react-native-toast-message";
 import Constants from "expo-constants";
-import { InteractionManager, Platform } from "react-native";
+import { Platform } from "react-native";
 
 import { dataRoutes } from "../../routes/dataRoutes";
 import {
@@ -19,7 +19,6 @@ import {
 } from "../../services/Storage/UserStorage";
 import { LoginActions } from "../Login/actions";
 
-import { Filter } from "../../components/Filter";
 import { SearchBar } from "../../components/SearchBar";
 import { ShrimpCardList } from "./components/ShrimpCardList";
 import { FilterContent } from "../../components/FilterContent";
@@ -36,25 +35,34 @@ import {
     Container,
     ContentInitialBanner,
     ContentSearchFilter,
-    InitialBannerStyle,
     PublicShrimpButton,
     ShrimpIcon,
     TextButton,
+    ScreenHeader,
+    SearchBarContainer,
+    FilterButton,
+    FilterButtonText,
+    ContentCardsList,
 } from "./styles";
 import { theme } from "../../styles/Theme";
 
-import initialBanner from "../../assets/images/initialBanner.png";
 import shrimpIconWhite from "../../assets/images/shrimpIconWhite.png";
 import { updateUserNotification } from "../../controllers/User/notification";
 import { ModalUpdateClientLocation } from "./components/ModalUpdateClientLocation";
 import { BannerShrimpSalePrice } from "../../components/BannerShrimpSalePrice";
+import { Feather } from "@expo/vector-icons";
 
 let time = null;
+let cachedInitialData = null;
+let cachedPublications = [];
+let cachedLastVisible = null;
+let cachedPrefetchedPublications = [];
 
 export const Home = ({ navigation }) => {
     const dispatch = useDispatch();
 
     const viewShotShrimpCardRef = useRef(null);
+    const isPrefetchingRef = useRef(false);
 
     const [showAlertVisible, setShowAlertVisible] = useState(false);
     const [showAlertUserType, setShowAlertUserType] = useState(false);
@@ -64,15 +72,16 @@ export const Home = ({ navigation }) => {
         useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [searchValue, setSearchValue] = useState("");
-    const [initialData, setInitialdata] = useState();
-    const [dataPublication, setDataPublication] = useState([]);
+    const [initialData, setInitialdata] = useState(cachedInitialData);
+    const [dataPublication, setDataPublication] = useState(cachedPublications);
     const [userType, setUserType] = useState("client");
     const [dataPublicationFiltered, setDataPublicationFiltered] = useState([]);
     const [dataAdvertising] = useState([]);
-    const [lastVisible, setLastVisible] = useState();
+    const [lastVisible, setLastVisible] = useState(cachedLastVisible);
     const [loadingNextPublications, setLoadingNextPublications] =
         useState(false);
     const [showEndPublications, setShowEndPublications] = useState(false);
+    const [isCardListScrolling, setIsCardListScrolling] = useState(false);
 
     const [showFilter, setShowFilter] = useState(false);
     const [hidedataFilter, setHidedataFilter] = useState(false);
@@ -144,35 +153,27 @@ export const Home = ({ navigation }) => {
 
     useFocusEffect(
         useCallback(() => {
-            setInitialdata();
-            setDataPublication([]);
             setShowEndPublications(false);
             setLoadingNextPublications(false);
 
             const loadInitialData = async () => {
                 getAllShrimpPondsRealTime((dataShrimpPonds) => {
-                    dataShrimpPonds.forEach((shrimpPond) => {
-                        dataShrimpPonds = dataShrimpPonds.filter(
-                            (item) => item.id !== shrimpPond.id,
-                        );
-                        dataShrimpPonds.push(shrimpPond);
-                    });
-
+                    cachedPublications = dataShrimpPonds;
+                    cachedInitialData = dataShrimpPonds;
                     setDataPublication(dataShrimpPonds);
                     setInitialdata(dataShrimpPonds);
-
-                    if (!lastVisible?.id) {
-                        setLastVisible(
-                            dataShrimpPonds[dataShrimpPonds.length - 1],
-                        );
-                    }
+                    const nextLastVisible =
+                        dataShrimpPonds[dataShrimpPonds.length - 1] ?? null;
+                    cachedLastVisible = nextLastVisible;
+                    setLastVisible(nextLastVisible);
+                    cachedPrefetchedPublications = [];
+                    prefetchNextPage(nextLastVisible);
                 });
 
                 const user = await GetUserStorage();
 
-                setUserType(user.userType);
-
                 if (user) {
+                    setUserType(user.userType);
                     dispatch({ type: LoginActions.ISAUTHENTICATED_ACTION });
 
                     if (
@@ -356,40 +357,73 @@ export const Home = ({ navigation }) => {
         navigation.navigate(dataRoutes.register, { tabIndex: 1 });
     };
 
+    const prefetchNextPage = useCallback(async (cursor) => {
+        if (!cursor || showEndPublications || isPrefetchingRef.current) {
+            return;
+        }
+
+        isPrefetchingRef.current = true;
+        try {
+            const nextData = await getMoreShrimpPonds(cursor);
+            cachedPrefetchedPublications = nextData;
+
+            if (!nextData.length) {
+                setShowEndPublications(true);
+            }
+        } catch (error) {
+            console.error("Error prefetching shrimp ponds:", error);
+        } finally {
+            isPrefetchingRef.current = false;
+        }
+    }, [showEndPublications]);
+
     const handleEndReached = useCallback(async () => {
         if (!showEndPublications && !loadingNextPublications) {
             setLoadingNextPublications(true);
 
-            InteractionManager.runAfterInteractions(async () => {
-                try {
-                    if (!lastVisible) {
-                        setLoadingNextPublications(false);
-                        return;
-                    }
-
-                    const moreShrimpPonds =
-                        await getMoreShrimpPonds(lastVisible);
-
-                    if (!moreShrimpPonds.length) {
-                        setShowEndPublications(true);
-                        return;
-                    }
-
-                    setLastVisible(moreShrimpPonds[moreShrimpPonds.length - 1]);
-                    setDataPublication((prevState) => [
-                        ...prevState,
-                        ...moreShrimpPonds,
-                    ]);
-                } catch (error) {
-                    console.error("Error fetching more shrimp ponds:", error);
-                } finally {
-                    setLoadingNextPublications(false);
+            try {
+                if (!lastVisible) {
+                    return;
                 }
-            });
-        }
-    }, [showEndPublications, loadingNextPublications, lastVisible]);
 
-    const getDataPublication = () => {
+                let moreShrimpPonds = cachedPrefetchedPublications;
+                cachedPrefetchedPublications = [];
+
+                if (!moreShrimpPonds.length) {
+                    moreShrimpPonds = await getMoreShrimpPonds(lastVisible);
+                }
+
+                if (!moreShrimpPonds.length) {
+                    setShowEndPublications(true);
+                    return;
+                }
+
+                const nextLastVisible =
+                    moreShrimpPonds[moreShrimpPonds.length - 1];
+                cachedLastVisible = nextLastVisible;
+                setLastVisible(nextLastVisible);
+                setDataPublication((prevState) => {
+                    const nextData = [...prevState, ...moreShrimpPonds];
+                    cachedPublications = nextData;
+                    cachedInitialData = nextData;
+                    return nextData;
+                });
+
+                prefetchNextPage(nextLastVisible);
+            } catch (error) {
+                console.error("Error fetching more shrimp ponds:", error);
+            } finally {
+                setLoadingNextPublications(false);
+            }
+        }
+    }, [
+        showEndPublications,
+        loadingNextPublications,
+        lastVisible,
+        prefetchNextPage,
+    ]);
+
+    const filteredPublications = useMemo(() => {
         const data1 = Object.values(
             dataPublicationFiltered.reduce(
                 (acc, item) => ({ ...acc, [item.id]: item }),
@@ -404,11 +438,21 @@ export const Home = ({ navigation }) => {
         );
 
         return data1.length === 0 ? data2 : data1;
-    };
+    }, [dataPublication, dataPublicationFiltered]);
 
     const handleRedirecSalesList = () => {
         navigation.navigate(dataRoutes.salesList);
     };
+
+    const handleOpenSelectAccountModal = useCallback(() => {
+        setModalVisible(true);
+    }, []);
+    const handleCardListScrollStart = useCallback(() => {
+        setIsCardListScrolling(true);
+    }, []);
+    const handleCardListScrollEnd = useCallback(() => {
+        setIsCardListScrolling(false);
+    }, []);
 
     const generateInitialBanner = () => {
         return (
@@ -419,30 +463,46 @@ export const Home = ({ navigation }) => {
     return (
         <>
             <Container>
-                <ContentSearchFilter>
-                    <SearchBar
-                        searchText={searchValue}
-                        onChange={handleSearchPublications}
-                        isLoadingSearch={isLoading}
-                    />
-                    <Filter onPress={handleOpenFilter} />
-                </ContentSearchFilter>
+                <ScreenHeader>
+                    <ContentSearchFilter>
+                        <SearchBarContainer>
+                            <SearchBar
+                                searchText={searchValue}
+                                onChange={handleSearchPublications}
+                                isLoadingSearch={isLoading}
+                            />
+                        </SearchBarContainer>
+                        <FilterButton onPress={handleOpenFilter}>
+                            <Feather name="filter" size={20} color={theme.colors.primary} />
+                            <FilterButtonText>Filtrar</FilterButtonText>
+                        </FilterButton>
+                    </ContentSearchFilter>
+                </ScreenHeader>
+
                 <ContentInitialBanner>
                     {generateInitialBanner()}
                 </ContentInitialBanner>
-                <ShrimpCardList
-                    dataPublication={getDataPublication()}
-                    dataAdvertising={dataAdvertising}
-                    sharedRef={viewShotShrimpCardRef}
-                    openModal={() => setModalVisible(true)}
-                    onEndReached={handleEndReached}
-                    isNextLoading={loadingNextPublications}
-                    isNestEnd={showEndPublications}
-                />
+
+                <ContentCardsList>
+                    <ShrimpCardList
+                        dataPublication={filteredPublications}
+                        dataAdvertising={dataAdvertising}
+                        sharedRef={viewShotShrimpCardRef}
+                        openModal={handleOpenSelectAccountModal}
+                        onEndReached={handleEndReached}
+                        isNextLoading={loadingNextPublications}
+                        isNestEnd={showEndPublications}
+                        isScrolling={isCardListScrolling}
+                        onScrollStart={handleCardListScrollStart}
+                        onScrollEnd={handleCardListScrollEnd}
+                    />
+                </ContentCardsList>
+
                 <PublicShrimpButton onPress={handleRedirectPublishShrimp}>
                     <ShrimpIcon source={shrimpIconWhite} />
                     <TextButton>Publicar meu Camarão</TextButton>
                 </PublicShrimpButton>
+
                 <FilterContent
                     width={width}
                     showFilter={showFilter}

@@ -4,207 +4,132 @@ import { ImageComponent } from "../ImageComponent";
 
 export const Container = styled.View`
     width: 100%;
-    height: ${({ theme }) => theme.size.componentSize(155)};
-
-    margin-top: ${({ theme }) => theme.size.dimentionsSize(1.5)};
-    margin-bottom: ${({ theme }) => theme.size.dimentionsSize(1.5)};
-    border-radius: 4px;
-
-    background-color: ${({ theme }) => theme.colors.tertiary};
-
-    elevation: 3;
+    background-color: #fff;
+    border-radius: 20px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    elevation: ${({ $disableShadow }) => ($disableShadow ? 0 : 3)};
+    shadow-color: #000;
+    shadow-offset: 0px 2px;
+    shadow-opacity: ${({ $disableShadow }) => ($disableShadow ? 0 : 0.1)};
+    shadow-radius: ${({ $disableShadow }) => ($disableShadow ? 0 : 4)}px;
 `;
 
 export const ContentPondsShrimp = styled.View`
-    height: ${({ theme }) => theme.size.componentSize(30)};
-
+    width: 100%;
+    padding: 12px 15px;
+    flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    flex-direction: row;
+`;
 
-    padding: 5px;
+export const LocationContainer = styled.View`
+    flex-direction: row;
+    align-items: center;
+    flex: 1;
 `;
 
 export const LocationText = styled(Text)`
-    font-size: ${({ theme }) => theme.size.fontSize(14)};
+    font-size: ${({ theme }) => theme.size.fontSize(16)};
     font-weight: bold;
-    color: ${({ theme }) => theme.colors.black};
+    color: #e85d22;
+    margin-left: 5px;
+`;
+
+export const RightHeaderContainer = styled.View`
+    flex-direction: row;
+    align-items: center;
 `;
 
 export const PondText = styled(Text)`
-    font-size: ${({ theme }) => theme.size.fontSize(15)};
-    font-weight: bold;
-
-    margin-left: ${({ theme }) => theme.size.dimentionsSize(-4)};
+    font-size: ${({ theme }) => theme.size.fontSize(14)};
+    color: #333;
+    margin-right: 15px;
 `;
 
 export const ButtonShare = styled.TouchableOpacity`
-    height: ${({ theme }) => theme.size.componentSize(30)};
-
-    justify-content: center;
-    align-items: center;
-
-    padding-left: ${({ theme }) => theme.size.componentSize(10)};
+    padding: 5px;
 `;
 
 export const ContainerInfo = styled.View`
-    width: 100%;
     flex-direction: row;
+    padding: 0 15px 15px 15px;
 `;
 
 export const ContentImageShrimp = styled.TouchableOpacity`
-    width: 30%;
-    height: ${({ theme }) => theme.size.componentSize(125)};
+    width: 45%;
+    aspect-ratio: 1.1;
+    border-radius: 15px;
+    overflow: hidden;
 `;
 
 export const ShrimpImage = styled(ImageComponent)`
     width: 100%;
-    height: ${({ theme }) => theme.size.componentSize(125)};
-
-    border-bottom-left-radius: 5px;
+    height: 100%;
 `;
 
 export const ContentDataShrimp = styled.View`
-    width: 70%;
+    width: 55%;
+    padding-left: 15px;
+    justify-content: space-between;
+`;
+
+export const GrammageContainer = styled.View`
+    background-color: #FEF5ED;
+    border-radius: 12px;
+    padding: 10px;
+    flex: 1;
+    margin-bottom: 10px;
+    justify-content: center;
 `;
 
 export const ContentTextInfo = styled.View`
-    width: 100%;
-    justify-content: center;
-    align-items: center;
-
-    background-color: ${({ theme }) => theme.colors.quaternary};
+    margin-bottom: 8px;
 `;
 
 export const TextInfo = styled(Text)`
-    height: ${({ theme }) => theme.size.componentSize(20)};
-    font-size: ${({ theme }) => theme.size.fontSize(12)};
+    font-size: ${({ theme }) => theme.size.fontSize(14)};
     font-weight: bold;
-
-    color: ${({ theme }) => theme.colors.black};
+    color: #e85d22;
 `;
 
 export const ContainerShrimp = styled.View`
-    height: ${({ theme }) => theme.size.componentSize(77)};
-
-    justify-content: center;
-    align-items: center;
     flex-direction: row;
-    flex-wrap: wrap;
-
-    padding: 5px 0;
-    padding-top: ${({ shrimpDimentions, theme }) => {
-        switch (shrimpDimentions) {
-            case 1:
-                return theme.size.dimentionsSize(4);
-
-            case 2:
-                return theme.size.dimentionsSize(2);
-
-            case 3:
-                return theme.size.dimentionsSize(2.4);
-
-            case 4:
-                return theme.size.dimentionsSize(2.4);
-
-            case 5:
-                return theme.size.dimentionsSize(0.5);
-
-            default:
-                return 0;
-        }
-    }};
-`;
-
-export const ContentTextShrimp = styled.View`
-    justify-content: center;
     align-items: center;
-    flex-direction: row;
-
-    padding: 0 1px;
 `;
 
 export const ShrimpIcon = styled.Image`
-    width: ${({ theme }) => theme.size.componentSize(24)};
-    height: ${({ theme }) => theme.size.componentSize(24)};
+    width: 24px;
+    height: 24px;
+    margin-right: 8px;
 `;
 
 export const TextShrimp = styled(Text)`
-    font-size: ${({ shrimpDimentions, theme }) => {
-        switch (shrimpDimentions) {
-            case 1:
-                return theme.size.fontSize(18);
-
-            case 2:
-                return theme.size.fontSize(18);
-
-            case 3:
-                return theme.size.fontSize(13);
-
-            case 4:
-                return theme.size.fontSize(12.8);
-
-            case 5:
-                return theme.size.fontSize(12.8);
-
-            default:
-                return 0;
-        }
-    }};
-
+    font-size: ${({ theme }) => theme.size.fontSize(18)};
     font-weight: bold;
-
-    color: ${({ theme }) => theme.colors.black};
-
+    color: #333;
     text-decoration: ${({ sale }) => (sale ? "line-through" : "none")};
     opacity: ${({ sale }) => (sale ? 0.5 : 1)};
 `;
 
 export const TextUnitMeasurement = styled(Text)`
-    font-size: ${({ shrimpDimentions, theme }) => {
-        switch (shrimpDimentions) {
-            case 1:
-                return theme.size.fontSize(16);
-
-            case 2:
-                return theme.size.fontSize(16);
-
-            case 3:
-                return theme.size.fontSize(10);
-
-            case 4:
-                return theme.size.fontSize(12);
-
-            case 5:
-                return theme.size.fontSize(12);
-
-            default:
-                return 0;
-        }
-    }};
-
+    font-size: ${({ theme }) => theme.size.fontSize(14)};
     font-weight: bold;
-
-    color: ${({ theme }) => theme.colors.black};
+    color: #333;
 `;
 
 export const ButtonBuy = styled.TouchableOpacity`
-    width: 100%;
-    height: ${({ theme }) => theme.size.componentSize(29)};
-
+    background-color: #1a1a1a;
+    height: 45px;
+    border-radius: 12px;
+    flex-direction: row;
     justify-content: center;
     align-items: center;
-    flex-direction: row;
-
-    border-bottom-right-radius: 4px;
-
-    background-color: ${({ theme }) => theme.colors.black};
 `;
 
 export const ButtonBuyText = styled(Text)`
     font-weight: bold;
-
-    margin-left: ${({ theme }) => theme.size.dimentionsSize(1)};
-
-    color: ${({ theme }) => theme.colors.white};
+    color: #fff;
+    font-size: ${({ theme }) => theme.size.fontSize(14)};
+    margin-left: 8px;
 `;

@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { Platform } from "react-native";
 import { pt, registerTranslation } from "react-native-paper-dates";
 import { ThemeProvider } from "styled-components/native";
-import { Provider as PaperProvider } from "react-native-paper";
+import { PaperProvider, MD3LightTheme } from "react-native-paper";
 import { Provider as ProviderRedux } from "react-redux";
 import Toast from "react-native-toast-message";
 import { useFonts } from "expo-font";
@@ -52,16 +52,26 @@ Sentry.init({
     },
 });
 
+const paperTheme = {
+    ...MD3LightTheme,
+    colors: {
+        ...MD3LightTheme.colors,
+        primary: theme?.colors?.primary ?? MD3LightTheme.colors.primary,
+        background: theme?.colors?.background ?? MD3LightTheme.colors.background,
+        surface: theme?.colors?.white ?? MD3LightTheme.colors.surface,
+        onSurface: theme?.colors?.text ?? MD3LightTheme.colors.onSurface,
+        error: theme?.colors?.red ?? MD3LightTheme.colors.error,
+    },
+};
+
 const App = () => {
     registerTranslation("pt", pt);
     const isConnected = useInternetConnection();
 
-    // Configurar as cores do sistema UI
     useSystemUI();
 
     useEffect(() => {
         (async () => {
-            // Configurar as cores do sistema UI
             if (Platform.OS === "android") {
                 await SystemUI.setBackgroundColorAsync("#F05829");
             }
@@ -112,7 +122,7 @@ const App = () => {
     return (
         <SafeAreaProvider>
             <ThemeProvider theme={theme}>
-                <PaperProvider theme={theme}>
+                <PaperProvider theme={paperTheme}>
                     <ProviderRedux store={store}>
                         <ContentStatusBar />
                         <KeyboardSafeContent>

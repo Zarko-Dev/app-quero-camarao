@@ -1,3 +1,4 @@
+import "react-native-get-random-values";
 import * as ExpoCrypto from "expo-crypto";
 
 if (typeof globalThis.crypto !== "object" || globalThis.crypto == null) {

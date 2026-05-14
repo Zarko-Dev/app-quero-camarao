@@ -1,14 +1,8 @@
-/* eslint-disable indent */
-/* eslint-disable object-curly-newline */
-/* eslint-disable operator-linebreak */
-/* eslint-disable react/no-array-index-key */
-
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useDispatch, useSelector } from "react-redux";
-import { memo, useState } from "react";
-import { ActivityIndicator } from "react-native-paper";
-import { Dimensions, Platform, Share } from "react-native";
+import { memo, useMemo, useState } from "react";
+import { ActivityIndicator, Dimensions, Platform, Share, View } from "react-native";
 import { v4 } from "uuid";
 
 import { dataRoutes } from "../../routes/dataRoutes";
@@ -37,7 +31,6 @@ import {
     ContentImageShrimp,
     ContentPondsShrimp,
     ContentTextInfo,
-    ContentTextShrimp,
     LocationText,
     PondText,
     ShrimpIcon,
@@ -45,14 +38,23 @@ import {
     TextInfo,
     TextShrimp,
     TextUnitMeasurement,
+    LocationContainer,
+    RightHeaderContainer,
+    GrammageContainer,
 } from "./styles";
-import { BoxShadowIos } from "../../styles/IosShadow";
 import { getPublicationViewLogs } from "../../controllers/Publication/getPublicationViewsLogs";
 import { getUserNotificationToken } from "../../controllers/User/notification";
 import { SendNotifications } from "../../controllers/Notifications/sendNotifications";
 
 export const CardPublicationShrimp = memo(
-    ({ item, index: indexList, dataAdvertising, sharedRef, openModal }) => {
+    ({
+        item,
+        index: indexList,
+        dataAdvertising,
+        sharedRef,
+        openModal,
+        isScrolling = false,
+    }) => {
         const dispatch = useDispatch();
 
         const navigation = useNavigation();
@@ -102,22 +104,9 @@ export const CardPublicationShrimp = memo(
                 openModal();
             } else {
                 const dataUser = await GetUserStorage();
-                const whatsappMessage = `Olá, venho através do aplicativo *Quero Camarão* 🦐
+                const whatsappMessage = `Olá, venho através do aplicativo *Quero Camarão* 🦐\n\nMe chamo *${dataUser.name.split(" ")[0]}*, vi seu anuncio e gostaria de Negociar seu camarão.\n\n*${ConvertPondsPlural()}*\n\n${shrimps.map((shrimp) => `*${shrimp.grammage}g/${shrimp.kilo}kg*`).join("\n")}\n${location}`;
 
-Me chamo *${
-                    dataUser.name.split(" ")[0]
-                }*, vi seu anuncio e gostaria de Negociar seu camarão.
-
-*${ConvertPondsPlural()}*
-
-${shrimps.map(
-    (shrimp) => `*${shrimp.grammage}g/${shrimp.kilo}kg*
-`,
-)}
-${location}`;
-
-                const dataViews =
-                    await getPublicationViewLogs(publicationViewsId);
+                const dataViews = await getPublicationViewLogs(publicationViewsId);
 
                 await setNewVisualizationPublication(
                     id,
@@ -153,8 +142,7 @@ ${location}`;
                 }
 
                 navigation.navigate(dataRoutes.redirect, {
-                    subtext:
-                        "Estamos lhe redirecionado ao whatsapp do produtor que selecionou",
+                    subtext: "Estamos lhe redirecionado ao whatsapp do produtor que selecionou",
                     actionRediret: redirectWhatsappLink(
                         contactNumber,
                         whatsappMessage,
@@ -238,36 +226,36 @@ ${location}`;
 
             return { data: [shrimps[0]], emptyImage: hasNonNullImageUri };
         };
+        const shrimpImageData = useMemo(() => generateShrimpImage(), [shrimps]);
+        const shouldUseCarousel =
+            Platform.OS !== "android" && shrimpImageData.data.length > 1;
 
         const wp = (percentage) => {
             const Screen = Dimensions.get("window");
             const value = (percentage * Screen.width) / 100;
-
             return Math.round(value);
         };
 
         return (
             <>
-                <Container style={BoxShadowIos}>
+                <Container $disableShadow={Platform.OS === "android" && isScrolling}>
                     <ContentPondsShrimp>
-                        <LocationText>{location}</LocationText>
-                        <PondText>{ConvertPondsPlural()}</PondText>
-                        <ButtonShare onPress={handleShareShrimpCard}>
-                            {!isSharingLoading ? (
-                                <FontAwesome
-                                    name="share"
-                                    size={18}
-                                    color="black"
-                                />
-                            ) : (
-                                <ActivityIndicator
-                                    animating
-                                    size={20}
-                                    color="black"
-                                />
-                            )}
-                        </ButtonShare>
+                        <LocationContainer>
+                            <Feather name="map-pin" size={18} color="#e85d22" />
+                            <LocationText>{location}</LocationText>
+                        </LocationContainer>
+                        <RightHeaderContainer>
+                            <PondText>{ConvertPondsPlural()}</PondText>
+                            <ButtonShare onPress={handleShareShrimpCard}>
+                                {!isSharingLoading ? (
+                                    <MaterialCommunityIcons name="share-outline" size={24} color="#e85d22" />
+                                ) : (
+                                    <ActivityIndicator animating size={20} color="#e85d22" />
+                                )}
+                            </ButtonShare>
+                        </RightHeaderContainer>
                     </ContentPondsShrimp>
+
                     <ContainerInfo>
                         <ContentImageShrimp
                             activeOpacity={0.5}
@@ -281,69 +269,55 @@ ${location}`;
                                     : () => {}
                             }
                         >
-                            <Carousel
-                                data={generateShrimpImage().data}
-                                renderItem={ItemImage}
-                                sliderWidth={wp(29.4)}
-                                itemWidth={wp(29.4)}
-                                autoplay
-                                enableMomentum={false}
-                                lockScrollWhileSnapping
-                                autoplayInterval={3000}
-                                loop
-                                decelerationRate="normal"
-                            />
+                            {shouldUseCarousel ? (
+                                <Carousel
+                                    data={shrimpImageData.data}
+                                    renderItem={ItemImage}
+                                    sliderWidth={wp(38)}
+                                    itemWidth={wp(38)}
+                                    autoplay
+                                    enableMomentum={false}
+                                    lockScrollWhileSnapping
+                                    autoplayInterval={3000}
+                                    loop
+                                    decelerationRate="normal"
+                                />
+                            ) : (
+                                <ShrimpImage
+                                    uri={shrimpImageData.data?.[0]?.imageShrimpUri}
+                                />
+                            )}
                         </ContentImageShrimp>
+
                         <ContentDataShrimp>
-                            <ContentTextInfo>
-                                <TextInfo>Gramatura/Quilos</TextInfo>
-                            </ContentTextInfo>
-                            <ContainerShrimp shrimpDimentions={shrimps.length}>
-                                {shrimps.map((shrimp, index) => (
-                                    <ContentTextShrimp key={index}>
-                                        <ShrimpIcon source={shrimpIcon} />
-                                        <TextShrimp
-                                            shrimpDimentions={shrimps.length}
-                                            sale={shrimp?.sale}
-                                        >
-                                            {`${shrimp.grammage}`}
-                                            <TextUnitMeasurement
-                                                shrimpDimentions={
-                                                    shrimps.length
-                                                }
-                                            >
-                                                g
-                                            </TextUnitMeasurement>{" "}
-                                            / {`${formatKilo(shrimp.kilo)}`}
-                                            <TextUnitMeasurement
-                                                shrimpDimentions={
-                                                    shrimps.length
-                                                }
-                                            >
-                                                Kg
-                                            </TextUnitMeasurement>
-                                        </TextShrimp>
-                                    </ContentTextShrimp>
-                                ))}
-                            </ContainerShrimp>
+                            <GrammageContainer>
+                                <ContentTextInfo>
+                                    <TextInfo>Gramatura/Quilos</TextInfo>
+                                </ContentTextInfo>
+                                <View>
+                                    {shrimps.slice(0, 2).map((shrimp, index) => (
+                                        <ContainerShrimp key={index}>
+                                            <ShrimpIcon source={shrimpIcon} />
+                                            <TextShrimp sale={shrimp?.sale}>
+                                                {`${shrimp.grammage}`}
+                                                <TextUnitMeasurement>g</TextUnitMeasurement>
+                                                {" / "}
+                                                {`${formatKilo(shrimp.kilo)}`}
+                                                <TextUnitMeasurement>Kg</TextUnitMeasurement>
+                                            </TextShrimp>
+                                        </ContainerShrimp>
+                                    ))}
+                                </View>
+                            </GrammageContainer>
+
                             <ButtonBuy onPress={handleRedirectPage}>
                                 {!isLoadingTalkProductor ? (
                                     <>
-                                        <FontAwesome
-                                            name="whatsapp"
-                                            size={24}
-                                            color="white"
-                                        />
-                                        <ButtonBuyText>
-                                            Falar com o Produtor
-                                        </ButtonBuyText>
+                                        <FontAwesome name="whatsapp" size={24} color="white" />
+                                        <ButtonBuyText>Falar com o Produtor</ButtonBuyText>
                                     </>
                                 ) : (
-                                    <ActivityIndicator
-                                        animating
-                                        size={20}
-                                        color="white"
-                                    />
+                                    <ActivityIndicator animating size={20} color="white" />
                                 )}
                             </ButtonBuy>
                         </ContentDataShrimp>
@@ -354,10 +328,17 @@ ${location}`;
                     visible={showModalImagesShrimp}
                     onClose={() => setShowModalImagesShrimp(false)}
                     actionBuy={handleRedirectPage}
-                    dataShrimp={generateShrimpImage().data}
+                    dataShrimp={shrimpImageData.data}
                     isLoading={isLoadingTalkProductor}
                 />
             </>
         );
     },
+    (prevProps, nextProps) =>
+        prevProps.item === nextProps.item &&
+        prevProps.index === nextProps.index &&
+        prevProps.dataAdvertising === nextProps.dataAdvertising &&
+        prevProps.sharedRef === nextProps.sharedRef &&
+        prevProps.openModal === nextProps.openModal &&
+        prevProps.isScrolling === nextProps.isScrolling,
 );
