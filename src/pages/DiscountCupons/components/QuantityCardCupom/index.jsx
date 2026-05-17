@@ -1,4 +1,4 @@
-import { DiscountIndicator } from "../DiscountIndicator";
+﻿import { DiscountIndicator } from "../DiscountIndicator";
 import {
     Container,
     ContentQuantity,
@@ -20,26 +20,19 @@ export const QuantityCardCupom = ({
         <Container>
             <ContentQuantityInfo>
                 <ContentQuantity>
-                    <TextQuantity>Quantidade Disponível</TextQuantity>
+                    <TextQuantity>Quantidade disponivel</TextQuantity>
                     <QuantityIndicator>
-                        <QuantityIndicatorText>
-                            {durationInitialValue}
-                        </QuantityIndicatorText>
+                        <QuantityIndicatorText>{durationInitialValue}</QuantityIndicatorText>
                     </QuantityIndicator>
                 </ContentQuantity>
                 <ContentQuantity>
-                    <TextQuantity>Quantidade Utilizada</TextQuantity>
+                    <TextQuantity>Quantidade utilizada</TextQuantity>
                     <QuantityIndicator>
-                        <QuantityIndicatorText>
-                            {getDifferentialValue()}
-                        </QuantityIndicatorText>
+                        <QuantityIndicatorText>{getDifferentialValue()}</QuantityIndicatorText>
                     </QuantityIndicator>
                 </ContentQuantity>
             </ContentQuantityInfo>
-            <DiscountIndicator
-                discountType={discountType}
-                discountValue={discountValue}
-            />
+            <DiscountIndicator discountType={discountType} discountValue={discountValue} />
         </Container>
     );
 };

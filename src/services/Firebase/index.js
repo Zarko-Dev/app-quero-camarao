@@ -18,33 +18,35 @@ let firebaseApp;
 let firestore;
 let storage;
 let firestoreInstance;
+const firestoreSettings = {
+    experimentalForceLongPolling: true,
+    useFetchStreams: false,
+};
 
 try {
     if (!getApps().length) {
         firebaseApp = initializeApp(config);
-
-        try {
-            initializeAuth(firebaseApp, {
-                persistence: getReactNativePersistence(ReactNativeAsyncStorage),
-            });
-        } catch (authError) {
-            getAuth(firebaseApp);
-        }
-
-        firestore = initializeFirestore(firebaseApp, {
-            experimentalAutoDetectLongPolling: true,
-            useFetchStreams: false,
-        });
-        firestoreInstance = firestore;
-
-        storage = getStorage(firebaseApp);
     } else {
         // eslint-disable-next-line prefer-destructuring
         firebaseApp = getApps()[0];
-        firestore = getFirestore(firebaseApp);
-        firestoreInstance = firestore;
-        storage = getStorage(firebaseApp);
     }
+
+    try {
+        initializeAuth(firebaseApp, {
+            persistence: getReactNativePersistence(ReactNativeAsyncStorage),
+        });
+    } catch (authError) {
+        getAuth(firebaseApp);
+    }
+
+    try {
+        firestore = initializeFirestore(firebaseApp, firestoreSettings);
+    } catch (firestoreError) {
+        firestore = getFirestore(firebaseApp);
+    }
+
+    firestoreInstance = firestore;
+    storage = getStorage(firebaseApp);
 } catch (error) {
     Sentry.captureException(error);
 

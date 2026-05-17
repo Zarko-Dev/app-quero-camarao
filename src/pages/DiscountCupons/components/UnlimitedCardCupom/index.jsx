@@ -1,4 +1,4 @@
-import { DiscountIndicator } from "../DiscountIndicator";
+﻿import { DiscountIndicator } from "../DiscountIndicator";
 import {
     Container,
     ContentUnlimited,
@@ -22,19 +22,16 @@ export const UnlimitedCardCupom = ({
             <ContentUnlimited>
                 <TextUnlimited>Expira em</TextUnlimited>
                 <UnlimitedIndicator>
-                    <UnlimitedIndicatorText>Não Expira</UnlimitedIndicatorText>
+                    <UnlimitedIndicatorText>Nao expira</UnlimitedIndicatorText>
                 </UnlimitedIndicator>
             </ContentUnlimited>
             <ContentQuantity>
-                <TextQuantity>Quantidade Utilizada</TextQuantity>
+                <TextQuantity>Quantidade utilizada</TextQuantity>
                 <QuantityIndicator>
                     <QuantityIndicatorText>{useCount}</QuantityIndicatorText>
                 </QuantityIndicator>
             </ContentQuantity>
         </ContentUnlimitedInfo>
-        <DiscountIndicator
-            discountType={discountType}
-            discountValue={discountValue}
-        />
+        <DiscountIndicator discountType={discountType} discountValue={discountValue} />
     </Container>
 );

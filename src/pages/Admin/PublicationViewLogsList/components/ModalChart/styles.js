@@ -47,7 +47,7 @@ export const Title = styled.Text`
     color: ${({ theme }) => theme.colors.black};
 `;
 
-export const ContainerDropdowSelects = styled.View`
+export const ContainerDropdownSelects = styled.View`
     width: 100%;
 
     justify-content: space-between;

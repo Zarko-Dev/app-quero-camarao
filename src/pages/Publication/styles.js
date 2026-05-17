@@ -3,13 +3,14 @@ import styled from "styled-components/native";
 
 export const Container = styled.ScrollView`
     flex: 1;
+    background-color: #ffffff;
 `;
 
 export const Content = styled.View`
     justify-content: center;
     align-items: center;
 
-    padding: ${({ theme }) => theme.size.dimentionsSize(2)};
+    padding: 10px;
 `;
 
 export const ContentImage = styled.View`
@@ -32,15 +33,15 @@ export const ImageShrimp = styled.Image`
 `;
 
 export const ButtomAddShrimpCard = styled.TouchableOpacity`
-    width: 90%;
-    height: ${({ theme }) => theme.size.componentSize(45)};
+    width: 100%;
+    height: ${({ theme }) => theme.size.componentSize(48)};
 
     justify-content: center;
     align-items: center;
 
     margin-top: ${({ theme }) => theme.size.dimentionsSize(2)};
 
-    border-radius: 4px;
+    border-radius: 8px;
 
     background-color: ${({ theme }) => theme.colors.primary};
 
@@ -52,18 +53,20 @@ export const TextButtomAddShrimpCard = styled(Text)`
     color: ${({ theme }) => theme.colors.white};
 `;
 
-export const ContentResume = styled.View``;
+export const ContentResume = styled.View`
+    padding: 8px 10px 10px 10px;
+    background-color: #ffffff;
+`;
 
 export const ButtonSendPayment = styled.TouchableOpacity`
-    height: ${({ theme }) => theme.size.componentSize(45)};
+    height: ${({ theme }) => theme.size.componentSize(50)};
 
     justify-content: center;
     align-items: center;
 
-    margin: 5px;
-    border-radius: 4px;
+    border-radius: 8px;
 
-    background-color: ${({ theme }) => theme.colors.black};
+    background-color: ${({ theme }) => theme.colors.primary};
 
     elevation: 3;
 `;

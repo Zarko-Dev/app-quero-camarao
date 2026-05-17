@@ -189,8 +189,8 @@ export const Publication = ({ navigation, route }) => {
         if (state === "" || city === "") {
             Toast.show({
                 type: "error",
-                text1: "Localização é obrigatória",
-                text2: "Verifique se seu Estado ou Cidade estão vazios",
+                text1: "LocalizaÃ§Ã£o Ã© obrigatÃ³ria",
+                text2: "Verifique se seu Estado ou Cidade estÃ£o vazios",
             });
         } else if (
             dataPonds.some((item) => item.grammage === "" || item.kilo === "")
@@ -269,7 +269,7 @@ export const Publication = ({ navigation, route }) => {
         if (result) {
             Toast.show({
                 type: "success",
-                text1: "Publicação atualizada com sucesso!",
+                text1: "PublicaÃ§Ã£o atualizada com sucesso!",
             });
 
             navigation.goBack();
@@ -306,7 +306,7 @@ export const Publication = ({ navigation, route }) => {
                             key={dataPond.id}
                             pondId={dataPond.id}
                             index={index}
-                            title={`${index + 1}° Viveiro`}
+                            title={`${index + 1} Viveiro`}
                             onDelete={() => handleDeleteCardpond(dataPond.id)}
                             actionEdit={handlePopulateDataPonds}
                             onPressIn={senEndScrollView}
@@ -330,7 +330,7 @@ export const Publication = ({ navigation, route }) => {
                             onPress={handleNewCardPond}
                         >
                             <TextButtomAddShrimpCard>
-                                Publique +1 Viveiro com 50% de desconto
+                                Adicionar viveiro com 50% de desconto
                             </TextButtomAddShrimpCard>
                         </ButtomAddShrimpCard>
                     )}
@@ -360,7 +360,7 @@ export const Publication = ({ navigation, route }) => {
                     >
                         {!isLoadingEditable ? (
                             <TextButtonSendPayment>
-                                Editar Publicação
+                                Editar PublicaÃ§Ã£o
                             </TextButtonSendPayment>
                         ) : (
                             <ActivityIndicator animating color="white" />
@@ -370,7 +370,7 @@ export const Publication = ({ navigation, route }) => {
             )}
             <DialogComponent
                 visible={dialogVisible}
-                title="Atenção"
+                title="AtenÃ§Ã£o"
                 text="Deseja realmente excluir este viveiro?"
                 textActionButton="Excluir"
                 hideDialog={hideDialog}
@@ -379,8 +379,8 @@ export const Publication = ({ navigation, route }) => {
             />
             <DialogComponent
                 visible={alertEmptyImage}
-                title="Sua publicação não possui imagem"
-                text="A imagem é importante para aumentar o engajamento de sua publicação, deseja adicionar a imagem?"
+                title="Sua publicaÃ§Ã£o nÃ£o possui imagem"
+                text="A imagem Ã© importante para aumentar o engajamento de sua publicaÃ§Ã£o, deseja adicionar a imagem?"
                 textActionButton="Adicionar Imagem"
                 hideDialog={hideDialog}
                 actionButton={hideDialog}

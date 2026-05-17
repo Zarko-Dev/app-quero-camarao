@@ -102,7 +102,7 @@ export const UseTerms = () => (
             </ParagraphItem>
             <ParagraphItem>
                 A legislação brasileira que embasa esses termos de uso é o
-                Código Civil Brasileiro, Lei nº 10.406/2002, que estabelece em
+                Código Civil Brasileiro, Lei nÂº 10.406/2002, que estabelece em
                 seu artigo 421 que "a liberdade de contratar será exercida em
                 razão e nos limites da função social do contrato". Ou seja, a
                 utilização do aplicativo é uma forma de contrato entre o
@@ -203,7 +203,7 @@ export const UseTerms = () => (
             </ParagraphItem>
             <ParagraphItem>
                 A legislação que embasa essa contratação estão estabelecidas no
-                art. 30 Código de Defesa do Consumidor, Lei nº 8.078 de 1990.
+                art. 30 Código de Defesa do Consumidor, Lei nÂº 8.078 de 1990.
             </ParagraphItem>
         </Content>
     </Container>

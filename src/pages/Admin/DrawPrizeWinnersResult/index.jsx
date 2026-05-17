@@ -5,7 +5,7 @@ import LottieView from "lottie-react-native";
 import { useEffect, useRef, useState } from "react";
 import Toast from "react-native-toast-message";
 import { ActivityIndicator } from "react-native-paper";
-import { Entypo } from "@expo/vector-icons";
+import { Entypo, Feather } from "@expo/vector-icons";
 import { useTheme } from "styled-components";
 import { getDrawPrizeLiveById } from "../../../controllers/DrawPrizes/live";
 import { Linking } from "react-native";
@@ -15,6 +15,7 @@ import lottieWinDrawPrize from "../../../assets/lotties/lottieWinDrawPrize.json"
 import lottieContinousWinDrawPrize from "../../../assets/lotties/lottieContinousWinDrawPrize.json";
 
 import {
+    BackButton,
     CardUser,
     Container,
     ContainerCards,
@@ -41,7 +42,7 @@ export const DrawPrizeWinnersResult = ({ route, navigation }) => {
     const theme = useTheme();
     const { drawPrizeId, showOnlyResults, drawerPrizeLiveId, newWinnersCount } =
         route.params;
-    const [usersWinner, setUsersWinner] = useState([]); // 👈 vira estado    
+    const [usersWinner, setUsersWinner] = useState([]); // ?? vira estado    
 
     const [isLoading, setIsLoading] = useState(false);
     const [isLoadingDelete, setIsLoadingDelete] = useState(false);
@@ -84,7 +85,7 @@ useEffect(() => {
                 }
             }
         } else {
-            setUsersWinner(route.params.usersWinner ?? []); // 👈 usa os do histórico
+            setUsersWinner(route.params.usersWinner ?? []); // ?? usa os do histórico
         }
     };
 
@@ -133,15 +134,15 @@ useEffect(() => {
                 return;
             }
 
-            // 👇 cria variável nova (não mexe no user)
+            // ?? cria variável nova (não mexe no user)
             let phoneFormatted = user.phone.replace(/\D/g, "");
 
             if (!phoneFormatted.startsWith("55")) {
                 phoneFormatted = "55" + phoneFormatted;
             }
 
-            const text = `🎉 Parabéns ${user.name}!
-        Você foi um dos ganhadores do sorteio! 🏆`;
+            const text = `?? Parabéns ${user.name}!
+        Você foi um dos ganhadores do sorteio! ??`;
 
             const url = `https://wa.me/${phoneFormatted}?text=${encodeURIComponent(text)}`;
 
@@ -219,6 +220,13 @@ useEffect(() => {
             {showResult && (
                 <>
                     <Header>
+                        <BackButton onPress={() => navigation.goBack()}>
+                            <Feather
+                                name="arrow-left"
+                                color={theme.colors.black}
+                                size={20}
+                            />
+                        </BackButton>
                         <Title>Vencedores do Sorteio</Title>
                    <DrawPizeShare
                         onPress={() =>

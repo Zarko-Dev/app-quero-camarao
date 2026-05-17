@@ -4,20 +4,32 @@ import * as NavigationBar from "expo-navigation-bar";
 
 export const useSystemUI = () => {
     useEffect(() => {
+        let isMounted = true;
+
         const configureSystemUI = async () => {
             if (Platform.OS === "android") {
                 try {
-                    // Ocultar a barra de navegação (modo imersivo)
+                    if (!isMounted) return;
                     await NavigationBar.setVisibilityAsync("hidden");
 
-                    // Configurar para que apareça apenas com gesture
+                    if (!isMounted) return;
                     await NavigationBar.setBehaviorAsync("overlay-swipe");
                 } catch (error) {
-                    console.log("Erro ao configurar NavigationBar:", error);
+                    const message = String(error?.message || error || "");
+                    const isActivityUnavailable =
+                        message.includes("current activity is no longer available");
+
+                    if (!isActivityUnavailable) {
+                        console.log("Erro ao configurar NavigationBar:", error);
+                    }
                 }
             }
         };
 
         configureSystemUI();
+
+        return () => {
+            isMounted = false;
+        };
     }, []);
 };

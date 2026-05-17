@@ -62,7 +62,7 @@ export const CardRegisterShrimp = ({
                     <ContentInternalHeader>
                         {index !== 0 && !editable && (
                             <ButtonDeleteCardPond onPress={onDelete}>
-                                <Feather name="x" size={28} color="white" />
+                                <Feather name="x" size={18} color="white" />
                             </ButtonDeleteCardPond>
                         )}
                     </ContentInternalHeader>
@@ -82,7 +82,7 @@ export const CardRegisterShrimp = ({
                         </TouchableOpacity>
                     </ContentImage>
                     <ContentInput>
-                        <TitleInput>Gramatura do camarão:</TitleInput>
+                        <TitleInput>Gramatura do camarao</TitleInput>
                         <InputStyle
                             label="Ex.: 50g"
                             keyboardType="numeric"
@@ -94,7 +94,7 @@ export const CardRegisterShrimp = ({
                         />
                     </ContentInput>
                     <ContentInput>
-                        <TitleInput>Quilo do camarão</TitleInput>
+                        <TitleInput>Quilo do camarao</TitleInput>
                         <InputStyle
                             label="Ex.: 1000kg"
                             keyboardType="numeric"

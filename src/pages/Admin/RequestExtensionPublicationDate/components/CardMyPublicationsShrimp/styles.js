@@ -1,246 +1,314 @@
-import { lighten } from "polished";
-import { Text } from "react-native-paper";
+import { Text } from "react-native";
 import styled from "styled-components/native";
 
 import { ImageComponent } from "../../../../../components/ImageComponent";
 
 export const Container = styled.View`
     width: 100%;
-    height: ${({ theme }) => theme.size.componentSize(155)};
-
-    margin-top: ${({ theme }) => theme.size.dimentionsSize(1.5)};
-    margin-bottom: ${({ theme }) => theme.size.dimentionsSize(1.5)};
-    border-radius: 4px;
-
-    background-color: ${({ theme }) => theme.colors.tertiary};
-
-    elevation: 3;
+    margin-top: ${({ theme }) => theme.size.dimentionsSize(1.2)};
+    margin-bottom: ${({ theme }) => theme.size.dimentionsSize(0.8)};
+    padding: 12px;
+    border-radius: 8px;
+    border-width: 1px;
+    border-color: #e8e8e8;
+    background-color: #ffffff;
+    elevation: 2;
 `;
 
 export const ContentExpired = styled.View`
-    width: 100%;
-    height: ${({ theme }) => theme.size.componentSize(155)};
-
     position: absolute;
-    border-radius: 4px;
-
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    border-radius: 8px;
     background-color: ${({ theme }) => theme.colors.black};
-    opacity: 0.3;
+    opacity: 0.12;
 `;
 
 export const ContentPondsShrimp = styled.View`
-    height: ${({ theme }) => theme.size.componentSize(30)};
-
-    justify-content: space-between;
-    align-items: center;
+    min-height: ${({ theme }) => theme.size.componentSize(28)};
     flex-direction: row;
+    align-items: center;
+    margin-bottom: 8px;
+`;
 
-    padding: 5px;
+export const TitleWrap = styled.View`
+    flex: 1;
+    flex-direction: row;
+    align-items: center;
 `;
 
 export const LocationText = styled(Text)`
-    font-size: ${({ theme }) => theme.size.fontSize(14)};
-    font-weight: bold;
-    color: ${({ theme }) => theme.colors.black};
+    font-size: ${({ theme }) => theme.size.fontSize(17)};
+    font-weight: 800;
+    color: #1f1f1f;
+`;
+
+export const MainBadge = styled.View`
+    flex-direction: row;
+    align-items: center;
+    margin-left: 10px;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background-color: #ffe7dc;
+`;
+
+export const MainBadgeText = styled(Text)`
+    margin-left: 4px;
+    font-size: ${({ theme }) => theme.size.fontSize(12)};
+    font-weight: 800;
+    color: ${({ theme }) => theme.colors.primary};
 `;
 
 export const PondText = styled(Text)`
-    font-size: ${({ theme }) => theme.size.fontSize(15)};
-    font-weight: bold;
-
-    margin-left: ${({ theme }) => theme.size.dimentionsSize(-10)};
+    margin-right: 12px;
+    font-size: ${({ theme }) => theme.size.fontSize(14)};
+    font-weight: 500;
+    color: #555555;
 `;
 
 export const ButtonShare = styled.View`
-    height: ${({ theme }) => theme.size.componentSize(30)};
-
+    width: ${({ theme }) => theme.size.componentSize(22)};
+    height: ${({ theme }) => theme.size.componentSize(22)};
     justify-content: center;
     align-items: center;
-
-    padding-left: ${({ theme }) => theme.size.componentSize(10)};
 `;
 
 export const ContainerInfo = styled.View`
     width: 100%;
     flex-direction: row;
+    align-items: flex-start;
 `;
 
 export const ContentImageShrimp = styled.TouchableOpacity`
-    width: 30.5%;
-    height: ${({ theme }) => theme.size.componentSize(125)};
+    width: 100%;
+    height: ${({ theme }) => theme.size.componentSize(86)};
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #fff4ef;
+`;
+
+export const ImageColumn = styled.View`
+    width: 24%;
+    margin-right: 10px;
+`;
+
+export const ImageViews = styled.View`
+    height: ${({ theme }) => theme.size.componentSize(26)};
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    margin-top: 6px;
+    border-radius: 999px;
+    background-color: #f7f7f7;
+`;
+
+export const EmptyImageWrap = styled.View`
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+    background-color: #fff4ef;
+`;
+
+export const EmptyShrimpImage = styled.Image`
+    width: 74%;
+    height: 74%;
 `;
 
 export const ShrimpImage = styled(ImageComponent)`
     width: 100%;
-    height: ${({ theme }) => theme.size.componentSize(125)};
-
-    border-bottom-left-radius: 5px;
+    height: 100%;
 `;
 
 export const ContentDataShrimp = styled.View`
-    width: 70%;
+    flex: 1;
+    min-height: ${({ theme }) => theme.size.componentSize(86)};
+    border-radius: 8px;
+    background-color: #fbfbfb;
+`;
+
+export const ShrimpInfoColumn = styled.View`
+    flex: 1;
+    padding: 10px;
 `;
 
 export const ContentTextInfo = styled.View`
-    width: 100%;
-    justify-content: center;
-    align-items: center;
-
-    background-color: ${({ theme }) => theme.colors.quaternary};
+    margin-bottom: 8px;
 `;
 
 export const TextInfo = styled(Text)`
-    height: ${({ theme }) => theme.size.componentSize(20)};
     font-size: ${({ theme }) => theme.size.fontSize(12)};
-    font-weight: bold;
-
-    color: ${({ theme }) => theme.colors.black};
+    font-weight: 800;
+    color: ${({ theme }) => theme.colors.primary};
 `;
 
 export const ContainerShrimp = styled.View`
-    height: ${({ theme }) => theme.size.componentSize(77)};
-
-    justify-content: center;
-    align-items: center;
     flex-direction: row;
     flex-wrap: wrap;
-
-    padding: 5px 0;
-    padding-top: ${({ shrimpDimentions, theme }) => {
-        switch (shrimpDimentions) {
-            case 1:
-                return theme.size.dimentionsSize(4);
-
-            case 2:
-                return theme.size.dimentionsSize(2);
-
-            case 3:
-                return theme.size.dimentionsSize(2.4);
-
-            case 4:
-                return theme.size.dimentionsSize(2.4);
-
-            case 5:
-                return theme.size.dimentionsSize(0.5);
-
-            default:
-                return 0;
-        }
-    }};
+    align-items: flex-start;
+    margin: -3px;
 `;
 
 export const ContentTextShrimp = styled.View`
-    justify-content: center;
-    align-items: center;
     flex-direction: row;
-
-    padding: 0 1px;
+    align-items: center;
+    margin: 3px;
+    padding: 5px 7px;
+    border-radius: 7px;
+    border-width: 1px;
+    border-color: #f1ded5;
+    background-color: #ffffff;
 `;
 
 export const ShrimpIcon = styled.Image`
-    width: ${({ theme }) => theme.size.componentSize(24)};
-    height: ${({ theme }) => theme.size.componentSize(24)};
+    width: ${({ theme }) => theme.size.componentSize(22)};
+    height: ${({ theme }) => theme.size.componentSize(22)};
+    margin-right: 5px;
 `;
 
 export const TextShrimp = styled(Text)`
-    font-size: ${({ shrimpDimentions, theme }) => {
-        switch (shrimpDimentions) {
-            case 1:
-                return theme.size.fontSize(18);
-
-            case 2:
-                return theme.size.fontSize(18);
-
-            case 3:
-                return theme.size.fontSize(14);
-
-            case 4:
-                return theme.size.fontSize(13);
-
-            case 5:
-                return theme.size.fontSize(13);
-
-            default:
-                return 0;
-        }
-    }};
-
-    font-weight: bold;
-
-    color: ${({ theme }) => theme.colors.black};
+    font-size: ${({ shrimpDimentions, theme }) =>
+        shrimpDimentions > 4 ? theme.size.fontSize(11) : theme.size.fontSize(12)};
+    font-weight: 800;
+    color: #202020;
 `;
 
-export const ButtonBuy = styled.View`
-    width: 99.1%;
-    height: ${({ theme }) => theme.size.componentSize(29)};
+export const MetaRow = styled.View`
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    margin-top: 10px;
+    padding: 8px;
+    border-radius: 8px;
+    background-color: #fbfbfb;
+`;
 
+export const MetaItem = styled.View`
+    flex: ${({ wide }) => (wide ? 1.8 : 1)};
+    flex-direction: row;
+    align-items: center;
+`;
+
+export const MetaDivider = styled.View`
+    width: 1px;
+    height: 24px;
+    margin: 0 8px;
+    background-color: #e5e5e5;
+`;
+
+export const ExpirationLabel = styled(Text)`
+    margin-left: 6px;
+    font-size: ${({ theme }) => theme.size.fontSize(12)};
+    font-weight: 700;
+    color: #333333;
+`;
+
+export const StatusPill = styled.View`
+    margin-left: 6px;
+    padding: 5px 8px;
+    border-radius: 999px;
+    background-color: ${({ expired }) => (expired ? "#eeeeee" : "#e7f6ea")};
+`;
+
+export const StatusPillText = styled(Text)`
+    font-size: ${({ theme }) => theme.size.fontSize(11)};
+    font-weight: 800;
+    color: ${({ expired }) => (expired ? "#555555" : "#145c2f")};
+`;
+
+export const UsageRing = styled.View`
+    width: ${({ theme }) => theme.size.componentSize(36)};
+    height: ${({ theme }) => theme.size.componentSize(36)};
     justify-content: center;
     align-items: center;
-    flex-direction: row;
-
-    border-bottom-right-radius: 4px;
-
-    background-color: ${({ theme }) => theme.colors.black};
+    margin-left: 6px;
+    border-radius: ${({ theme }) => theme.size.componentSize(36)};
+    border-width: 3px;
+    border-color: ${({ theme }) => theme.colors.primary};
+    background-color: #ffffff;
 `;
 
-export const ButtonBuyText = styled(Text)`
-    font-weight: bold;
+export const UsagePercentText = styled(Text)`
+    font-size: ${({ theme }) => theme.size.fontSize(11)};
+    font-weight: 900;
+    color: ${({ theme }) => theme.colors.primary};
+`;
 
-    margin-left: ${({ theme }) => theme.size.dimentionsSize(1)};
+export const UsageLabel = styled(Text)`
+    margin-left: 5px;
+    font-size: ${({ theme }) => theme.size.fontSize(10)};
+    color: #666666;
+`;
 
-    color: ${({ theme }) => theme.colors.white};
+export const ExpirationDateRow = styled.View`
+    flex-direction: row;
+    align-items: center;
+    margin-left: 6px;
+`;
+
+export const ExpirationDateText = styled(Text)`
+    margin-left: 6px;
+    font-size: ${({ theme }) => theme.size.fontSize(12)};
+    font-weight: 800;
+    color: ${({ theme }) => theme.colors.primary};
 `;
 
 export const ContentVisualizations = styled.View`
-    height: ${({ theme }) => theme.size.componentSize(29)};
-
-    justify-content: flex-start;
-    align-items: center;
+    align-items: flex-start;
 `;
 
 export const TextVisualizations = styled(Text)`
-    font-size: ${({ theme }) => theme.size.fontSize(13)};
-    font-weight: bold;
+    margin-left: 5px;
+    font-size: ${({ theme }) => theme.size.fontSize(12)};
+    font-weight: 700;
+    color: #333333;
+`;
 
-    padding: 3px 8px;
-    border-radius: 4px;
+export const CompactText = styled(Text)`
+    margin-left: 5px;
+    font-size: ${({ theme }) => theme.size.fontSize(12)};
+    font-weight: 700;
+    color: #333333;
+`;
 
-    background-color: ${({ theme }) => theme.colors.tertiary};
-
-    elevation: 3;
+export const FooterButton = styled.TouchableOpacity`
+    width: 100%;
+    height: ${({ theme }) => theme.size.componentSize(50)};
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    margin-top: 12px;
+    border-radius: 6px;
+    background-color: ${({ theme }) => theme.colors.primary};
 `;
 
 export const ContentActionButtons = styled.View`
     width: 100%;
-
+    flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    flex-direction: row;
-
-    margin-top: ${({ theme }) => theme.size.dimentionsSize(0.5)};
+    margin-top: 12px;
 `;
 
 export const ButtonDisablePublication = styled.TouchableOpacity`
-    width: 48%;
-    height: ${({ theme }) => theme.size.componentSize(45)};
-
+    width: 48.5%;
+    height: ${({ theme }) => theme.size.componentSize(44)};
+    flex-direction: row;
     justify-content: center;
     align-items: center;
-
-    border-radius: 4px;
+    border-radius: 7px;
     background-color: ${({ theme }) => theme.colors.primary};
-
-    elevation: 3;
+    elevation: 2;
 `;
 
 export const ButtonExtendsPublication = styled(ButtonDisablePublication)`
-    background-color: ${({ theme, disabled }) =>
-        disabled ? lighten(0.5, theme.colors.black) : theme.colors.black};
+    background-color: #171717;
 `;
 
 export const TextButton = styled(Text)`
-    font-size: ${({ theme }) => theme.size.fontSize(14)};
-    font-weight: bold;
-
-    color: ${({ theme }) => theme.colors.white};
+    font-size: ${({ theme }) => theme.size.fontSize(15)};
+    font-weight: 800;
+    color: #ffffff;
 `;

@@ -7,7 +7,6 @@ import { Feather } from "@expo/vector-icons";
 // import { ActivityIndicator } from "react-native-paper";
 // import { useDispatch, useSelector } from "react-redux";
 // import * as Notifications from "expo-notifications";
-import { View } from "react-native";
 
 // import { GetUserStorage } from "../../services/Storage/UserStorage";
 // import { getAllNotifications } from "../../controllers/Notifications/getAllNotifications";
@@ -20,6 +19,7 @@ import {
     Container,
     LogoImage,
     MenuButton,
+    RightSpacer,
     // NotificationBadge,
     // NotificationsButton,
 } from "./styles";
@@ -153,7 +153,7 @@ export const Header = (props) => {
             ) : (
                 <View />
             )} */}
-            <View />
+            <RightSpacer />
         </Container>
     );
 };

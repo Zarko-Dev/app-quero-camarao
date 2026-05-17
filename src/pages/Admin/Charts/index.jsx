@@ -17,7 +17,7 @@ import SelectComponent from "../../../components/SelectComponent";
 import {
     CharButton,
     Container,
-    ContainerDropdowSelects,
+    ContainerDropdownSelects,
     ContentInputSelect,
     TitleButton,
 } from "./styles";
@@ -25,6 +25,26 @@ import { theme } from "../../../styles/Theme";
 import { material } from "../../../styles/Theme/charts";
 import { BoxShadowIos } from "../../../styles/IosShadow";
 import { AdminChartCardSkeleton } from "../../../components/Skeleton/AdminChartCardSkeleton";
+
+const withTimeout = (promise, ms = 30000) =>
+    Promise.race([
+        promise,
+        new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("ADMIN_CHARTS_TIMEOUT")), ms),
+        ),
+    ]);
+
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const executeWithRetry = async (requestFactory, retries = 1) => {
+    try {
+        return await requestFactory();
+    } catch (error) {
+        if (retries <= 0) throw error;
+        await wait(1200);
+        return executeWithRetry(requestFactory, retries - 1);
+    }
+};
 
 export const Charts = ({ navigation }) => {
     const [isLoading, setIsLoading] = useState(false);
@@ -66,18 +86,28 @@ export const Charts = ({ navigation }) => {
 
     const processData = (data, selectedYear, selectedMonth, dateRange) => {
         const result = {};
+        const selectedMonthNumber = formatMonth(selectedMonth);
+        const normalizedYear = Number(selectedYear);
 
         data.forEach((entry) => {
             entry.logViews.forEach((log) => {
-                const newDate = new Date(log.createdAt);
-                newDate.setHours(newDate.getHours() - 3);
+                const logDate = new Date(log.createdAt);
+                const logYear = logDate.getFullYear();
+                const logMonth = logDate.getMonth() + 1;
 
-                const date = newDate.toISOString().split("T")[0];
+                if (
+                    logYear !== normalizedYear ||
+                    logMonth !== selectedMonthNumber
+                ) {
+                    return;
+                }
 
-                if (result[date]) {
-                    result[date]++;
+                const day = String(logDate.getDate()).padStart(2, "0");
+
+                if (result[day]) {
+                    result[day] += 1;
                 } else {
-                    result[date] = 1;
+                    result[day] = 1;
                 }
             });
         });
@@ -89,15 +119,9 @@ export const Charts = ({ navigation }) => {
         if (startDay < 1) startDay = 1;
         if (endDay > 31) endDay = 31;
 
-        const dataMonth = formatMonth(selectedMonth);
-
         for (let day = startDay; day <= endDay; day++) {
             const dayString = day < 10 ? `0${day}` : `${day}`;
-            const date = `${selectedYear}-${
-                dataMonth < 10 ? `0${dataMonth}` : dataMonth
-            }-${dayString}`;
-
-            const count = result[date] || null;
+            const count = result[dayString] || 0;
 
             formattedResult.push({ x: dayString, y: count });
         }
@@ -112,11 +136,11 @@ export const Charts = ({ navigation }) => {
         data.forEach((entry) => {
             entry.logViews.forEach((log) => {
                 const date = new Date(log.createdAt);
+                const monthNumber = String(date.getMonth() + 1).padStart(2, "0");
+                const yearNumber = String(date.getFullYear());
 
-                const newDate = date.toISOString().split("T")[0];
-
-                uniqueMonths.add(newDate.split("-")[1]);
-                uniqueYears.add(newDate.split("-")[0]);
+                uniqueMonths.add(monthNumber);
+                uniqueYears.add(yearNumber);
             });
         });
 
@@ -140,14 +164,25 @@ export const Charts = ({ navigation }) => {
     };
 
     const prepareData = async () => {
-        const result = await getViewLogs();
+        const result = await executeWithRetry(
+            () => withTimeout(getViewLogs(), 30000),
+            1,
+        );
+        const currentRageDate = getCurrentDateRange();
+        const fallbackMonth = getCurrentExtendedMonth();
+        const fallbackYear = getCurrentYear();
 
-        if (!result.error) {
-            const currentRageDate = getCurrentDateRange();
+        if (!result.error && Array.isArray(result.data)) {
             const dataMonthYear = extractUniqueMonthsAndYears(result.data);
+            const months = dataMonthYear.month?.length
+                ? dataMonthYear.month
+                : [fallbackMonth];
+            const years = dataMonthYear.year?.length
+                ? dataMonthYear.year
+                : [fallbackYear];
 
-            setMonthOptions(dataMonthYear.month);
-            setYearOptions(dataMonthYear.year);
+            setMonthOptions(months);
+            setYearOptions(years);
             setSelectRageDate(currentRageDate);
             setDataViewLogs(result.data);
 
@@ -157,20 +192,31 @@ export const Charts = ({ navigation }) => {
                 currentExtendedMonth,
                 currentRageDate,
             );
-        } else {
-            Toast.show({
-                type: "error",
-                text1: "Não foram encontrados regitrso de visualizações!",
-            });
+            return;
         }
+
+        setMonthOptions([fallbackMonth]);
+        setYearOptions([fallbackYear]);
+        setSelectRageDate(currentRageDate);
+        setDataViewLogs([]);
+        processData([], fallbackYear, fallbackMonth, currentRageDate);
     };
 
     useFocusEffect(
         useCallback(() => {
             setIsLoading(true);
             prepareData()
-                .then(() => setIsLoading(false))
-                .catch();
+                .catch((error) => {
+                    Toast.show({
+                        type: "error",
+                        text1: "Erro ao carregar gráficos",
+                        text2:
+                            error?.message === "ADMIN_CHARTS_TIMEOUT"
+                                ? "Tempo limite da consulta."
+                                : "Falha ao buscar dados.",
+                    });
+                })
+                .finally(() => setIsLoading(false));
         }, []),
     );
 
@@ -202,7 +248,7 @@ export const Charts = ({ navigation }) => {
         );
     };
 
-    const hadleRedirectPublicationViewLogsList = () => {
+    const handleRedirectPublicationViewLogsList = () => {
         navigation.navigate(dataRoutes.admin.publicationViewLogsList, {
             dataViewLogsList: dataViewLogs,
         });
@@ -212,7 +258,7 @@ export const Charts = ({ navigation }) => {
         <Container>
             {!isLoading ? (
                 <CardChart title="Visualizações Diárias das Publicações">
-                    <ContainerDropdowSelects>
+                    <ContainerDropdownSelects>
                         <ContentInputSelect width="38%">
                             <SelectComponent
                                 initialTitle={currentExtendedMonth}
@@ -234,7 +280,7 @@ export const Charts = ({ navigation }) => {
                                 action={handleSelectRangeDate}
                             />
                         </ContentInputSelect>
-                    </ContainerDropdowSelects>
+                    </ContainerDropdownSelects>
                     <VictoryChart
                         width={Number(
                             theme.size.componentSize(330).replace("px", ""),
@@ -269,7 +315,7 @@ export const Charts = ({ navigation }) => {
                     </VictoryChart>
                     <CharButton
                         style={BoxShadowIos}
-                        onPress={hadleRedirectPublicationViewLogsList}
+                        onPress={handleRedirectPublicationViewLogsList}
                     >
                         <TitleButton>Visualizações por Publicação</TitleButton>
                     </CharButton>

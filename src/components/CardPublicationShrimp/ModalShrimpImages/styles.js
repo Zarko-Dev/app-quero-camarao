@@ -52,15 +52,17 @@ export const ShrimpImage = styled(ImageComponent)`
 `;
 
 export const ButtonBuyShrimp = styled.TouchableOpacity`
-    width: 90%;
-    height: ${({ theme }) => theme.size.componentSize(50)};
+    width: 100%;
+    align-self: stretch;
+    height: 44px;
 
     justify-content: center;
     align-items: center;
     flex-direction: row;
 
     margin-bottom: ${({ theme }) => theme.size.dimentionsSize(5)};
-    border-radius: 4px;
+    padding-horizontal: 16px;
+    border-radius: 12px;
 
     background-color: ${({ theme }) => theme.colors.primary};
 

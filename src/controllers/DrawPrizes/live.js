@@ -37,7 +37,7 @@ export const createDrawPrizeLiveByCode = async (
                 id: drawPrizeId,
                 code: drawPrizeCode,
 
-                // 🔥 agora vira ARRAY
+                // ?? agora vira ARRAY
                 names: [],
 
                 status: true,
@@ -246,7 +246,7 @@ export const getAllDrawPrizesLiveWhereParticipant = async (
         if (!querySnapshot.empty) {
             const data = querySnapshot.docs
                 .map((dataDoc) => dataDoc.data())
-                .filter(item => item.status === true)  // ← filtra só ativos
+                .filter(item => item.status === true)  // â† filtra só ativos
 
             if (data.length === 0) {
                 return { error: true, data: [] };

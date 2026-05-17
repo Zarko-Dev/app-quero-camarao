@@ -3,11 +3,13 @@
 /* eslint-disable function-paren-newline */
 
 import { useFocusEffect } from "@react-navigation/native";
+import { Feather } from "@expo/vector-icons";
 import { useCallback, useState } from "react";
 import { FlatList } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import Toast from "react-native-toast-message";
 
-import { getAllApprovedOrders } from "../../../controllers/Payment/order";
+import { getApprovedOrdersByYear } from "../../../controllers/Payment/order";
 import { convertToMoney } from "../../../utils/convertToMoney";
 import {
     getCurrentExtendedMonth,
@@ -21,16 +23,18 @@ import Skeleton from "./components/Skeleton";
 import {
     Container,
     ContainerCardInfoValue,
-    ContainerDropdowSelects,
+    ContainerDropdownSelects,
     ContainerValueMonth,
     ContentInputSelect,
     ContentMonthInfo,
     ContentTextLeft,
     ContentTextMonthInfo,
-    ContenttextRight,
+    ContentTextRight,
     ContentTextYearlyInfo,
     ContentYearlyInfo,
     Divider,
+    FilterButton,
+    FilterText,
     ImageYearlyInfo,
     SubtitleMonthInfo,
     SubtitleYearlyInfo,
@@ -39,10 +43,70 @@ import {
     TitleNextMoth,
     TitleTransaction,
     TitleYearlyInfo,
+    TransactionHeader,
 } from "./styles";
 import { BoxShadowIos } from "../../../styles/IosShadow";
 
 import ShrimpIcon from "../../../assets/images/shrimpIcon.png";
+
+const withTimeout = (promise, ms = 30000) =>
+    Promise.race([
+        promise,
+        new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("ADMIN_HOME_TIMEOUT")), ms),
+        ),
+    ]);
+
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const executeWithRetry = async (requestFactory, retries = 1) => {
+    try {
+        return await requestFactory();
+    } catch (error) {
+        if (retries <= 0) throw error;
+        await wait(1200);
+        return executeWithRetry(requestFactory, retries - 1);
+    }
+};
+
+const monthNameToIndex = (month) => {
+    const months = [
+        "janeiro",
+        "fevereiro",
+        "março",
+        "abril",
+        "maio",
+        "junho",
+        "julho",
+        "agosto",
+        "setembro",
+        "outubro",
+        "novembro",
+        "dezembro",
+    ];
+
+    return months.indexOf(String(month || "").toLowerCase());
+};
+
+const getMonthLabel = (date) =>
+    new Intl.DateTimeFormat("pt-BR", { month: "long" }).format(date);
+
+const sumPayment = (orders) =>
+    (orders || []).reduce(
+        (total, order) => total + Number(order?.paymentValue || 0),
+        0,
+    );
+
+const filterByMonthYear = (orders, monthLabel, year) =>
+    (orders || []).filter((order) => {
+        const date = order?.createdAt;
+        if (!(date instanceof Date)) return false;
+
+        return (
+            getMonthLabel(date) === String(monthLabel || "").toLowerCase() &&
+            date.getFullYear() === Number(year)
+        );
+    });
 
 export const Home = () => {
     const [isLoading, setIsLoading] = useState(false);
@@ -50,228 +114,157 @@ export const Home = () => {
     const [currentMonth, setCurrentMonth] = useState("");
     const [yearOptions, setYearOptions] = useState([]);
     const [currentYear, setCurrentYear] = useState("");
-    const [dataOriginalOrders, setDataOriginalOrders] = useState();
-    const [dataOrders, setDataOrders] = useState();
+    const [dataOriginalOrders, setDataOriginalOrders] = useState([]);
+    const [dataOrders, setDataOrders] = useState([]);
     const [monthlyEarnings, setMonthlyEarnings] = useState(0);
     const [yearlyEarnings, setYearlyEarnings] = useState(0);
     const [previousMonthValue, setPreviousMonthValue] = useState(0);
     const [nextMonthValue, setNextMonthValue] = useState(0);
 
-    const setAllDataMonth = (dataMonth) => {
-        setMonthOptions([...new Set(dataMonth)]);
-    };
+    const setMonthYearOptions = (orders, fallbackMonth, fallbackYear) => {
+        const allDates = (orders || []).map((item) => item.createdAt);
 
-    const setAllDataYear = (dataYear) => {
-        setYearOptions([...new Set(dataYear)]);
-    };
+        if (allDates.length === 0) {
+            setMonthOptions([fallbackMonth]);
+            setYearOptions([fallbackYear]);
+            return;
+        }
 
-    const getMonthlyEarnings = (orders) => {
-        let dataPayValues = 0;
-
-        orders.map((order) => {
-            dataPayValues += order.paymentValue;
-
-            return null;
+        const mappedMonths = allDates.map((date) => {
+            const label = getMonthLabel(date);
+            return label.charAt(0).toUpperCase() + label.slice(1);
         });
+        const mappedYears = allDates.map((date) => date.getFullYear());
 
-        setMonthlyEarnings(dataPayValues);
+        setMonthOptions([...new Set(mappedMonths)]);
+        setYearOptions([...new Set(mappedYears)]);
     };
 
-    const getYearlyEarnings = (originalOrders, selectedYear) => {
-        let dataPayValues = 0;
-
-        const yearlyOrders = originalOrders.filter((dataObject) => {
-            const dateObject = dataObject.createdAt;
-            const dateYear = dateObject.getFullYear();
-
-            return dateYear === selectedYear;
-        });
-
-        yearlyOrders.map((order) => {
-            dataPayValues += order.paymentValue;
-
-            return null;
-        });
-
-        setYearlyEarnings(dataPayValues);
-    };
-
-    const getPreviousMonthValue = (originalOrders, order) => {
-        let dataPayValues = 0;
-
-        const previousMonth = new Date(
-            order.createdAt.getFullYear(),
-            order.createdAt.getMonth(),
-            1,
+    const applyCalculatedState = (orders, selectedMonth, selectedYear) => {
+        const monthOrders = filterByMonthYear(
+            orders,
+            selectedMonth,
+            selectedYear,
         );
 
-        previousMonth.setDate(Math.min(order.createdAt.getDate(), 0));
+        const monthIndex = monthNameToIndex(selectedMonth);
+        const prevDate = new Date(Number(selectedYear), monthIndex - 1, 1);
+        const nextDate = new Date(Number(selectedYear), monthIndex + 1, 1);
 
-        const previousMonthName = new Intl.DateTimeFormat("pt-BR", {
-            month: "long",
-        }).format(previousMonth);
-
-        const previousMonthOrders = originalOrders.filter((dataObject) => {
-            const dateObject = dataObject.createdAt;
-            const dateMonth = new Intl.DateTimeFormat("pt-BR", {
-                month: "long",
-            }).format(dateObject);
-
-            return dateMonth === previousMonthName;
-        });
-
-        previousMonthOrders.map((orderValues) => {
-            dataPayValues += orderValues.paymentValue;
-
-            return null;
-        });
-
-        setPreviousMonthValue(dataPayValues);
-    };
-
-    const getNextMonthValue = (originalOrders, order) => {
-        let dataPayValues = 0;
-
-        const currentDate = order?.createdAt || new Date();
-
-        const nextMonth = new Date(
-            currentDate.getFullYear(),
-            currentDate.getMonth() + 1,
-            1,
+        const previousMonthOrders = filterByMonthYear(
+            orders,
+            getMonthLabel(prevDate),
+            prevDate.getFullYear(),
+        );
+        const nextMonthOrders = filterByMonthYear(
+            orders,
+            getMonthLabel(nextDate),
+            nextDate.getFullYear(),
         );
 
-        nextMonth.setDate(
-            Math.min(
-                currentDate.getDate(),
-                new Date(
-                    nextMonth.getFullYear(),
-                    nextMonth.getMonth() + 1,
-                    0,
-                ).getDate(),
-            ),
-        );
-
-        const nextMonthName = new Intl.DateTimeFormat("pt-BR", {
-            month: "long",
-        }).format(nextMonth);
-
-        const nextMonthOrders = originalOrders.filter((dataObject) => {
-            const dateObject = dataObject.createdAt;
-            const dateMonth = new Intl.DateTimeFormat("pt-BR", {
-                month: "long",
-            }).format(dateObject);
-
-            return dateMonth === nextMonthName;
-        });
-
-        nextMonthOrders.map((orderValues) => {
-            dataPayValues += orderValues.paymentValue;
-
-            return null;
-        });
-
-        setNextMonthValue(dataPayValues);
+        setDataOrders(monthOrders);
+        setMonthlyEarnings(sumPayment(monthOrders));
+        setYearlyEarnings(sumPayment(orders));
+        setPreviousMonthValue(sumPayment(previousMonthOrders));
+        setNextMonthValue(sumPayment(nextMonthOrders));
     };
 
-    const filterDataOrders = (orders, selectedMonth, selectedYear) => {
-        const newOrders = orders?.filter((dataObject) => {
-            const dateObject = dataObject.createdAt;
-            const dateMonth = new Intl.DateTimeFormat("pt-BR", {
-                month: "long",
-            }).format(dateObject);
-            const dateYear = dateObject.getFullYear();
+    const applyYearData = (orders, selectedYear) => {
+        const month = getCurrentExtendedMonth();
 
-            return (
-                dateMonth === selectedMonth.toLowerCase() &&
-                dateYear === selectedYear
-            );
-        });
-
-        getMonthlyEarnings(newOrders);
-        getYearlyEarnings(orders, selectedYear);
-        getPreviousMonthValue(orders, newOrders[0]);
-        getNextMonthValue(orders, newOrders[0]);
-
-        return newOrders;
+        setCurrentMonth(month);
+        setCurrentYear(selectedYear);
+        setDataOriginalOrders(orders);
+        setMonthYearOptions(orders, month, selectedYear);
+        applyCalculatedState(orders, month, selectedYear);
     };
 
     useFocusEffect(
         useCallback(() => {
+            let isActive = true;
             setIsLoading(true);
 
-            getAllApprovedOrders()
-                .then((data) => {
-                    if (data.error || data.data.length === 0) {
+            const loadAdminData = async () => {
+                const selectedYear = getCurrentYear();
+
+                try {
+                    const data = await executeWithRetry(() =>
+                        withTimeout(
+                            getApprovedOrdersByYear(selectedYear),
+                            30000,
+                        ),
+                    );
+
+                    if (!isActive) return;
+
+                    if (data.error) {
                         Toast.show({
                             type: "error",
-                            text1: "Não foi possível buscar as ordens de pagamento",
-                            text2: "Tente novamente em instante!",
+                            text1: "Erro ao carregar Admin",
+                            text2: data?.message || "Falha na consulta do Firestore",
                         });
-                    } else {
-                        const newDataOrders = data.data;
-                        const allDates = newDataOrders.map(
-                            (values) => values.createdAt,
-                        );
-                        const month = getCurrentExtendedMonth();
-                        const year = getCurrentYear();
-
-                        setCurrentMonth(month);
-                        setCurrentYear(year);
-                        setDataOriginalOrders(newDataOrders);
-                        setDataOrders(
-                            filterDataOrders(newDataOrders, month, year),
-                        );
-                        setAllDataMonth(
-                            allDates.map((date) => {
-                                const monthName = new Intl.DateTimeFormat(
-                                    "pt-BR",
-                                    { month: "long" },
-                                ).format(date);
-                                return (
-                                    monthName.charAt(0).toUpperCase() +
-                                    monthName.slice(1)
-                                );
-                            }),
-                        );
-                        setAllDataYear(
-                            allDates.map((date) => date.getFullYear()),
-                        );
+                        applyYearData([], selectedYear);
+                        return;
                     }
-                })
-                .catch()
-                .finally(() => setIsLoading(false));
+
+                    applyYearData(data.data || [], selectedYear);
+                } catch (error) {
+                    if (!isActive) return;
+
+                    Toast.show({
+                        type: "error",
+                        text1: "Erro ao carregar Admin",
+                        text2:
+                            error?.message === "ADMIN_HOME_TIMEOUT"
+                                ? "Tempo limite da consulta."
+                                : error?.message || "Erro inesperado",
+                    });
+
+                    applyYearData([], selectedYear);
+                } finally {
+                    if (isActive) setIsLoading(false);
+                }
+            };
+
+            loadAdminData();
+
+            return () => {
+                isActive = false;
+            };
         }, []),
     );
 
     const handleSelectMonth = async (dataMonth) => {
-        setIsLoading(true);
-
         setCurrentMonth(dataMonth);
-        setDataOrders(
-            filterDataOrders(dataOriginalOrders, dataMonth, currentYear),
-        );
-
-        setTimeout(() => {
-            setIsLoading(false);
-        }, 2000);
+        applyCalculatedState(dataOriginalOrders, dataMonth, currentYear);
     };
 
     const handleSelectYear = async (dataYear) => {
         setIsLoading(true);
 
-        setCurrentYear(dataYear);
-        setDataOrders(
-            filterDataOrders(dataOriginalOrders, currentMonth, dataYear),
-        );
+        try {
+            const selectedYear = Number(dataYear);
+            const result = await executeWithRetry(() =>
+                withTimeout(
+                    getApprovedOrdersByYear(selectedYear),
+                    30000,
+                ),
+            );
 
-        setTimeout(() => {
+            if (!result.error) {
+                setCurrentYear(selectedYear);
+                setDataOriginalOrders(result.data || []);
+                setMonthYearOptions(result.data || [], currentMonth, selectedYear);
+                applyCalculatedState(result.data || [], currentMonth, selectedYear);
+            }
+        } finally {
             setIsLoading(false);
-        }, 2000);
+        }
     };
 
     return !isLoading ? (
         <Container>
-            <ContainerDropdowSelects>
+            <ContainerDropdownSelects>
                 <ContentInputSelect>
                     <SelectComponent
                         initialTitle={currentMonth}
@@ -286,25 +279,32 @@ export const Home = () => {
                         action={handleSelectYear}
                     />
                 </ContentInputSelect>
-            </ContainerDropdowSelects>
+            </ContainerDropdownSelects>
             <ContainerCardInfoValue style={BoxShadowIos}>
-                <ContentYearlyInfo>
-                    <ContentTextYearlyInfo>
-                        <TitleYearlyInfo>Total Proventos Anual</TitleYearlyInfo>
-                        <SubtitleYearlyInfo>
-                            R$ {convertToMoney(yearlyEarnings)}
-                        </SubtitleYearlyInfo>
-                    </ContentTextYearlyInfo>
-                    <ImageYearlyInfo source={ShrimpIcon} />
-                </ContentYearlyInfo>
-                <ContentMonthInfo>
-                    <ContentTextMonthInfo>
-                        <TitleMonthInfo>Total Proventos Mensal</TitleMonthInfo>
-                        <SubtitleMonthInfo>
-                            R$ {convertToMoney(monthlyEarnings)}
-                        </SubtitleMonthInfo>
-                    </ContentTextMonthInfo>
-                </ContentMonthInfo>
+                <LinearGradient
+                    colors={["#ff932f", "#f36b12"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{ borderRadius: 14, padding: 18 }}
+                >
+                    <ContentYearlyInfo>
+                        <ContentTextYearlyInfo>
+                            <TitleYearlyInfo>Total de Proventos no Ano</TitleYearlyInfo>
+                            <SubtitleYearlyInfo>
+                                R$ {convertToMoney(yearlyEarnings)}
+                            </SubtitleYearlyInfo>
+                        </ContentTextYearlyInfo>
+                        <ImageYearlyInfo source={ShrimpIcon} />
+                    </ContentYearlyInfo>
+                    <ContentMonthInfo>
+                        <ContentTextMonthInfo>
+                            <TitleMonthInfo>Total de Proventos no Mês</TitleMonthInfo>
+                            <SubtitleMonthInfo>
+                                R$ {convertToMoney(monthlyEarnings)}
+                            </SubtitleMonthInfo>
+                        </ContentTextMonthInfo>
+                    </ContentMonthInfo>
+                </LinearGradient>
             </ContainerCardInfoValue>
             <ContainerValueMonth>
                 <ContentTextLeft>
@@ -314,19 +314,27 @@ export const Home = () => {
                     </TitleNextMoth>
                 </ContentTextLeft>
                 <Divider />
-                <ContenttextRight>
-                    <TitleLastMoth align>Próximo Mês</TitleLastMoth>
+                <ContentTextRight>
+                    <TitleLastMoth align>Próximo mês</TitleLastMoth>
                     <TitleNextMoth align>
                         R$ {convertToMoney(nextMonthValue)}
                     </TitleNextMoth>
-                </ContenttextRight>
+                </ContentTextRight>
             </ContainerValueMonth>
-            <TitleTransaction>Transações</TitleTransaction>
+            <TransactionHeader>
+                <TitleTransaction>Transações</TitleTransaction>
+                <FilterButton>
+                    <Feather name="filter" size={14} color="#f56a27" />
+                    <FilterText>Filtrar</FilterText>
+                    <Feather name="chevron-down" size={14} color="#8c8c8c" />
+                </FilterButton>
+            </TransactionHeader>
             <FlatList
                 data={dataOrders}
                 renderItem={({ item }) => <CardTransaction item={item} />}
                 keyExtractor={(item) => item.idOrder}
                 style={{ width: "100%" }}
+                contentContainerStyle={{ paddingBottom: 22 }}
             />
         </Container>
     ) : (

@@ -21,6 +21,26 @@ import { BoxShadowIos } from "../../../styles/IosShadow";
 import { dataRoutes } from "../../../routes/dataRoutes";
 import { UserDivideList } from "../../../components/UserDivideList";
 
+const withTimeout = (promise, ms = 30000) =>
+    Promise.race([
+        promise,
+        new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("ADMIN_USERS_TIMEOUT")), ms),
+        ),
+    ]);
+
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const executeWithRetry = async (requestFactory, retries = 1) => {
+    try {
+        return await requestFactory();
+    } catch (error) {
+        if (retries <= 0) throw error;
+        await wait(1200);
+        return executeWithRetry(requestFactory, retries - 1);
+    }
+};
+
 export const Users = ({ navigation }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [listUsers, setListUsers] = useState([]);
@@ -84,7 +104,7 @@ export const Users = ({ navigation }) => {
     useEffect(() => {
         setIsLoading(true);
 
-        getAllUsers()
+        executeWithRetry(() => withTimeout(getAllUsers(), 30000), 1)
             .then((data) => {
                 if (data.length > 0) {
                     setListUsers(data);
@@ -93,7 +113,16 @@ export const Users = ({ navigation }) => {
                     Toast.show({ type: "Não foram encontrados usuários!" });
                 }
             })
-            .catch()
+            .catch((error) => {
+                Toast.show({
+                    type: "error",
+                    text1: "Erro ao carregar usu?rios",
+                    text2:
+                        error?.message === "ADMIN_USERS_TIMEOUT"
+                            ? "Tempo limite da consulta."
+                            : "Falha ao buscar dados.",
+                });
+            })
             .finally(() => setIsLoading(false));
     }, []);
 
