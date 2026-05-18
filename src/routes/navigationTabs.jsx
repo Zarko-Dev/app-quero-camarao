@@ -15,6 +15,7 @@ const { Navigator, Screen } = createBottomTabNavigator();
 export const AdminTabNavigation = () => (
     <Navigator
         screenOptions={({ route }) => ({
+            lazy: true,
             tabBarIcon: ({ color, size }) => {
                 let iconName = "user-secret";
 

@@ -4,25 +4,20 @@ import { Input } from "../Input";
 
 export const Container = styled.View`
     width: 100%;
-
-    margin-top: ${({ theme }) => theme.size.dimentionsSize(1)};
-
-    border-radius: 4px;
-
-    background-color: ${({ theme }) => theme.colors.tertiary};
+    margin-top: ${({ theme }) => theme.size.dimentionsSize(1.2)};
+    padding: 10px;
+    border-radius: 8px;
+    border-width: 1px;
+    border-color: #ffe2cc;
+    background-color: #ffffff;
 `;
 
 export const Header = styled.View`
-    height: ${({ theme }) => theme.size.componentSize(28)};
-
+    min-height: ${({ theme }) => theme.size.componentSize(30)};
     justify-content: space-between;
     align-items: center;
     flex-direction: row;
-
-    border-top-left-radius: 4px;
-    border-top-right-radius: 4px;
-
-    background-color: ${({ theme }) => theme.colors.primary};
+    margin-bottom: 10px;
 `;
 
 export const ContentInternalHeader = styled.View`
@@ -30,38 +25,42 @@ export const ContentInternalHeader = styled.View`
 `;
 
 export const TitleHeader = styled(Text)`
+    flex: 1;
     font-weight: bold;
-    font-size: ${({ theme }) => theme.size.fontSize(15)};
-
-    color: ${({ theme }) => theme.colors.white};
+    font-size: ${({ theme }) => theme.size.fontSize(16)};
+    text-align: center;
+    color: ${({ theme }) => theme.colors.primary};
 `;
 
-export const ButtonDeleteCardPond = styled.TouchableOpacity``;
+export const ButtonDeleteCardPond = styled.TouchableOpacity`
+    width: 28px;
+    height: 28px;
+    justify-content: center;
+    align-items: center;
+    border-radius: 14px;
+    background-color: ${({ theme }) => theme.colors.primary};
+`;
 
 export const ContentForm = styled.View`
     justify-content: center;
     align-items: center;
-
-    padding: 15px 5px 5px 5px;
 `;
 
 export const ContentImage = styled.View`
-    width: ${({ theme }) => theme.size.componentSize(105)};
-    height: ${({ theme }) => theme.size.componentSize(105)};
-
+    width: ${({ theme }) => theme.size.componentSize(110)};
+    height: ${({ theme }) => theme.size.componentSize(110)};
     justify-content: center;
     align-items: center;
-
+    margin-bottom: 12px;
     border: 1.5px ${({ theme }) => theme.colors.primary} solid;
-
-    border-radius: ${({ theme }) => theme.size.componentSize(105)};
+    border-radius: ${({ theme }) => theme.size.componentSize(110)};
+    background-color: #fff7f2;
 `;
 
 export const ImageShrimp = styled.Image`
-    width: ${({ theme }) => theme.size.componentSize(100)};
-    height: ${({ theme }) => theme.size.componentSize(100)};
-
-    border-radius: ${({ theme }) => theme.size.componentSize(100)};
+    width: ${({ theme }) => theme.size.componentSize(96)};
+    height: ${({ theme }) => theme.size.componentSize(96)};
+    border-radius: ${({ theme }) => theme.size.componentSize(96)};
 `;
 
 export const ContentInput = styled.View`
@@ -69,10 +68,10 @@ export const ContentInput = styled.View`
 `;
 
 export const TitleInput = styled(Text)`
+    margin-bottom: 4px;
     font-weight: bold;
-    font-size: ${({ theme }) => theme.size.fontSize(13)};
-
-    color: ${({ theme }) => theme.colors.black};
+    font-size: ${({ theme }) => theme.size.fontSize(12)};
+    color: ${({ theme }) => theme.colors.text};
 `;
 
 export const InputStyle = styled(Input)`

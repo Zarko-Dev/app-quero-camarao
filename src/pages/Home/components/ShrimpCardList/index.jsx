@@ -1,7 +1,6 @@
 /* eslint-disable operator-linebreak */
 import { useMemo, useCallback } from "react";
-import { ActivityIndicator, Platform } from "react-native";
-import { FlashList } from "@shopify/flash-list";
+import { ActivityIndicator, FlatList, Platform } from "react-native";
 
 import { CardPublicationShrimp } from "../../../../components/CardPublicationShrimp";
 import { CardPublicationShrimpSkeleton } from "../../../../components/Skeleton/CardPublicationShrimpSkeleton";
@@ -93,17 +92,13 @@ export const ShrimpCardList = ({
     }, [isNextLoading, isNestEnd]);
 
     const keyExtractor = useCallback((item) => item.id.toString(), []);
-    const getItemType = useCallback((item) => item.type, []);
-
     return (
         <Container>
-            <FlashList
+            <FlatList
                 data={combinedList}
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}
-                getItemType={getItemType}
                 showsVerticalScrollIndicator={false}
-                estimatedItemSize={230}
                 initialNumToRender={Platform.OS === "android" ? 6 : 10}
                 maxToRenderPerBatch={Platform.OS === "android" ? 6 : 12}
                 updateCellsBatchingPeriod={Platform.OS === "android" ? 80 : 50}

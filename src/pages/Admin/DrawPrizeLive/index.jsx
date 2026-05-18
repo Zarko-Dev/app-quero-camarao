@@ -72,7 +72,7 @@ export const DrawPrizeLive = ({ navigation }) => {
                if (!response.error) {
                 setDrawerCodeFixed(response.data.code);
                 setDrawerNameFixed(response.data.names?.[0] ?? '');
-                setDrawPrizeNames(response.data.names ?? []); // 👈
+                setDrawPrizeNames(response.data.names ?? []); // ??
                 setDrawerPrizeLiveId(response.data.id);
                 setParticipants(response.data?.participants ?? []);
                 setCountPrizes(response.data?.participants?.length > 0 ? 1 : 0);
@@ -86,16 +86,16 @@ export const DrawPrizeLive = ({ navigation }) => {
     );
 
   const handleStartDrawPrizeLive = async () => {
-    if (drawerCode) { // 👈 valida os dois campos
+    if (drawerCode) { // ?? valida os dois campos
         setLoadingStartDrawPrize(true);
 
         const id = v4();
-        const response = await createDrawPrizeLiveByCode(id, drawerCode); // 👈 passa o nome
+        const response = await createDrawPrizeLiveByCode(id, drawerCode); // ?? passa o nome
 
         if (response) {
             setDrawerCodeFixed(drawerCode);
-            setDrawerNameFixed(drawerName); // 👈 seta o nome fixo
-             setDrawPrizeNames([]); // 👈 já inicia o array com o primeiro
+            setDrawerNameFixed(drawerName); // ?? seta o nome fixo
+             setDrawPrizeNames([]); // ?? já inicia o array com o primeiro
             setDrawerPrizeLiveId(id);
 
             setLoadingStartDrawPrize(false);
@@ -109,7 +109,7 @@ export const DrawPrizeLive = ({ navigation }) => {
         Toast.show({
             type: "error",
             text1: !drawerCode 
-                ? "Informe o código do sorteio" // 👈 mensagens separadas
+                ? "Informe o código do sorteio" // ?? mensagens separadas
                 : "Informe o nome do sorteio",
         });
     }
@@ -169,13 +169,13 @@ export const DrawPrizeLive = ({ navigation }) => {
             updatedAt: item.updatedAt?.toDate?.() ?? null,
         }));
 
-         setLoadingWinners(false); // 👈 para o loading antes de navegar
+         setLoadingWinners(false); // ?? para o loading antes de navegar
 
         navigation.navigate(dataRoutes.admin.usersList, {
             dataListUsers: fixResponse,
         });
     }  else {
-        setLoadingWinners(false); // 👈 para o loading em caso de erro
+        setLoadingWinners(false); // ?? para o loading em caso de erro
     }
 };
 
@@ -194,7 +194,7 @@ export const DrawPrizeLive = ({ navigation }) => {
     //Muda o handleInitDrawPrizeLive para abrir o dialog quando já houver sorteios anteriores:
 const handleInitDrawPrizeLive = async () => {
     if (countPrizes > 0) {
-        setShowDrawPrizeNameDialog(true); // 👈 sempre abre o dialog
+        setShowDrawPrizeNameDialog(true); // ?? sempre abre o dialog
     } else {
         Toast.show({
             type: "error",
@@ -259,16 +259,16 @@ const handleInitDrawPrizeLive = async () => {
 
     await setWinnerDrawPrizeLive(drawerPrizeLiveId, allWinners)
 
-    // ✅ salva no histórico automaticamente
+    // âœ… salva no histórico automaticamente
     await saveDrawPrize(prizeName,usersWinnerWithPrizeName, drawerPrizeLiveId)
 
-    // 👇 salva o novo nome no array names do Firestore
+    // ?? salva o novo nome no array names do Firestore
     await updateDrawPrizeLiveNames(drawerPrizeLiveId, prizeName)
 
     await new Promise(resolve => setTimeout(resolve, 1000))
     
-    setDrawPrizeNames((prev) => [...prev, prizeName]) // 👈 aqui
-    setCurrentDrawPrizeName("") // 👈 faltou isso
+    setDrawPrizeNames((prev) => [...prev, prizeName]) // ?? aqui
+    setCurrentDrawPrizeName("") // ?? faltou isso
 
     setLoadingInitDrawPrize(false)
 

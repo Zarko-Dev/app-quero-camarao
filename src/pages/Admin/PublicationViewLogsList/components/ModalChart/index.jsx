@@ -13,7 +13,7 @@ import SelectComponent from "../../../../../components/SelectComponent";
 import {
     ButtomBack,
     Container,
-    ContainerDropdowSelects,
+    ContainerDropdownSelects,
     Content,
     ContentHeader,
     ContentInputSelect,
@@ -194,7 +194,7 @@ export const ModalChart = ({ isVisible = false, onClose, viewLogs }) => {
                                 />
                             </ButtomBack>
                         </ContentHeader>
-                        <ContainerDropdowSelects>
+                        <ContainerDropdownSelects>
                             <ContentInputSelect width="38%">
                                 <SelectComponent
                                     initialTitle={currentExtendedMonth}
@@ -216,7 +216,7 @@ export const ModalChart = ({ isVisible = false, onClose, viewLogs }) => {
                                     action={handleSelectRangeDate}
                                 />
                             </ContentInputSelect>
-                        </ContainerDropdowSelects>
+                        </ContainerDropdownSelects>
                         <VictoryChart
                             width={Number(
                                 theme.size.componentSize(330).replace("px", ""),

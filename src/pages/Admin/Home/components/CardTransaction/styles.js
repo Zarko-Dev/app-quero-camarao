@@ -6,11 +6,12 @@ export const Container = styled.TouchableOpacity`
     justify-content: space-between;
     align-items: center;
 
-    margin-bottom: ${({ theme }) => theme.size.dimentionsSize(1)};
+    margin-bottom: ${({ theme }) => theme.size.dimentionsSize(1.2)};
     padding: 12px;
-    border-radius: 10px;
-
-    background-color: ${({ theme }) => theme.colors.tertiary};
+    border-radius: 12px;
+    border-width: 1px;
+    border-color: #dddddd;
+    background-color: #f8f8f8;
 
     elevation: 3;
 `;
@@ -30,10 +31,11 @@ export const ContentInfo = styled.View`
 `;
 
 export const ImageItem = styled.Image`
-    width: ${({ theme }) => theme.size.componentSize(55)};
-    height: ${({ theme }) => theme.size.componentSize(55)};
+    width: ${({ theme }) => theme.size.componentSize(50)};
+    height: ${({ theme }) => theme.size.componentSize(50)};
 
-    border-radius: ${({ theme }) => theme.size.componentSize(55)};
+    border-radius: ${({ theme }) => theme.size.componentSize(50)};
+    background-color: #ffe9da;
 `;
 
 export const ContentTextInfo = styled.View`
@@ -43,43 +45,42 @@ export const ContentTextInfo = styled.View`
 export const InfoTitle = styled.Text`
     font-size: ${({ theme }) => theme.size.fontSize(13)};
     font-weight: bold;
-    color: ${({ theme }) => theme.colors.text};
+    color: #333333;
 `;
 
 export const InfoSubtitle = styled.Text`
-    font-size: ${({ theme }) => theme.size.fontSize(12)};
+    font-size: ${({ theme }) => theme.size.fontSize(11)};
+    color: #6d6d6d;
 `;
 
 export const TitlePayValue = styled.Text`
-    font-size: ${({ theme }) => theme.size.fontSize(15)};
+    font-size: ${({ theme }) => theme.size.fontSize(19)};
     font-weight: bold;
-    color: ${({ theme }) => theme.colors.text};
+    color: #f55b1f;
 `;
 
 export const ContentPonds = styled.View`
     width: 100%;
 
-    justify-content: center;
-    align-items: center;
+    justify-content: flex-start;
+    align-items: flex-start;
     flex-direction: row;
     flex-wrap: wrap;
 
-    padding: 5px 0;
-    margin: 10px 10px 3px 10px;
-    border: 1px #3c3c3c solid;
-    border-radius: 4px;
+    padding: 8px 8px;
+    margin: 10px 0 0 0;
+    border: 1px #d8d8d8 solid;
+    border-radius: 8px;
 `;
 
 export const TagPonds = styled.View`
-    margin: 3px;
-    padding: 2px 8px;
-
-    border-radius: 10px;
-
-    background-color: ${({ theme }) => theme.colors.primary};
+    margin: 3px 6px 3px 0;
+    padding: 3px 10px;
+    border-radius: 12px;
+    background-color: #ffe4d5;
 `;
 
 export const TitleTagPond = styled.Text`
     font-weight: bold;
-    color: ${({ theme }) => theme.colors.white};
+    color: #f56a27;
 `;

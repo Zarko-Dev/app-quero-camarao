@@ -43,19 +43,15 @@ const CardTransaction = ({ item }) => {
                     <ContentTextInfo>
                         <InfoTitle>Publicação de Camarão</InfoTitle>
                         <InfoSubtitle>
-                            {item.user.name} {item.user.surname}
+                            {item?.user?.name || "-"} {item?.user?.surname || ""}
                         </InfoSubtitle>
-                        <InfoSubtitle>
-                            {convertDate(item.createdAt)}
-                        </InfoSubtitle>
+                        <InfoSubtitle>{convertDate(item?.createdAt)}</InfoSubtitle>
                     </ContentTextInfo>
                 </ContentInfo>
-                <TitlePayValue>
-                    R$ {convertToMoney(item.paymentValue)}
-                </TitlePayValue>
+                <TitlePayValue>R$ {convertToMoney(Number(item?.paymentValue || 0))}</TitlePayValue>
             </Content>
             <ContentPonds>
-                {item.dataPublication.shrimps.map((shrimp, index) => (
+                {(item?.dataPublication?.shrimps || []).map((shrimp, index) => (
                     <TagPonds key={index}>
                         <TitleTagPond>
                             {shrimp.grammage}g / {formatKilo(shrimp.kilo)}kg

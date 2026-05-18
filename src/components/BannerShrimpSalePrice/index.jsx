@@ -1,7 +1,7 @@
 /* eslint-disable object-curly-newline */
 /* eslint-disable operator-linebreak */
 import { useCallback, useEffect, useState } from "react";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Animated, Easing, useWindowDimensions } from "react-native";
 import {
@@ -23,10 +23,12 @@ import {
 import ShririmpBanner from "../../assets/images/camaraoBanner.png";
 import { getShirimpSaleByCreatedAtLastSevenDays } from "../../controllers/ShirimpSale/sale";
 import { BannerShirimpSaleSkeleton } from "../Skeleton/BannerShirimpSaleSkeleton";
+import { dataRoutes } from "../../routes/dataRoutes";
 
 let cachedSalesBanner = [];
 
-export const BannerShrimpSalePrice = ({ open }) => {
+export const BannerShrimpSalePrice = () => {
+    const navigation = useNavigation();
     const { width: screenWidth } = useWindowDimensions();
     const isCompact = screenWidth <= 390;
 
@@ -57,21 +59,21 @@ export const BannerShrimpSalePrice = ({ open }) => {
                     ];
                 } else {
                     nextData = resultData.map((item) => ({
-                            location: item.location || "-",
-                            data: Array.isArray(item.sales) && item.sales.length > 0
-                                ? item.sales.map((data) => ({
-                                    grammage: data?.grammage ?? "-",
-                                    grammageValue: data?.grammageValue ?? "-",
-                                    saleDate: data?.saleDate ?? "-",
-                                }))
-                                : [
-                                    {
-                                        grammage: "-",
-                                        grammageValue: "-",
-                                        saleDate: "-",
-                                    },
-                                ],
-                        }));
+                        location: item.location || "-",
+                        data: Array.isArray(item.sales) && item.sales.length > 0
+                            ? item.sales.map((data) => ({
+                                grammage: data?.grammage ?? "-",
+                                grammageValue: data?.grammageValue ?? "-",
+                                saleDate: data?.saleDate ?? "-",
+                            }))
+                            : [
+                                {
+                                    grammage: "-",
+                                    grammageValue: "-",
+                                    saleDate: "-",
+                                },
+                            ],
+                    }));
                 }
 
                 cachedSalesBanner = nextData;
@@ -171,10 +173,29 @@ export const BannerShrimpSalePrice = ({ open }) => {
         return 15;
     };
 
+    const handleOpenSalesList = () => {
+        navigation.navigate(dataRoutes.salesList);
+    };
+
     return loading ? (
         <BannerShirimpSaleSkeleton />
     ) : (
-        <BannerContainer onPress={open} $compact={isCompact}>
+        <BannerContainer
+            $compact={isCompact}
+            activeOpacity={0.85}
+            onPress={handleOpenSalesList}
+        >
+            <Feather
+                name="chevron-right"
+                size={24}
+                color="#e85d22"
+                style={{
+                    position: "absolute",
+                    right: isCompact ? 10 : 14,
+                    top: isCompact ? 10 : 14,
+                    zIndex: 10,
+                }}
+            />
             <BannerTitle $compact={isCompact}>
                 {"Pre\u00e7o Atual do Camar\u00e3o"}
             </BannerTitle>
@@ -249,6 +270,7 @@ export const BannerShrimpSalePrice = ({ open }) => {
                     </AnimatedDataRowsGroup>
                 </ContentDataInfo>
             </BannerBody>
+
         </BannerContainer>
     );
 };

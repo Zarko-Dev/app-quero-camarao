@@ -53,7 +53,7 @@ export const ButtonShare = styled.TouchableOpacity`
 
 export const ContainerInfo = styled.View`
     flex-direction: row;
-    padding: 0 15px 15px 15px;
+    padding: 0 15px 0 15px;
 `;
 
 export const ContentImageShrimp = styled.TouchableOpacity`
@@ -79,7 +79,7 @@ export const GrammageContainer = styled.View`
     border-radius: 12px;
     padding: 10px;
     flex: 1;
-    margin-bottom: 10px;
+    margin-bottom: 0px;
     justify-content: center;
 `;
 
@@ -120,11 +120,13 @@ export const TextUnitMeasurement = styled(Text)`
 
 export const ButtonBuy = styled.TouchableOpacity`
     background-color: #1a1a1a;
-    height: 45px;
+    align-self: stretch;
+    height: 44px;
     border-radius: 12px;
     flex-direction: row;
     justify-content: center;
     align-items: center;
+    margin: 10px 15px 15px;
 `;
 
 export const ButtonBuyText = styled(Text)`

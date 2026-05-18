@@ -119,3 +119,29 @@ export const getShirimpSaleByCreatedAtLastSevenDays = async () => {
         return [];
     }
 };
+
+export const getShirimpSaleByCreatedAtLastThirtyDays = async () => {
+    try {
+        const shirimpSaleRef = collection(firestore, models.shirimpSale);
+        const queryConfig = query(
+            shirimpSaleRef,
+            where(
+                "createdAt",
+                ">=",
+                new Date(new Date().setDate(new Date().getDate() - 30)),
+            ),
+        );
+
+        const shirimpSaleSnapshot = await getDocs(queryConfig);
+
+        if (shirimpSaleSnapshot.empty) {
+            return [];
+        }
+
+        return shirimpSaleSnapshot.docs.map((dataDoc) => dataDoc.data());
+    } catch (error) {
+        Sentry.captureException(error);
+
+        return [];
+    }
+};

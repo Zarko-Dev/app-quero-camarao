@@ -6,7 +6,7 @@ export const Container = styled.View`
 
 export const SearchInputContainer = styled.View`
     width: 100%;
-    height: 50px;
+    height: 44px;
     background-color: #fff;
     border-radius: 12px;
     flex-direction: row;

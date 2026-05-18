@@ -136,7 +136,7 @@ export const CardPublicationShrimp = memo(
 
                     SendNotifications(
                         [notificationToken],
-                        "👀 Sua publicação teve uma visualização!",
+                        "?? Sua publicação teve uma visualização!",
                         `${userNameView} Visualizou sua publicação!`,
                     );
                 }
@@ -295,7 +295,7 @@ export const CardPublicationShrimp = memo(
                                     <TextInfo>Gramatura/Quilos</TextInfo>
                                 </ContentTextInfo>
                                 <View>
-                                    {shrimps.slice(0, 2).map((shrimp, index) => (
+                                    {shrimps.map((shrimp, index) => (
                                         <ContainerShrimp key={index}>
                                             <ShrimpIcon source={shrimpIcon} />
                                             <TextShrimp sale={shrimp?.sale}>
@@ -309,19 +309,18 @@ export const CardPublicationShrimp = memo(
                                     ))}
                                 </View>
                             </GrammageContainer>
-
-                            <ButtonBuy onPress={handleRedirectPage}>
-                                {!isLoadingTalkProductor ? (
-                                    <>
-                                        <FontAwesome name="whatsapp" size={24} color="white" />
-                                        <ButtonBuyText>Falar com o Produtor</ButtonBuyText>
-                                    </>
-                                ) : (
-                                    <ActivityIndicator animating size={20} color="white" />
-                                )}
-                            </ButtonBuy>
                         </ContentDataShrimp>
                     </ContainerInfo>
+                    <ButtonBuy onPress={handleRedirectPage}>
+                        {!isLoadingTalkProductor ? (
+                            <>
+                                <FontAwesome name="whatsapp" size={24} color="white" />
+                                <ButtonBuyText>Falar com o Produtor</ButtonBuyText>
+                            </>
+                        ) : (
+                            <ActivityIndicator animating size={20} color="white" />
+                        )}
+                    </ButtonBuy>
                 </Container>
                 <RenderImage />
                 <ModalShrimpImages

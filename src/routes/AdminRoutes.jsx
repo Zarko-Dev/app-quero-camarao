@@ -1,12 +1,10 @@
 import { createDrawerNavigator } from "@react-navigation/drawer";
-import { FontAwesome } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 import { dataRoutes } from "./dataRoutes";
 
 import { Header } from "../components/Header";
 import { DrawerContent } from "../components/DrawerContent";
-
-import { theme } from "../styles/Theme";
 
 import { DiscountCupons } from "../pages/DiscountCupons";
 import { RequestExtensionPublicationDate } from "../pages/Admin/RequestExtensionPublicationDate";
@@ -26,10 +24,21 @@ export const NavigationAdminMenu = () => (
     <Navigator
         drawerContent={(props) => <DrawerContent {...props} backAdmin />}
         screenOptions={{
-            drawerLabelStyle: { marginLeft: -25, fontSize: 16 },
-            drawerActiveBackgroundColor: theme.colors.primary,
-            drawerActiveTintColor: theme.colors.white,
-            drawerInactiveTintColor: theme.colors.text,
+            drawerStyle: { width: "86%", backgroundColor: "#ffffff" },
+            drawerLabelStyle: {
+                marginLeft: -18,
+                fontSize: 15,
+                fontWeight: "600",
+            },
+            drawerItemStyle: {
+                marginHorizontal: 10,
+                marginVertical: 3,
+                borderRadius: 12,
+                paddingHorizontal: 6,
+            },
+            drawerActiveBackgroundColor: "#fff1e8",
+            drawerActiveTintColor: "#f55b1f",
+            drawerInactiveTintColor: "#3f3f3f",
         }}
     >
         <Screen
@@ -39,7 +48,7 @@ export const NavigationAdminMenu = () => (
                 title: "Início Administrador",
                 header: (props) => <Header {...props} />,
                 drawerIcon: ({ color }) => (
-                    <FontAwesome name="user-secret" size={20} color={color} />
+                    <MaterialCommunityIcons name="view-dashboard-outline" size={21} color={color} />
                 ),
                 headerShown: false,
             }}
@@ -51,7 +60,7 @@ export const NavigationAdminMenu = () => (
                 title: "Preço do Camarão",
                 header: (props) => <Header {...props} />,
                 drawerIcon: ({ color }) => (
-                    <FontAwesome name="dollar" size={20} color={color} />
+                    <MaterialCommunityIcons name="cash-multiple" size={21} color={color} />
                 ),
             }}
         />
@@ -62,7 +71,7 @@ export const NavigationAdminMenu = () => (
                 title: "Cupons de Desconto",
                 header: (props) => <Header {...props} />,
                 drawerIcon: ({ color }) => (
-                    <FontAwesome name="ticket" size={20} color={color} />
+                    <MaterialCommunityIcons name="ticket-percent-outline" size={21} color={color} />
                 ),
             }}
         />
@@ -73,7 +82,7 @@ export const NavigationAdminMenu = () => (
                 title: "Estenção de Data",
                 header: (props) => <Header {...props} />,
                 drawerIcon: ({ color }) => (
-                    <FontAwesome name="calendar" size={20} color={color} />
+                    <MaterialCommunityIcons name="calendar-month-outline" size={21} color={color} />
                 ),
             }}
         />
@@ -84,7 +93,7 @@ export const NavigationAdminMenu = () => (
                 title: "Solici. de Publicidade",
                 header: (props) => <Header {...props} />,
                 drawerIcon: ({ color }) => (
-                    <FontAwesome name="bookmark" size={20} color={color} />
+                    <MaterialCommunityIcons name="clipboard-text-outline" size={21} color={color} />
                 ),
             }}
         />
@@ -95,7 +104,7 @@ export const NavigationAdminMenu = () => (
                 title: "Publicidades Ativas",
                 header: (props) => <Header {...props} />,
                 drawerIcon: ({ color }) => (
-                    <FontAwesome name="bookmark" size={20} color={color} />
+                    <MaterialCommunityIcons name="check-decagram-outline" size={21} color={color} />
                 ),
             }}
         />
@@ -106,7 +115,7 @@ export const NavigationAdminMenu = () => (
                 title: "Envio de Notificações",
                 header: (props) => <Header {...props} />,
                 drawerIcon: ({ color }) => (
-                    <FontAwesome name="send" size={20} color={color} />
+                    <MaterialCommunityIcons name="send-outline" size={21} color={color} />
                 ),
             }}
         />
@@ -117,7 +126,7 @@ export const NavigationAdminMenu = () => (
                 title: "Sorteio",
                 header: (props) => <Header {...props} />,
                 drawerIcon: ({ color }) => (
-                    <FontAwesome name="cube" size={20} color={color} />
+                    <MaterialCommunityIcons name="gift-outline" size={21} color={color} />
                 ),
             }}
         />
@@ -128,7 +137,7 @@ export const NavigationAdminMenu = () => (
                 title: "Histórico de Sorteios",
                 header: (props) => <Header {...props} />,
                 drawerIcon: ({ color }) => (
-                    <FontAwesome name="history" size={20} color={color} />
+                    <MaterialCommunityIcons name="history" size={21} color={color} />
                 ),
             }}
         />
@@ -139,7 +148,7 @@ export const NavigationAdminMenu = () => (
                 title: "Lista Sorteios ao Vivo",
                 header: (props) => <Header {...props} />,
                 drawerIcon: ({ color }) => (
-                    <FontAwesome name="list-alt" size={20} color={color} />
+                    <MaterialCommunityIcons name="broadcast" size={21} color={color} />
                 ),
             }}
         />
@@ -150,7 +159,7 @@ export const NavigationAdminMenu = () => (
                 title: "Regras Sorteio",
                 header: (props) => <Header {...props} />,
                 drawerIcon: ({ color }) => (
-                    <FontAwesome name="cube" size={20} color={color} />
+                    <MaterialCommunityIcons name="file-document-edit-outline" size={21} color={color} />
                 ),
             }}
         />

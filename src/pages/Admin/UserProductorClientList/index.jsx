@@ -15,9 +15,9 @@ export const UserProductorClientList = ({ navigation }) => {
 
     return (
         <ScrollContentUserList>
-            {dataUsers.map((dataUser) => (
+            {dataUsers.map((dataUser, index) => (
                 <UserDivideList
-                    key={dataUser.state}
+                    key={`${dataUser.state}-${index}`}
                     listUsers={dataUser}
                     redirectAction={handleRedirectListUsers}
                 />

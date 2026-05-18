@@ -456,7 +456,7 @@ export const CardOrder = ({ data, reload, reloadAction }) => {
             <Container>
                 <Header>
                     <ContentTextOrderNumber>
-                        <TitleOrderNumber>Nº: </TitleOrderNumber>
+                        <TitleOrderNumber>NÂº: </TitleOrderNumber>
                         {isLoading ? (
                             <TextSkeleton />
                         ) : (

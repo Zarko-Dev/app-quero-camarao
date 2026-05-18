@@ -1,4 +1,4 @@
-/* eslint-disable operator-linebreak */
+﻿/* eslint-disable operator-linebreak */
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Checkbox } from "react-native-paper";
 import Toast from "react-native-toast-message";
@@ -71,7 +71,7 @@ export const Register = ({ navigation, route }) => {
             const cepLimpo = cepDigitado.replace(/\D/g, "");
             if (cepLimpo.length === 8) {
                 const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
-                const data = await response.json(); // <- CORREÇÃO AQUI
+                const data = await response.json(); // via CEP
                 if (!data.erro) {
                     setState(data.uf)
                     setCity(data.localidade)
@@ -576,3 +576,5 @@ export const Register = ({ navigation, route }) => {
         </TabsProvider>
     );
 };
+
+

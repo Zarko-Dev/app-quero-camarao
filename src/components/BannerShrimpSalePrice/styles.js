@@ -1,6 +1,22 @@
 import styled from "styled-components/native";
 import { Animated } from "react-native";
 
+const getRowMinHeight = ({ $compact, $isLocation }) => {
+    if ($isLocation) {
+        return $compact ? "36px" : "44px";
+    }
+
+    return $compact ? "21px" : "24px";
+};
+
+const getRowMarginTop = ({ $compact, $isLocation }) => {
+    if (!$isLocation) {
+        return "0px";
+    }
+
+    return $compact ? "2px" : "4px";
+};
+
 export const BannerContainer = styled.TouchableOpacity`
     width: 100%;
     min-height: ${({ $compact }) => ($compact ? "162px" : "186px")};
@@ -77,9 +93,9 @@ export const DataRow = styled.View`
     border-bottom-width: ${({ $withDivider }) => ($withDivider ? "1px" : "0px")};
     border-bottom-color: #f0d9c8;
     min-height: ${({ $compact, $isLocation }) =>
-        $compact ? ($isLocation ? "36px" : "21px") : $isLocation ? "44px" : "24px"};
+        getRowMinHeight({ $compact, $isLocation })};
     margin-top: ${({ $compact, $isLocation }) =>
-        $isLocation ? ($compact ? "2px" : "4px") : "0px"};
+        getRowMarginTop({ $compact, $isLocation })};
 `;
 
 export const IconContainer = styled.View`
@@ -111,4 +127,28 @@ export const ValueText = styled.Text`
     color: #333;
     text-align: right;
     flex-wrap: wrap;
+`;
+
+export const ActionButton = styled.TouchableOpacity`
+    width: 100%;
+    height: ${({ $compact }) => ($compact ? "40px" : "44px")};
+    background-color: transparent;
+    border-width: 1.5px;
+    border-color: #25d366;
+    border-radius: 12px;
+    justify-content: center;
+    align-items: center;
+    margin-top: ${({ $compact }) => ($compact ? "8px" : "10px")};
+`;
+
+export const ActionButtonContent = styled.View`
+    flex-direction: row;
+    align-items: center;
+`;
+
+export const ActionButtonText = styled.Text`
+    color: #25d366;
+    font-weight: bold;
+    font-size: ${({ theme, $compact }) => theme.size.fontSize($compact ? 13 : 14)};
+    margin-left: 6px;
 `;

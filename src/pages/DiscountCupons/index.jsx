@@ -3,6 +3,7 @@
 
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useState } from "react";
+import { Feather } from "@expo/vector-icons";
 import { FlatList, ScrollView } from "react-native";
 
 import { dataRoutes } from "../../routes/dataRoutes";
@@ -85,6 +86,7 @@ export const DiscountCupons = ({ navigation }) => {
                     searchText={searchValue}
                     onChange={handleSearchCupons}
                     isLoadingSearch={false}
+                    placeholder="Busque cupons, codigos..."
                 />
             </ContentSearch>
             {!dataIsLoading ? (
@@ -194,6 +196,7 @@ export const DiscountCupons = ({ navigation }) => {
                 <ScrollView>{showSkeleton()}</ScrollView>
             )}
             <ButtonRegister onPress={handleRedirectRegisterDiscountCupom}>
+                <Feather name="plus-circle" size={16} color="white" style={{ marginRight: 8 }} />
                 <TitleButton>Cadastrar Cupom</TitleButton>
             </ButtonRegister>
         </Container>

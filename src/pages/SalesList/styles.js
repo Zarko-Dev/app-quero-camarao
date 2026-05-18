@@ -307,3 +307,129 @@ export const ButtonText = styled.Text`
     font-size: ${({ theme }) => theme.size.fontSize(15)};
     margin-left: 10px;
 `;
+
+export const FlyerContainer = styled.View`
+    width: 92%;
+    align-self: center;
+    margin-top: 12px;
+    background-color: #fff7ee;
+    border-radius: 16px;
+    padding: 12px;
+    border-width: 1px;
+    border-color: #ffe2cc;
+    elevation: 3;
+    shadow-color: #000;
+    shadow-offset: 0px 2px;
+    shadow-opacity: 0.1;
+    shadow-radius: 4px;
+    margin-bottom: 5px;
+`;
+
+export const FlyerTitle = styled.Text`
+    font-size: ${({ theme }) => theme.size.fontSize(18)};
+    font-weight: bold;
+    color: ${({ theme }) => theme.colors.primary};
+    text-align: center;
+    margin-bottom: 10px;
+`;
+
+export const FlyerBody = styled.View`
+    width: 100%;
+    flex-direction: row;
+    align-items: stretch;
+`;
+
+export const FlyerContentShrimpImage = styled.View`
+    width: 110px;
+    justify-content: center;
+    align-items: center;
+    padding-right: 10px;
+`;
+
+export const FlyerShrimpImageCircle = styled.View`
+    width: 96px;
+    height: 96px;
+    border-radius: 48px;
+    background-color: #fff;
+    border-width: 1px;
+    border-color: #ffe2cc;
+    justify-content: center;
+    align-items: center;
+`;
+
+export const FlyerShrimpImage = styled.Image`
+    width: 80px;
+    height: 80px;
+`;
+
+export const FlyerContentDataInfo = styled.View`
+    flex: 1;
+    min-width: 0px;
+    justify-content: center;
+`;
+
+export const FlyerDataRow = styled.View`
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    border-bottom-width: ${({ $withDivider }) => ($withDivider ? "1px" : "0px")};
+    border-bottom-color: #f0d9c8;
+    min-height: ${({ $isLocation }) => ($isLocation ? "40px" : "24px")};
+    margin-top: ${({ $isLocation }) => ($isLocation ? "3px" : "0px")};
+`;
+
+export const FlyerIconContainer = styled.View`
+    width: 20px;
+    height: 20px;
+    justify-content: center;
+    align-items: center;
+`;
+
+export const FlyerShrimpMiniIcon = styled.Image`
+    width: 14px;
+    height: 14px;
+`;
+
+export const FlyerLabelText = styled.Text`
+    width: 74px;
+    font-size: ${({ theme }) => theme.size.fontSize(12)};
+    color: #6f6f6f;
+    margin-left: 5px;
+`;
+
+export const FlyerValueText = styled.Text`
+    flex: 1;
+    min-width: 0px;
+    font-size: ${({ theme, $fontSize }) => theme.size.fontSize($fontSize ?? 14)};
+    line-height: 20px;
+    font-weight: bold;
+    color: #333;
+    text-align: right;
+`;
+
+export const FlyerFooter = styled.View`
+    width: 100%;
+    margin-top: 12px;
+`;
+
+export const FlyerButtonChatProductor = styled.TouchableOpacity`
+    background-color: #25d366;
+    height: 42px;
+    border-radius: 12px;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    elevation: 2;
+    shadow-color: #000;
+    shadow-offset: 0px 2px;
+    shadow-opacity: 0.15;
+    shadow-radius: 3px;
+`;
+
+export const FlyerButtonText = styled.Text`
+    color: #fff;
+    font-weight: bold;
+    font-size: ${({ theme }) => theme.size.fontSize(14)};
+    margin-left: 10px;
+`;
+

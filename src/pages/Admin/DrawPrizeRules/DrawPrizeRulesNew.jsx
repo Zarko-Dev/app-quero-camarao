@@ -70,7 +70,7 @@ const clientes = selectedCpfs.filter(
     loadAllUsers()
   }, [])
 
-  // Quando estados selecionados mudam → busca cidades
+  // Quando estados selecionados mudam â†’ busca cidades
   useEffect(() => {
     if (selectedStates.length > 0) {
       loadCitiesByStates(selectedStates)
@@ -82,7 +82,7 @@ const clientes = selectedCpfs.filter(
     }
   }, [selectedStates])
 
-  // Quando cidades selecionadas mudam → busca CPFs
+  // Quando cidades selecionadas mudam â†’ busca CPFs
   useEffect(() => {
     if (selectedCities.length > 0) {
       loadCpfsByCities(selectedCities)
@@ -94,8 +94,8 @@ const clientes = selectedCpfs.filter(
 
  useFocusEffect(
   useCallback(() => {
-    loadStates()      // ✅ recarrega ao entrar
-    loadAllUsers()    // ✅ recarrega ao entrar
+    loadStates()      // âœ… recarrega ao entrar
+    loadAllUsers()    // âœ… recarrega ao entrar
     return () => { handleClearAll() }
   }, [])
 )
@@ -249,8 +249,8 @@ const clientes = selectedCpfs.filter(
     setAllProductorsLabels([])
     setSelectedAll(false)
     setModeAll(false)
-     loadAllUsers()  // ✅ recarrega os usuários após limpar
-     loadStates()    // ✅ recarrega os estados após limpar
+     loadAllUsers()  // âœ… recarrega os usuários após limpar
+     loadStates()    // âœ… recarrega os estados após limpar
   }
 
   const handleSaveAll = async () => {
