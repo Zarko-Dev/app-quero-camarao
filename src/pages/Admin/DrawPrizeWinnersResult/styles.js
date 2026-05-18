@@ -19,9 +19,20 @@ export const Content = styled.View`
 export const Header = styled.View`
     width: 100%;
 
-    justify-content: space-around;
+    justify-content: space-between;
     align-items: center;
     flex-direction: row;
+    padding: 0 12px;
+`;
+
+export const BackButton = styled.TouchableOpacity`
+    width: ${({ theme }) => theme.size.componentSize(34)};
+    height: ${({ theme }) => theme.size.componentSize(34)};
+    margin-top: ${({ theme }) => theme.size.dimentionsSize(2.5)};
+    background-color: ${({ theme }) => theme.colors.tertiary};
+    align-items: center;
+    justify-content: center;
+    border-radius: ${({ theme }) => theme.size.componentSize(34)};
 `;
 
 export const Title = styled(Text)`
@@ -30,7 +41,10 @@ export const Title = styled(Text)`
 
     margin-top: ${({ theme }) => theme.size.dimentionsSize(4)};
     margin-bottom: ${({ theme }) => theme.size.dimentionsSize(2)};
-    margin-left: ${({ theme }) => theme.size.dimentionsSize(3)};
+    flex: 1;
+    text-align: center;
+    margin-left: ${({ theme }) => theme.size.dimentionsSize(1)};
+    margin-right: ${({ theme }) => theme.size.dimentionsSize(1)};
 
     color: ${({ theme }) => theme.colors.primary};
 `;

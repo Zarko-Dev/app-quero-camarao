@@ -187,12 +187,12 @@ export const Invitations = () => {
                         title: "Convite para indicação",
                         message: `Olá! Venho através do *Aplicativo Quero Camarão* 🦐
 
-Use meu convite para ganhar um desconto especial de *R$${configData.invitationDiscount},00* em sua *primeira publicação* de camarão. 💰✨🎉
+Use meu convite para ganhar um desconto especial de *R$${configData.invitationDiscount},00* em sua *primeira publicação* de camarão. ?????
 
 *Convite*:
 http://querocamarao.logicphire.com.br?convite=${dataInvitations.invitationCode}
 
-Se ainda não baixou o Quero Camarão, *baixe agora mesmo*! 📲🔥👇🏻👇🏻
+Se ainda não baixou o Quero Camarão, *baixe agora mesmo*! ????????????
 
 *Play Store*: ${configData.androidUrl}
 

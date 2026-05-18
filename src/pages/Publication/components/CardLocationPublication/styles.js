@@ -5,41 +5,29 @@ import SelectComponent from "../../../../components/SelectComponent";
 
 export const Container = styled.View`
     width: 100%;
-
     margin-top: ${({ theme }) => theme.size.dimentionsSize(1)};
-
-    border-radius: 4px;
-
-    background-color: ${({ theme }) => theme.colors.tertiary};
+    padding: 10px;
+    border-radius: 8px;
+    border-width: 1px;
+    border-color: #ffe2cc;
+    background-color: #ffffff;
 `;
 
 export const Header = styled.View`
-    height: ${({ theme }) => theme.size.componentSize(28)};
-
-    justify-content: center;
-    align-items: center;
-
-    border-top-left-radius: 4px;
-    border-top-right-radius: 4px;
-
-    background-color: ${({ theme }) => theme.colors.primary};
+    margin-bottom: 10px;
 `;
 
 export const TextHeader = styled(Text)`
     font-weight: bold;
-    font-size: ${({ theme }) => theme.size.fontSize(15)};
-
-    color: ${({ theme }) => theme.colors.white};
+    font-size: ${({ theme }) => theme.size.fontSize(16)};
+    color: ${({ theme }) => theme.colors.primary};
 `;
 
 export const ContentLocation = styled.View`
     width: 100%;
-
     justify-content: space-between;
     align-items: flex-start;
     flex-direction: row;
-
-    padding: 5px;
 `;
 
 export const ContentInputSelect = styled.View`
@@ -52,9 +40,6 @@ export const SelectComponentStyle = styled(SelectComponent)`
 
 export const TextInputSelect = styled(Text)`
     font-weight: bold;
-    font-size: ${({ theme }) => theme.size.fontSize(13)};
-
-    margin-left: -1px;
-
-    color: ${({ theme }) => theme.colors.black};
+    font-size: ${({ theme }) => theme.size.fontSize(12)};
+    color: ${({ theme }) => theme.colors.text};
 `;

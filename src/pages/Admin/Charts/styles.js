@@ -9,7 +9,7 @@ export const Container = styled.SafeAreaView`
     padding-top: 14px;
 `;
 
-export const ContainerDropdowSelects = styled.View`
+export const ContainerDropdownSelects = styled.View`
     width: 100%;
 
     justify-content: space-between;

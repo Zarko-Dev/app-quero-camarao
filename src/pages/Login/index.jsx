@@ -13,18 +13,21 @@ import { InvitationActions } from "../ValidateInvitation/actions";
 import { Input } from "../../components/Input";
 
 import {
+    BrandCard,
     ButtonLogin,
     ButtonRegister,
     Container,
     ContentFormLogin,
     ContentTextRegister,
     Footer,
+    Header,
     LogoImage,
     TextButton,
     TextButtonRegister,
     TextRegister,
+    WelcomeSubtitle,
+    WelcomeTitle,
 } from "./styles";
-import { BoxShadowIos } from "../../styles/IosShadow";
 
 import originalLogo from "../../assets/images/originalLogo.png";
 
@@ -90,7 +93,15 @@ export const Login = ({ navigation }) => {
 
     return (
         <Container>
-            <LogoImage source={originalLogo} />
+            <Header>
+                <BrandCard>
+                    <LogoImage source={originalLogo} />
+                    <WelcomeTitle>Bem-vindo de volta</WelcomeTitle>
+                    <WelcomeSubtitle>
+                        Entre para continuar no Quero Camarão
+                    </WelcomeSubtitle>
+                </BrandCard>
+            </Header>
 
             <ContentFormLogin>
                 <Input
@@ -116,7 +127,7 @@ export const Login = ({ navigation }) => {
             </ContentFormLogin>
 
             <Footer>
-                <ButtonLogin style={BoxShadowIos} onPress={HandleLogin}>
+                <ButtonLogin onPress={HandleLogin}>
                     {!isLoading ? (
                         <TextButton>Entrar</TextButton>
                     ) : (

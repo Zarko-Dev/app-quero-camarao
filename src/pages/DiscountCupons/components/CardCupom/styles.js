@@ -7,58 +7,63 @@ export const Container = styled.View`
     justify-content: space-between;
     align-items: center;
 
-    margin-bottom: ${({ theme }) => theme.size.dimentionsSize(1)};
-    border-radius: 4px;
+    margin-bottom: ${({ theme }) => theme.size.dimentionsSize(1.2)};
+    border-radius: 14px;
+    border-width: 1px;
+    border-color: #ececec;
+    overflow: hidden;
 
-    background-color: ${({ theme }) => theme.colors.quaternary};
+    background-color: #ffffff;
 `;
 
 export const Header = styled.View`
     width: 100%;
-    height: ${({ theme }) => theme.size.componentSize(28)};
+    height: ${({ theme }) => theme.size.componentSize(34)};
 
     justify-content: center;
     align-items: center;
+    flex-direction: row;
 
-    border-top-left-radius: 4px;
-    border-top-right-radius: 4px;
+    border-top-left-radius: 14px;
+    border-top-right-radius: 14px;
 
     background-color: ${({ theme }) => theme.colors.primary};
 `;
 
 export const TextHeader = styled(Text)`
     font-weight: bold;
-    font-size: ${({ theme }) => theme.size.fontSize(15)};
+    font-size: ${({ theme }) => theme.size.fontSize(14)};
 
     color: ${({ theme }) => theme.colors.white};
 `;
 
 export const ButtonDelete = styled.TouchableOpacity`
-    width: 45%;
-    height: ${({ theme }) => theme.size.componentSize(45)};
+    width: 48%;
+    height: ${({ theme }) => theme.size.componentSize(40)};
 
     justify-content: center;
     align-items: center;
+    flex-direction: row;
 
     margin-bottom: ${({ theme }) => theme.size.dimentionsSize(1)};
-    border-radius: 4px;
+    border-radius: 10px;
+    border-width: 1px;
+    border-color: #d8d8d8;
 
-    background-color: ${({ theme }) => theme.colors.black};
-
-    elevation: 3;
+    background-color: #f7f7f7;
 `;
 
 export const ButtonSetDefault = styled(ButtonDelete)`
+    border-width: 0;
     background-color: ${({ isDefault, theme }) =>
-        isDefault ? theme.colors.red : theme.colors.primary};
+        isDefault ? "#f08a5d" : theme.colors.primary};
 `;
 
 export const TitleButton = styled(Text)`
-    font-size: ${({ theme }) => theme.size.fontSize(16)};
-    font-weight: bold;
+    font-size: ${({ theme }) => theme.size.fontSize(13)};
+    font-weight: 700;
     text-align: center;
-
-    color: ${({ theme }) => theme.colors.white};
+    color: ${({ theme }) => theme.colors.text};
 `;
 
 export const ContentActionButtonCoupon = styled.View`
@@ -66,4 +71,9 @@ export const ContentActionButtonCoupon = styled.View`
     justify-content: space-around;
     align-items: center;
     flex-direction: row;
+    padding: 0 8px;
+`;
+
+export const HeaderIconWrap = styled.View`
+    margin-right: 8px;
 `;

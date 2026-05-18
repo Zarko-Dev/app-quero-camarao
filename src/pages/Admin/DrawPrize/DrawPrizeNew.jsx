@@ -136,7 +136,7 @@ export const DrawPrizeNew = ({ navigation }) => {
 
             await blockWinners(selectedRule.firestoreId, updatedCpfs)
 
-            // ✅ salva no histórico automaticamente
+            // âœ… salva no histórico automaticamente
             await saveDrawPrize(selectedRule.store, winnersFullData, null)
 
             navigation.navigate(dataRoutes.admin.drawPrizeWinnerResult, {

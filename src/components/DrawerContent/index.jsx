@@ -13,7 +13,11 @@ export const DrawerContent = (props) => {
     return (
         <>
             <Profile navigation={navigation} />
-            <DrawerContentScrollView {...props}>
+            <DrawerContentScrollView
+                {...props}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingTop: 8, paddingBottom: 12 }}
+            >
                 <DrawerItemList {...props} />
             </DrawerContentScrollView>
             {backAdmin ? (

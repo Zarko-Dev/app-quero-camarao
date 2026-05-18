@@ -1,5 +1,6 @@
-/* eslint-disable operator-linebreak */
+﻿/* eslint-disable operator-linebreak */
 import { useCallback, useState } from "react";
+import { Feather } from "@expo/vector-icons";
 import { ActivityIndicator, Checkbox } from "react-native-paper";
 import Toast from "react-native-toast-message";
 import { useFocusEffect } from "@react-navigation/native";
@@ -11,7 +12,10 @@ import { Input } from "../../../components/Input";
 
 import {
     Body,
+    CheckBoxHolder,
+    CheckboxSubtext,
     CheckboxText,
+    CheckboxTextWrap,
     Confirmbutton,
     Container,
     ContainerCheckbox,
@@ -19,7 +23,14 @@ import {
     ContentForm,
     Footer,
     Header,
+    SectionHeader,
+    SectionMarker,
+    SectionTitle,
     Subtitle,
+    TipBox,
+    TipDescription,
+    TipIconWrap,
+    TipTitle,
     Title,
     TitleButton,
 } from "./styles";
@@ -33,11 +44,9 @@ export const ShrimpPrice = () => {
     const [defaultPriceGrammage, setDefaultPriceGrammage] = useState("0");
     const [lastDefaultPrice, setLastDefaultPrice] = useState("0");
     const [leftGrammageReference, setLeftGrammageReference] = useState("0");
-    const [priceLeftGramageReference, setPriceLeftGramageReference] =
-        useState("0");
+    const [priceLeftGramageReference, setPriceLeftGramageReference] = useState("0");
     const [rightGrammagereference, setRightGrammagereference] = useState("0");
-    const [priceRightGrammageReference, setPriceRightGrammageReference] =
-        useState("0");
+    const [priceRightGrammageReference, setPriceRightGrammageReference] = useState("0");
     const [showSuggestPrice, setShowSuggestPrice] = useState(true);
     const [showAllUsers, setShowAllUsers] = useState(true);
 
@@ -53,13 +62,9 @@ export const ShrimpPrice = () => {
                 setDefaultPriceGrammage(`${data.defaultPriceGrammage}`);
                 setLastDefaultPrice(data.defaultPriceGrammage);
                 setLeftGrammageReference(data.leftGrammageReference);
-                setPriceLeftGramageReference(
-                    `${data.priceLeftGramageReference}`,
-                );
+                setPriceLeftGramageReference(`${data.priceLeftGramageReference}`);
                 setRightGrammagereference(data.rightGrammagereference);
-                setPriceRightGrammageReference(
-                    `${data.priceRightGrammageReference}`,
-                );
+                setPriceRightGrammageReference(`${data.priceRightGrammageReference}`);
                 setShowSuggestPrice(data.showSuggestPrice);
                 setShowAllUsers(data.showAllUsers);
 
@@ -88,24 +93,24 @@ export const ShrimpPrice = () => {
         if (result) {
             Toast.show({
                 type: "success",
-                text1: "Preço do camarão atualizado!",
+                text1: "Preco do camarao atualizado!",
             });
 
             let title = "";
 
             if (lastDefaultPrice > defaultPriceGrammage) {
-                title = "⬇️ Preço do 🦐 camarão baixou!";
+                title = "Preco do camarao baixou!";
             } else if (lastDefaultPrice < defaultPriceGrammage) {
-                title = "⬆️ Preço do 🦐 camarão subiu!";
+                title = "Preco do camarao subiu!";
             } else {
-                title = "➡️ Camarão manteve o preço!";
+                title = "Camarao manteve o preco!";
             }
 
             await sendNotificationAllUsers(title, "Venha conferir!");
         } else {
             Toast.show({
                 type: "error",
-                text1: "Não foi possível atualizar o preço!",
+                text1: "Nao foi possivel atualizar o preco!",
             });
         }
 
@@ -116,21 +121,20 @@ export const ShrimpPrice = () => {
         <>
             <Container>
                 <Header>
-                    <Title>Preço do Camarão</Title>
+                    <Title>Preco do Camarao</Title>
                     <Subtitle>
-                        Informe a seus usuários o preço do camarão e suas
-                        variações!
+                        Informe a seus usuarios o preco do camarao e suas variacoes.
                     </Subtitle>
                 </Header>
                 <Body>
                     {isLoadingData ? (
-                        <ActivityIndicator
-                            animating
-                            color={theme.colors.primary}
-                            size={45}
-                        />
+                        <ActivityIndicator animating color={theme.colors.primary} size={45} />
                     ) : (
                         <>
+                            <SectionHeader>
+                                <SectionMarker />
+                                <SectionTitle>Defina os precos</SectionTitle>
+                            </SectionHeader>
                             <ContentForm>
                                 <Input
                                     label="Gram. base"
@@ -141,7 +145,7 @@ export const ShrimpPrice = () => {
                                     style={{ width: "49%" }}
                                 />
                                 <Input
-                                    label="Preço base"
+                                    label="Preco base"
                                     icon="dollar-sign"
                                     onChange={setDefaultPriceGrammage}
                                     value={defaultPriceGrammage}
@@ -159,7 +163,7 @@ export const ShrimpPrice = () => {
                                     style={{ width: "49%" }}
                                 />
                                 <Input
-                                    label="Preço menor"
+                                    label="Preco menor"
                                     icon="dollar-sign"
                                     onChange={setPriceLeftGramageReference}
                                     value={priceLeftGramageReference}
@@ -177,7 +181,7 @@ export const ShrimpPrice = () => {
                                     style={{ width: "49%" }}
                                 />
                                 <Input
-                                    label="Preço maior"
+                                    label="Preco maior"
                                     icon="dollar-sign"
                                     onChange={setPriceRightGrammageReference}
                                     value={priceRightGrammageReference}
@@ -185,39 +189,56 @@ export const ShrimpPrice = () => {
                                     style={{ width: "49%" }}
                                 />
                             </ContentForm>
+
+                            <SectionHeader>
+                                <SectionMarker />
+                                <SectionTitle>Opcoes de exibicao</SectionTitle>
+                            </SectionHeader>
                             <ContainerCheckbox>
                                 <ContentCheckbox>
-                                    <Checkbox.Android
-                                        status={
-                                            showSuggestPrice
-                                                ? "checked"
-                                                : "unchecked"
-                                        }
-                                        onPress={() => {
-                                            setShowSuggestPrice(
-                                                !showSuggestPrice,
-                                            );
-                                        }}
-                                    />
-                                    <CheckboxText>
-                                        Exibir informação de preço sugerido!
-                                    </CheckboxText>
+                                    <CheckboxTextWrap>
+                                        <CheckboxText>Exibir informacao de preco sugerido!</CheckboxText>
+                                        <CheckboxSubtext>
+                                            Mostra o preco sugerido para seus usuarios.
+                                        </CheckboxSubtext>
+                                    </CheckboxTextWrap>
+                                    <CheckBoxHolder>
+                                        <Checkbox.Android
+                                            color={theme.colors.primary}
+                                            uncheckedColor={theme.colors.primary}
+                                            status={showSuggestPrice ? "checked" : "unchecked"}
+                                            onPress={() => setShowSuggestPrice(!showSuggestPrice)}
+                                        />
+                                    </CheckBoxHolder>
                                 </ContentCheckbox>
                                 <ContentCheckbox>
-                                    <Checkbox.Android
-                                        status={
-                                            showAllUsers
-                                                ? "checked"
-                                                : "unchecked"
-                                        }
-                                        onPress={() => {
-                                            setShowAllUsers(!showAllUsers);
-                                        }}
-                                    />
-                                    <CheckboxText>
-                                        Exibir preço para todos os usuários!
-                                    </CheckboxText>
+                                    <CheckboxTextWrap>
+                                        <CheckboxText>Exibir preco para todos os usuarios!</CheckboxText>
+                                        <CheckboxSubtext>
+                                            Disponibiliza os precos para todos os usuarios.
+                                        </CheckboxSubtext>
+                                    </CheckboxTextWrap>
+                                    <CheckBoxHolder>
+                                        <Checkbox.Android
+                                            color={theme.colors.primary}
+                                            uncheckedColor={theme.colors.primary}
+                                            status={showAllUsers ? "checked" : "unchecked"}
+                                            onPress={() => setShowAllUsers(!showAllUsers)}
+                                        />
+                                    </CheckBoxHolder>
                                 </ContentCheckbox>
+
+                                <TipBox>
+                                    <TipIconWrap>
+                                        <Feather name="alert-circle" size={16} color={theme.colors.primary} />
+                                    </TipIconWrap>
+                                    <>
+                                        <TipTitle>Dica</TipTitle>
+                                        <TipDescription>
+                                            Mantenha seus precos atualizados para oferecer transparencia e confianca aos seus usuarios.
+                                        </TipDescription>
+                                    </>
+                                </TipBox>
                             </ContainerCheckbox>
                         </>
                     )}
@@ -226,7 +247,10 @@ export const ShrimpPrice = () => {
             <Footer>
                 <Confirmbutton onPress={handleChangeShrimpPrice}>
                     {!isLoading ? (
-                        <TitleButton>Alterar Preço do Camarão</TitleButton>
+                        <>
+                            <Feather name="tag" size={15} color={theme.colors.white} style={{ marginRight: 8 }} />
+                            <TitleButton>Alterar Preco do Camarao</TitleButton>
+                        </>
                     ) : (
                         <ActivityIndicator animating color="white" />
                     )}

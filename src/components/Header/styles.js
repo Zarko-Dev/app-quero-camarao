@@ -16,9 +16,13 @@ export const Container = styled.View`
 
 export const MenuButton = styled.TouchableOpacity``;
 
+export const RightSpacer = styled.View`
+    width: 40px;
+`;
+
 export const LogoImage = styled.Image`
-    width: ${({ theme }) => theme.size.componentSize(90)};
-    height: ${({ theme }) => theme.size.componentSize(45)};
+    width: ${({ theme }) => theme.size.componentSize(80)};
+    height: ${({ theme }) => theme.size.componentSize(40)};
 
     margin-right: ${({ theme }) => theme.size.dimentionsSize(-1)};
 `;

@@ -53,7 +53,7 @@ export const UserAuthentication = async (email, password) => {
 
         Toast.show({
             type: "error",
-            text1: "❌ Dados não encontrados!",
+            text1: "âŒ Dados não encontrados!",
             text2: "Tente novamente mais tarde!",
         });
 
@@ -62,7 +62,7 @@ export const UserAuthentication = async (email, password) => {
 
     Toast.show({
         type: "error",
-        text1: "❌ Acesso Negado!",
+        text1: "âŒ Acesso Negado!",
         text2: "E-mail ou senha incorreta!",
     });
 

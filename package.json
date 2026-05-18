@@ -26,15 +26,16 @@
     "dependencies": {
         "@bam.tech/react-native-image-resizer": "^3.0.7",
         "@expo-google-fonts/comfortaa": "^0.2.3",
-        "@react-native-async-storage/async-storage": "^2.2.0",
+        "@react-native-async-storage/async-storage": "1.23.1",
         "@react-native-community/netinfo": "11.4.1",
-        "@react-native/metro-config": "^0.79.2",
+        "@react-native/metro-config": "0.76.9",
         "@react-navigation/bottom-tabs": "^6.5.11",
         "@react-navigation/drawer": "^6.6.3",
         "@react-navigation/native": "^6.1.7",
         "@react-navigation/native-stack": "^6.9.13",
         "@reduxjs/toolkit": "^1.9.5",
         "@sentry/react-native": "~6.10.0",
+        "@shopify/flash-list": "^1.7.2",
         "expo": "^52.0.49",
         "expo-application": "~6.0.2",
         "expo-asset": "~11.0.5",
@@ -70,7 +71,7 @@
         "react-native-dotenv": "^3.4.9",
         "react-native-fs": "^2.20.0",
         "react-native-gesture-handler": "~2.20.2",
-        "react-native-get-random-values": "1.8.0",
+        "react-native-get-random-values": "~1.11.0",
         "react-native-masked-text": "^1.13.0",
         "react-native-pager-view": "6.5.1",
         "react-native-paper": "^5.14.5",
@@ -104,6 +105,20 @@
         "eslint-plugin-react": "^7.28.0",
         "eslint-plugin-react-hooks": "^4.3.0",
         "prettier": "^3.0.1"
+    },
+    "expo": {
+        "doctor": {
+            "reactNativeDirectoryCheck": {
+                "exclude": [
+                    "expo-av",
+                    "react-native-dotenv",
+                    "react-native-fs",
+                    "react-native-masked-text",
+                    "react-native-responsive-fontsize"
+                ],
+                "listUnknownPackages": false
+            }
+        }
     },
     "private": true
 }

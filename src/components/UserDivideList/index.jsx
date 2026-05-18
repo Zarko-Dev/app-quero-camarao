@@ -43,9 +43,9 @@ export const UserDivideList = ({ listUsers, redirectAction }) => {
             </ContentTitle>
             <Divider />
             <ContentCardCount>
-                {listUsers.data.map((item) => (
+                {listUsers.data.map((item, index) => (
                     <CardCount
-                        key={item.city}
+                        key={`${listUsers.state}-${item.city}-${index}`}
                         onPress={() => redirectAction(item.dataUser)}
                     >
                         <TitleCard>{item.city}</TitleCard>

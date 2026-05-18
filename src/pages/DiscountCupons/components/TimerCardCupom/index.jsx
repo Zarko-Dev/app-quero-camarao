@@ -1,4 +1,4 @@
-import { DiscountIndicator } from "../DiscountIndicator";
+﻿import { DiscountIndicator } from "../DiscountIndicator";
 import { RegressiveTimer } from "./components/RegressiveTImer";
 
 import {
@@ -28,15 +28,12 @@ export const TimerCardCupom = ({
                 </TimerIndicator>
             </ContentTimer>
             <ContentQuantity>
-                <TextQuantity>Quantidade Utilizada</TextQuantity>
+                <TextQuantity>Quantidade utilizada</TextQuantity>
                 <QuantityIndicator>
                     <QuantityIndicatorText>{useCount}</QuantityIndicatorText>
                 </QuantityIndicator>
             </ContentQuantity>
         </ContentTimerInfo>
-        <DiscountIndicator
-            discountType={discountType}
-            discountValue={discountValue}
-        />
+        <DiscountIndicator discountType={discountType} discountValue={discountValue} />
     </Container>
 );

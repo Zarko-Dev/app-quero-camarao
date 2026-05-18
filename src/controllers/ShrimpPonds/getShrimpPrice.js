@@ -1,24 +1,22 @@
 /* eslint-disable object-curly-newline */
-import { collection, doc, getDoc, onSnapshot, query } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, query } from "firebase/firestore";
 import * as Sentry from "@sentry/react-native";
 
 import { firestore } from "../../services/Firebase";
 import { models } from "../../services/Firebase/models";
 
-export const getShrimpPriceRealTime = (actionCallback) => {
+export const getShrimpPriceRealTime = async (actionCallback) => {
     try {
         const ShrimpRef = collection(firestore, models.shrimpPrice);
         const shrimpQuery = query(ShrimpRef);
+        const querySnapshot = await getDocs(shrimpQuery);
+        const dataShrimp = [];
 
-        onSnapshot(shrimpQuery, (querySnapshot) => {
-            const dataShrimp = [];
-
-            querySnapshot.forEach((document) => {
-                dataShrimp.push(document.data());
-            });
-
-            actionCallback(dataShrimp);
+        querySnapshot.forEach((document) => {
+            dataShrimp.push(document.data());
         });
+
+        actionCallback(dataShrimp);
     } catch (error) {
         Sentry.captureException(error);
 

@@ -48,11 +48,6 @@
       "runtimeVersion": {
         "policy": "appVersion"
       },
-      "edgeToEdgeEnabled": true,
-      "statusBar": {
-        "backgroundColor": "#F05829",
-        "barStyle": "light-content"
-      },
       "softwareKeyboardLayoutMode": "pan"
     },
     "web": {

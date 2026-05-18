@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createDrawerNavigator } from "@react-navigation/drawer";
-import { Feather, FontAwesome } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSelector } from "react-redux";
 
 import { GetUserStorage } from "../services/Storage/UserStorage";
@@ -8,8 +8,6 @@ import { dataRoutes } from "./dataRoutes";
 
 import { Header } from "../components/Header";
 import { DrawerContent } from "../components/DrawerContent";
-
-import { theme } from "../styles/Theme";
 
 import { Home } from "../pages/Home";
 import { Profile } from "../pages/Profile";
@@ -43,10 +41,21 @@ export const NavigationMenu = () => {
         <Navigator
             drawerContent={(props) => <DrawerContent {...props} />}
             screenOptions={{
-                drawerLabelStyle: { marginLeft: -25, fontSize: 16 },
-                drawerActiveBackgroundColor: theme.colors.primary,
-                drawerActiveTintColor: theme.colors.white,
-                drawerInactiveTintColor: theme.colors.text,
+                drawerStyle: { width: "86%", backgroundColor: "#ffffff" },
+                drawerLabelStyle: {
+                    marginLeft: -18,
+                    fontSize: 15,
+                    fontWeight: "600",
+                },
+                drawerItemStyle: {
+                    marginHorizontal: 10,
+                    marginVertical: 3,
+                    borderRadius: 12,
+                    paddingHorizontal: 6,
+                },
+                drawerActiveBackgroundColor: "#fff1e8",
+                drawerActiveTintColor: "#f55b1f",
+                drawerInactiveTintColor: "#3f3f3f",
             }}
         >
             <Screen
@@ -56,7 +65,7 @@ export const NavigationMenu = () => {
                     title: "Início",
                     header: (props) => <Header {...props} />,
                     drawerIcon: ({ color }) => (
-                        <Feather name="home" size={20} color={color} />
+                        <MaterialCommunityIcons name="home-outline" size={21} color={color} />
                     ),
                 }}
             />
@@ -68,7 +77,7 @@ export const NavigationMenu = () => {
                         title: "Meus dados",
                         header: (props) => <Header {...props} />,
                         drawerIcon: ({ color }) => (
-                            <Feather name="user" size={20} color={color} />
+                            <MaterialCommunityIcons name="account-outline" size={21} color={color} />
                         ),
                     }}
                 />
@@ -81,7 +90,7 @@ export const NavigationMenu = () => {
                         title: "Meus camarões",
                         header: (props) => <Header {...props} />,
                         drawerIcon: ({ color }) => (
-                            <Feather name="star" size={20} color={color} />
+                            <MaterialCommunityIcons name="fish" size={21} color={color} />
                         ),
                     }}
                 />
@@ -94,11 +103,7 @@ export const NavigationMenu = () => {
                         title: "Meus Pagamentos",
                         header: (props) => <Header {...props} />,
                         drawerIcon: ({ color }) => (
-                            <Feather
-                                name="dollar-sign"
-                                size={20}
-                                color={color}
-                            />
+                            <MaterialCommunityIcons name="cash-multiple" size={21} color={color} />
                         ),
                     }}
                 />
@@ -111,11 +116,7 @@ export const NavigationMenu = () => {
                         title: "Minhas Publicidades",
                         header: (props) => <Header {...props} />,
                         drawerIcon: ({ color }) => (
-                            <FontAwesome
-                                name="bookmark"
-                                size={20}
-                                color={color}
-                            />
+                            <MaterialCommunityIcons name="bullhorn-outline" size={21} color={color} />
                         ),
                     }}
                 />
@@ -128,11 +129,7 @@ export const NavigationMenu = () => {
                         title: "Indique e ganhe",
                         header: (props) => <Header {...props} />,
                         drawerIcon: ({ color }) => (
-                            <FontAwesome
-                                name="ticket"
-                                size={20}
-                                color={color}
-                            />
+                            <MaterialCommunityIcons name="ticket-percent-outline" size={21} color={color} />
                         ),
                     }}
                 />
@@ -145,7 +142,7 @@ export const NavigationMenu = () => {
                         title: "Sorteio ao vivo",
                         header: (props) => <Header {...props} />,
                         drawerIcon: ({ color }) => (
-                            <FontAwesome name="cube" size={20} color={color} />
+                            <MaterialCommunityIcons name="broadcast" size={21} color={color} />
                         ),
                     }}
                 />
@@ -159,11 +156,7 @@ export const NavigationMenu = () => {
                         headerShown: false,
                         header: (props) => <Header {...props} />,
                         drawerIcon: ({ color }) => (
-                            <FontAwesome
-                                name="user-secret"
-                                size={20}
-                                color={color}
-                            />
+                            <MaterialCommunityIcons name="shield-account-outline" size={21} color={color} />
                         ),
                     }}
                 />
@@ -175,7 +168,7 @@ export const NavigationMenu = () => {
                     title: "Termos de Uso",
                     header: (props) => <Header {...props} />,
                     drawerIcon: ({ color }) => (
-                        <Feather name="file-text" size={20} color={color} />
+                        <MaterialCommunityIcons name="file-document-outline" size={21} color={color} />
                     ),
                 }}
             />
@@ -186,7 +179,7 @@ export const NavigationMenu = () => {
                     title: "Ajuda",
                     header: (props) => <Header {...props} />,
                     drawerIcon: ({ color }) => (
-                        <Feather name="help-circle" size={20} color={color} />
+                        <MaterialCommunityIcons name="help-circle-outline" size={21} color={color} />
                     ),
                 }}
             />

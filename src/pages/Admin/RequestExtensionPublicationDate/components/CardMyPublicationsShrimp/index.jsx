@@ -13,15 +13,12 @@ import { ActivityIndicator } from "react-native-paper";
 import { changeRequestExtensionDate } from "../../../../../controllers/Publication/requestAnalysis";
 
 import { ModalShrimpImages } from "../../../../../components/CardPublicationShrimp/ModalShrimpImages";
-import { RegressivePublicationShrimpTimer } from "../RegressivePublicationShrimpTimer";
 import { DialogComponent } from "../../../../../components/Dialog";
 import Carousel from "../../../../../components/SnapCarousel/src";
 
 import shrimpIcon from "../../../../../assets/images/shrimpIcon.png";
 
 import {
-    ButtonBuy,
-    ButtonBuyText,
     ButtonDisablePublication,
     ButtonExtendsPublication,
     ButtonShare,
@@ -30,25 +27,41 @@ import {
     ContainerShrimp,
     ContentActionButtons,
     ContentDataShrimp,
-    ContentExpired,
     ContentImageShrimp,
     ContentPondsShrimp,
     ContentTextInfo,
     ContentTextShrimp,
-    ContentVisualizations,
+    EmptyImageWrap,
+    EmptyShrimpImage,
+    ExpirationDateRow,
+    ExpirationDateText,
+    ExpirationLabel,
+    ImageColumn,
+    ImageViews,
     LocationText,
+    MainBadge,
+    MainBadgeText,
+    MetaItem,
+    MetaRow,
     PondText,
+    ShrimpInfoColumn,
     ShrimpIcon,
     ShrimpImage,
+    StatusPill,
+    StatusPillText,
     TextButton,
     TextInfo,
     TextShrimp,
     TextVisualizations,
+    TitleWrap,
+    UsageLabel,
+    UsagePercentText,
+    UsageRing,
 } from "./styles";
 import { BoxShadowIos } from "../../../../../styles/IosShadow";
 import { theme } from "../../../../../styles/Theme";
 
-export const CardMyPublicationsShrimp = memo(({ item, action }) => {
+export const CardMyPublicationsShrimp = memo(({ item, index, action }) => {
     const [expired, setExpired] = useState(false);
     const [isLoadingApproved, setIsLoadingApproved] = useState(false);
     const [isLoadingRepproved, setIsLoadingRepproved] = useState(false);
@@ -81,15 +94,51 @@ export const CardMyPublicationsShrimp = memo(({ item, action }) => {
         }
     }, []);
 
+    const extensionDays = requestExtensionDate === "approved" ? 22 : 15;
+
+    const getExpirationDate = () => {
+        const dateExpiration = new Date(createdAt);
+        dateExpiration.setDate(dateExpiration.getDate() + extensionDays);
+        return dateExpiration;
+    };
+
+    const getUsagePercent = () => {
+        const startDate = new Date(createdAt);
+        const currentDate = new Date();
+        const expirationDate = getExpirationDate();
+        const totalTime = expirationDate - startDate;
+        const usedTime = currentDate - startDate;
+
+        if (totalTime <= 0) {
+            return 100;
+        }
+
+        return Math.min(100, Math.max(0, Math.round((usedTime / totalTime) * 100)));
+    };
+
+    const formatExpirationDate = () =>
+        getExpirationDate().toLocaleDateString("pt-BR", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+        });
+
     const ConvertPondsPlural = () =>
         ponds > 1 ? `${ponds} Viveiros` : `${ponds} Viveiro`;
+
+    const hasShrimpImage = () =>
+        shrimps.some(
+            (itemSome) =>
+                itemSome.imageShrimpUri !== null &&
+                itemSome.imageShrimpUri !== "",
+        );
 
     const handleOpenModalShrimpImage = () => {
         setShowModalImagesShrimp(true);
     };
 
-    const ItemImage = ({ index, item: itemValue }) => (
-        <ShrimpImage key={index} uri={itemValue.imageShrimpUri} />
+    const ItemImage = ({ index: imageIndex, item: itemValue }) => (
+        <ShrimpImage key={imageIndex} uri={itemValue.imageShrimpUri} />
     );
 
     const handleApproveExtensionDatePublication = () => {
@@ -101,7 +150,7 @@ export const CardMyPublicationsShrimp = memo(({ item, action }) => {
                 if (result) {
                     Toast.show({
                         type: "success",
-                        text1: "Estenção de data aprovada!",
+                        text1: "Extensao de data aprovada!",
                     });
 
                     action((data) =>
@@ -110,7 +159,7 @@ export const CardMyPublicationsShrimp = memo(({ item, action }) => {
                 } else {
                     Toast.show({
                         type: "error",
-                        text1: "Não foi possível realizar esta solicitação!",
+                        text1: "Nao foi possivel realizar esta solicitacao!",
                         text2: "Tente novamente em instantes",
                     });
                 }
@@ -130,7 +179,7 @@ export const CardMyPublicationsShrimp = memo(({ item, action }) => {
                 if (result) {
                     Toast.show({
                         type: "success",
-                        text1: "Solicitação reprovada!",
+                        text1: "Solicitacao reprovada!",
                     });
 
                     action((data) =>
@@ -139,7 +188,7 @@ export const CardMyPublicationsShrimp = memo(({ item, action }) => {
                 } else {
                     Toast.show({
                         type: "error",
-                        text1: "Não foi possível realizar esta solicitação!",
+                        text1: "Nao foi possivel realizar esta solicitacao!",
                         text2: "Tente novamente em instantes",
                     });
                 }
@@ -182,94 +231,142 @@ export const CardMyPublicationsShrimp = memo(({ item, action }) => {
         <>
             <Container style={BoxShadowIos}>
                 <ContentPondsShrimp>
-                    <LocationText>{location}</LocationText>
+                    <TitleWrap>
+                        <LocationText>{location}</LocationText>
+                        {index === 0 && (
+                            <MainBadge>
+                                <FontAwesome name="star" size={11} color={theme.colors.primary} />
+                                <MainBadgeText>Principal</MainBadgeText>
+                            </MainBadge>
+                        )}
+                    </TitleWrap>
                     <PondText>{ConvertPondsPlural()}</PondText>
-                    <ButtonShare />
+                    <ButtonShare>
+                        <FontAwesome name="ellipsis-v" size={16} color="#999" />
+                    </ButtonShare>
                 </ContentPondsShrimp>
                 <ContainerInfo>
-                    <ContentImageShrimp
-                        activeOpacity={0.5}
-                        onPress={
-                            shrimps.some(
-                                (itemSome) =>
-                                    itemSome.imageShrimpUri !== null &&
-                                    itemSome.imageShrimpUri !== "",
-                            )
-                                ? handleOpenModalShrimpImage
-                                : () => {}
-                        }
-                    >
-                        <Carousel
-                            data={generateShrimpImage().data}
-                            renderItem={ItemImage}
-                            sliderWidth={Number(
-                                theme.size.componentSize(103).replace("px", ""),
-                            )}
-                            itemWidth={Number(
-                                theme.size.componentSize(103).replace("px", ""),
-                            )}
-                            autoplay
-                            enableMomentum={false}
-                            lockScrollWhileSnapping
-                            autoplayInterval={6000}
-                            loop
-                            decelerationRate="normal"
-                        />
-                    </ContentImageShrimp>
-                    <ContentDataShrimp>
-                        <ContentTextInfo>
-                            <TextInfo>Gramatura/Quilos</TextInfo>
-                        </ContentTextInfo>
-                        <ContainerShrimp shrimpDimentions={shrimps.length}>
-                            {shrimps.map((shrimp, index) => (
-                                <ContentTextShrimp key={index}>
-                                    <ShrimpIcon source={shrimpIcon} />
-                                    <TextShrimp
-                                        shrimpDimentions={shrimps.length}
-                                    >
-                                        {`${shrimp.grammage}g / ${shrimp.kilo}Kg`}
-                                    </TextShrimp>
-                                </ContentTextShrimp>
-                            ))}
-                        </ContainerShrimp>
-                        <ButtonBuy>
-                            <ButtonBuyText>
-                                <RegressivePublicationShrimpTimer
-                                    dateValue={createdAt}
-                                    extensionDate={requestExtensionDate}
+                    <ImageColumn>
+                        <ContentImageShrimp
+                            activeOpacity={0.5}
+                            onPress={
+                                hasShrimpImage()
+                                    ? handleOpenModalShrimpImage
+                                    : () => {}
+                            }
+                        >
+                            {hasShrimpImage() ? (
+                                <Carousel
+                                    data={generateShrimpImage().data}
+                                    renderItem={ItemImage}
+                                    sliderWidth={Number(
+                                        theme.size
+                                            .componentSize(94)
+                                            .replace("px", ""),
+                                    )}
+                                    itemWidth={Number(
+                                        theme.size
+                                            .componentSize(94)
+                                            .replace("px", ""),
+                                    )}
+                                    autoplay
+                                    enableMomentum={false}
+                                    lockScrollWhileSnapping
+                                    autoplayInterval={6000}
+                                    loop
+                                    decelerationRate="normal"
                                 />
-                            </ButtonBuyText>
-                        </ButtonBuy>
+                            ) : (
+                                <EmptyImageWrap>
+                                    <EmptyShrimpImage
+                                        source={shrimpIcon}
+                                        resizeMode="contain"
+                                    />
+                                </EmptyImageWrap>
+                            )}
+                        </ContentImageShrimp>
+                        <ImageViews>
+                            <FontAwesome name="eye" size={14} color="#4f4f4f" />
+                            <TextVisualizations>{views || 0}</TextVisualizations>
+                        </ImageViews>
+                    </ImageColumn>
+                    <ContentDataShrimp>
+                        <ShrimpInfoColumn>
+                            <ContentTextInfo>
+                                <TextInfo>Gram./Kg</TextInfo>
+                            </ContentTextInfo>
+                            <ContainerShrimp shrimpDimentions={shrimps.length}>
+                                {shrimps.map((shrimp, shrimpIndex) => (
+                                    <ContentTextShrimp key={shrimpIndex}>
+                                        <ShrimpIcon source={shrimpIcon} />
+                                        <TextShrimp shrimpDimentions={shrimps.length}>
+                                            {`${shrimp.grammage}g / ${shrimp.kilo}Kg`}
+                                        </TextShrimp>
+                                    </ContentTextShrimp>
+                                ))}
+                            </ContainerShrimp>
+                        </ShrimpInfoColumn>
                     </ContentDataShrimp>
                 </ContainerInfo>
-                {expired && <ContentExpired />}
+                <MetaRow>
+                    <MetaItem wide>
+                        <FontAwesome
+                            name="calendar-o"
+                            size={14}
+                            color={theme.colors.primary}
+                        />
+                        <ExpirationLabel>Expira</ExpirationLabel>
+                        <StatusPill expired={expired}>
+                            <StatusPillText expired={expired}>
+                                {expired ? "Expirada" : "Ativa"}
+                            </StatusPillText>
+                        </StatusPill>
+                        <ExpirationDateRow>
+                            <ExpirationDateText>
+                                {formatExpirationDate()}
+                            </ExpirationDateText>
+                        </ExpirationDateRow>
+                    </MetaItem>
+                    <MetaItem>
+                        <UsageRing>
+                            <UsagePercentText>{getUsagePercent()}%</UsagePercentText>
+                        </UsageRing>
+                        <UsageLabel>usado</UsageLabel>
+                    </MetaItem>
+                </MetaRow>
+                <ContentActionButtons>
+                    <ButtonDisablePublication onPress={() => setShowAlertVisible(true)}>
+                        {!isLoadingApproved ? (
+                            <>
+                                <TextButton>Aprovar</TextButton>
+                                <FontAwesome
+                                    name="check-circle-o"
+                                    size={14}
+                                    color="white"
+                                    style={{ marginLeft: 6 }}
+                                />
+                            </>
+                        ) : (
+                            <ActivityIndicator animating color="white" />
+                        )}
+                    </ButtonDisablePublication>
+                    <ButtonExtendsPublication onPress={() => setShowAlertRepproved(true)}>
+                        {!isLoadingRepproved ? (
+                            <>
+                                <TextButton>Reprovar</TextButton>
+                                <FontAwesome
+                                    name="times-circle-o"
+                                    size={14}
+                                    color="white"
+                                    style={{ marginLeft: 6 }}
+                                />
+                            </>
+                        ) : (
+                            <ActivityIndicator animating color="white" />
+                        )}
+                    </ButtonExtendsPublication>
+                </ContentActionButtons>
             </Container>
-            <ContentVisualizations>
-                <TextVisualizations>
-                    <FontAwesome name="eye" size={18} color="black" />{" "}
-                    Quantidade de visualizações: {views || 0}
-                </TextVisualizations>
-            </ContentVisualizations>
-            <ContentActionButtons>
-                <ButtonDisablePublication
-                    onPress={() => setShowAlertVisible(true)}
-                >
-                    {!isLoadingApproved ? (
-                        <TextButton>Aprovar</TextButton>
-                    ) : (
-                        <ActivityIndicator animating color="white" />
-                    )}
-                </ButtonDisablePublication>
-                <ButtonExtendsPublication
-                    onPress={() => setShowAlertRepproved(true)}
-                >
-                    {!isLoadingRepproved ? (
-                        <TextButton>Reprovar</TextButton>
-                    ) : (
-                        <ActivityIndicator animating color="white" />
-                    )}
-                </ButtonExtendsPublication>
-            </ContentActionButtons>
             <ModalShrimpImages
                 visible={showModalImagesShrimp}
                 onClose={() => setShowModalImagesShrimp(false)}
@@ -278,8 +375,8 @@ export const CardMyPublicationsShrimp = memo(({ item, action }) => {
             />
             <DialogComponent
                 visible={showAlertVisible}
-                title="Aprovar extenção de data?"
-                text="Deseja aprovar a extenção de data desta publicação?"
+                title="Aprovar extensao de data?"
+                text="Deseja aprovar a extensao de data desta publicacao?"
                 textActionButton="Aprovar"
                 hideDialog={() => setShowAlertVisible(false)}
                 actionButton={() => handleApproveExtensionDatePublication()}
@@ -287,8 +384,8 @@ export const CardMyPublicationsShrimp = memo(({ item, action }) => {
             />
             <DialogComponent
                 visible={showAlertRepproved}
-                title="Repovar solicitação?"
-                text="Deseja reprova esta solictitação de extenção e data?"
+                title="Reprovar solicitacao?"
+                text="Deseja reprovar esta solicitacao de extensao de data?"
                 textActionButton="Reprovar"
                 hideDialog={() => setShowAlertRepproved(false)}
                 actionButton={() => handleRepproveExtensionDatePublication()}

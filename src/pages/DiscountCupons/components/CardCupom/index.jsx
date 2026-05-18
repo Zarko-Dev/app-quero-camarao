@@ -1,4 +1,5 @@
-import { useState } from "react";
+﻿import { useState } from "react";
+import { Feather } from "@expo/vector-icons";
 import { ActivityIndicator } from "react-native-paper";
 import Toast from "react-native-toast-message";
 
@@ -9,6 +10,7 @@ import {
     Container,
     ButtonDelete,
     Header,
+    HeaderIconWrap,
     TextHeader,
     TitleButton,
     ContentActionButtonCoupon,
@@ -39,14 +41,14 @@ export const CardCupom = ({
                 if (data) {
                     Toast.show({
                         type: "success",
-                        text1: "Cupom excluído com sucesso!",
+                        text1: "Cupom excluido com sucesso!",
                     });
 
                     refresh();
                 } else {
                     Toast.show({
                         type: "error",
-                        text1: "Não foi possível excluir o cupom!",
+                        text1: "Nao foi possivel excluir o cupom!",
                         text2: "Tente novamente mais tarde",
                     });
                 }
@@ -56,7 +58,7 @@ export const CardCupom = ({
             .catch(() => {
                 Toast.show({
                     type: "error",
-                    text1: "Não foi possível excluir o cupom!",
+                    text1: "Nao foi possivel excluir o cupom!",
                     text2: "Tente novamente mais tarde",
                 });
 
@@ -73,33 +75,30 @@ export const CardCupom = ({
             if (result) {
                 Toast.show({
                     type: "success",
-                    text1: `Cupom ${cupomCode} foi removido do padrão!`,
+                    text1: `Cupom ${cupomCode} foi removido do padrao!`,
                 });
 
                 refresh();
             } else {
                 Toast.show({
                     type: "error",
-                    text1: "Não foi possível remover o padrão do cupom!",
+                    text1: "Nao foi possivel remover o padrao do cupom!",
                 });
             }
         } else {
-            const result = await SetDefaultCoupon(
-                cupomCode,
-                heaveDefaultCoupon,
-            );
+            const result = await SetDefaultCoupon(cupomCode, heaveDefaultCoupon);
 
             if (result) {
                 Toast.show({
                     type: "success",
-                    text1: `Cupom ${cupomCode} foi definido como padrão!`,
+                    text1: `Cupom ${cupomCode} foi definido como padrao!`,
                 });
 
                 refresh();
             } else {
                 Toast.show({
                     type: "error",
-                    text1: "Não foi possível definir o cupom como padrão!",
+                    text1: "Nao foi possivel definir o cupom como padrao!",
                 });
             }
         }
@@ -110,6 +109,9 @@ export const CardCupom = ({
     return (
         <Container>
             <Header>
+                <HeaderIconWrap>
+                    <Feather name={isDefault ? "award" : "tag"} size={14} color="white" />
+                </HeaderIconWrap>
                 <TextHeader>
                     {cupomCode}
                     {isDefault ? " (Principal)" : ""}
@@ -119,21 +121,27 @@ export const CardCupom = ({
             <ContentActionButtonCoupon>
                 <ButtonDelete onPress={() => setShowAlertVisible(true)}>
                     {!isLoading ? (
-                        <TitleButton>Excluir Cupom</TitleButton>
+                        <>
+                            <Feather name="trash-2" size={13} color="#4a4a4a" style={{ marginRight: 6 }} />
+                            <TitleButton>Excluir Cupom</TitleButton>
+                        </>
                     ) : (
-                        <ActivityIndicator animating color="white" />
+                        <ActivityIndicator animating color="#4a4a4a" />
                     )}
                 </ButtonDelete>
-                <ButtonSetDefault
-                    isDefault={isDefault}
-                    onPress={handleDefineRemoveDefaultCoupon}
-                >
+                <ButtonSetDefault isDefault={isDefault} onPress={handleDefineRemoveDefaultCoupon}>
                     {!isLoadingDefaultCoupon ? (
-                        <TitleButton>
-                            {isDefault
-                                ? "Remover cupom principal"
-                                : "Definir como principal"}
-                        </TitleButton>
+                        <>
+                            <Feather
+                                name={isDefault ? "x-circle" : "star"}
+                                size={13}
+                                color="white"
+                                style={{ marginRight: 6 }}
+                            />
+                            <TitleButton style={{ color: "white" }}>
+                                {isDefault ? "Remover cupom principal" : "Definir como principal"}
+                            </TitleButton>
+                        </>
                     ) : (
                         <ActivityIndicator animating color="white" />
                     )}

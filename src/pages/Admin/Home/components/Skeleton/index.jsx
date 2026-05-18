@@ -10,28 +10,28 @@ import {
 
 import {
     Container,
-    ContainerDropdowSelects,
+    ContainerDropdownSelects,
     ContainerValueMonth,
     ContentTextLeft,
-    ContenttextRight,
+    ContentTextRight,
 } from "../../styles";
 
 const Skeleton = () => (
     <Container>
-        <ContainerDropdowSelects>
+        <ContainerDropdownSelects>
             <AdminHomeSelectDropdownSkeleton />
             <AdminHomeSelectDropdownSkeleton />
-        </ContainerDropdowSelects>
+        </ContainerDropdownSelects>
         <AdminHomeCardValueSkeleton />
         <ContainerValueMonth>
             <ContentTextLeft>
                 <AdminHomeTitleValueMonthSkeleton />
                 <AdminHomeValueMonthSkeleton />
             </ContentTextLeft>
-            <ContenttextRight>
+            <ContentTextRight>
                 <AdminHomeTitleValueMonthRightSkeleton />
                 <AdminHomeValueMonthSkeleton />
-            </ContenttextRight>
+            </ContentTextRight>
         </ContainerValueMonth>
         <AdminHomeTitleTransactionSkeleton />
         <AdminHomeTransactionsSkeleton />
