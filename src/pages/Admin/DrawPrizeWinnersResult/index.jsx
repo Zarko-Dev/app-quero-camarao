@@ -8,7 +8,7 @@ import { ActivityIndicator } from "react-native-paper";
 import { Entypo, Feather } from "@expo/vector-icons";
 import { useTheme } from "styled-components";
 import { getDrawPrizeLiveById } from "../../../controllers/DrawPrizes/live";
-import { Linking } from "react-native";
+import { Share } from "react-native";
 
 import lottieLoadingDrawPrize from "../../../assets/lotties/lottieLoadingDrawPrize.json";
 import lottieWinDrawPrize from "../../../assets/lotties/lottieWinDrawPrize.json";
@@ -24,6 +24,7 @@ import {
     ContentShareUser,
     DrawPizeShare,
     Header,
+    InfoRow,
     LocationTitle,
     PhoneTitle,
     SaveDrawPrize,
@@ -36,7 +37,10 @@ import { dataRoutes } from "../../../routes/dataRoutes";
 import { saveDrawPrize } from "../../../controllers/DrawPrizes/create";
 import { DrawPrizeNameDialog } from "./components/DrawPrizeNameDialog";
 import { deleteDrawPrize } from "../../../controllers/DrawPrizes/delete";
-import { handleRedirectPage } from "./redirectPageWhatsapp";
+import {
+    buildSingleWinnerShareMessage,
+    buildWinnersShareMessage,
+} from "../../../utils/winnerShareMessage";
 
 export const DrawPrizeWinnersResult = ({ route, navigation }) => {
     const theme = useTheme();
@@ -127,27 +131,56 @@ useEffect(() => {
         navigation.navigate(dataRoutes.admin.userDetailed, { dataUser });
     };
     
-    //Compartilha para o zap do ganhador do sorteio
-        const shareOnWhatsApp = (user) => {
-            if (!user?.phone) {
-                alert("Usuário não possui telefone!");
-                return;
+    const isShareCancellation = (error) => {
+        // iOS: usuário fechou o share sheet sem compartilhar — não é erro real
+        const msg = error?.message ?? "";
+        return (
+            error?.name === "AbortError" ||
+            msg.includes("User did not share") ||
+            msg.includes("cancelled") ||
+            msg.includes("canceled")
+        );
+    };
+
+    const shareSingleWinner = async (user) => {
+        try {
+            const message = buildSingleWinnerShareMessage(
+                user,
+                "https://querocamarao.com.br",
+            );
+            await Share.share({
+                message,
+                title: "Vencedor do Sorteio - Quero Camarão",
+            });
+        } catch (error) {
+            if (!isShareCancellation(error)) {
+                Toast.show({
+                    type: "error",
+                    text1: "Não foi possível compartilhar este ganhador.",
+                });
             }
+        }
+    };
 
-            // ?? cria variável nova (não mexe no user)
-            let phoneFormatted = user.phone.replace(/\D/g, "");
-
-            if (!phoneFormatted.startsWith("55")) {
-                phoneFormatted = "55" + phoneFormatted;
+    const shareAllWinners = async () => {
+        try {
+            const message = buildWinnersShareMessage(
+                usersWinner,
+                "https://querocamarao.com.br",
+            );
+            await Share.share({
+                message,
+                title: "Vencedores do Sorteio - Quero Camarão",
+            });
+        } catch (error) {
+            if (!isShareCancellation(error)) {
+                Toast.show({
+                    type: "error",
+                    text1: "Não foi possível compartilhar os vencedores.",
+                });
             }
-
-            const text = `?? Parabéns ${user.name}!
-        Você foi um dos ganhadores do sorteio! ??`;
-
-            const url = `https://wa.me/${phoneFormatted}?text=${encodeURIComponent(text)}`;
-
-            Linking.openURL(url);
-        };
+        }
+    };
 
     const handleActionButton = () => {
         if (showOnlyResults || backAfterSave) {
@@ -228,11 +261,7 @@ useEffect(() => {
                             />
                         </BackButton>
                         <Title>Vencedores do Sorteio</Title>
-                   <DrawPizeShare
-                        onPress={() =>
-                            handleRedirectPage(usersWinner, navigation)
-                        }
-                    >
+                   <DrawPizeShare onPress={shareAllWinners}>
                         <Entypo
                             name="share"
                             color={theme.colors.white}
@@ -250,9 +279,7 @@ useEffect(() => {
                                 onPress={() => handleRedirectUserDetailed(user)}
                             >
                                 <ContentShareUser>
-                                    <DrawPizeShare
-                                        onPress={() => shareOnWhatsApp(user)}
-                                    >
+                                    <DrawPizeShare onPress={() => shareSingleWinner(user)}>
                                         <Entypo
                                             name="share"
                                             color={theme.colors.white}
@@ -270,22 +297,30 @@ useEffect(() => {
                                     }}
                                 />
                                 <UserNameTitle>{user.name}</UserNameTitle>
-                                <PhoneTitle>
-                                    Tel:{" "}
-                                    {`(**) ****${user?.phone?.substring(user.phone.length - 6)}`}
-                                </PhoneTitle>
-                                <PhoneTitle>
-                                    CPF: ***.***.{user?.cpf?.substring(user.cpf.length - 6) ?? "Não informado"}
-                                </PhoneTitle>
-                             <LocationTitle>
-                            {user.userType === "productor"
-                                ? user?.address?.city ?? "Cidade não informada"
-                                : user?.city ?? "Cidade não informada"}{" "}
-                            -{" "}
-                            {user.userType === "productor"
-                                ? user?.address?.state ?? "Estado não informado"
-                                : user?.state ?? "Estado não informado"}
-                        </LocationTitle>
+                                <InfoRow>
+                                    <Feather name="phone" size={18} color="black" />
+                                    <PhoneTitle>
+                                        Tel: {`(**) ****${user?.phone?.substring(user.phone.length - 6)}`}
+                                    </PhoneTitle>
+                                </InfoRow>
+                                <InfoRow>
+                                    <Feather name="file-text" size={18} color="black" />
+                                    <PhoneTitle>
+                                        CPF: ***.***{user?.cpf?.substring(user.cpf.length - 6) ?? "Não informado"}
+                                    </PhoneTitle>
+                                </InfoRow>
+                                <InfoRow>
+                                    <Feather name="map-pin" size={18} color="black" />
+                                    <LocationTitle>
+                                        {user.userType === "productor"
+                                            ? user?.address?.city ?? "Cidade não informada"
+                                            : user?.city ?? "Cidade não informada"}{" "}
+                                        -{" "}
+                                        {user.userType === "productor"
+                                            ? user?.address?.state ?? "Estado não informado"
+                                            : user?.state ?? "Estado não informado"}
+                                    </LocationTitle>
+                                </InfoRow>
                             </CardUser>
                         ))}
                     </ContentCards>
@@ -324,3 +359,4 @@ useEffect(() => {
         </Container>
     );
 };
+

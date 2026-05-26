@@ -11,145 +11,105 @@ export const Container = styled(ViewShot)`
 
 export const ContainerShrimp = styled.View`
     width: 100%;
-    height: ${({ theme }) => theme.size.componentSize(210)};
-
-    margin-top: ${({ theme }) => theme.size.dimentionsSize(1.5)};
-    margin-bottom: ${({ theme }) => theme.size.dimentionsSize(1.5)};
-    border-radius: 4px;
-
-    background-color: ${({ theme }) => theme.colors.tertiary};
-
+    background-color: #fff;
+    border-radius: 20px;
+    overflow: hidden;
     elevation: 3;
+    shadow-color: #000;
+    shadow-offset: 0px 2px;
+    shadow-opacity: 0.1;
+    shadow-radius: 4px;
 `;
 
 export const ContentLogo = styled.View`
-    height: ${({ theme }) => theme.size.componentSize(55)};
-
+    height: ${({ theme }) => theme.size.componentSize(50)};
     justify-content: center;
     align-items: center;
-
-    background-color: ${({ theme }) => theme.colors.primary};
+    background-color: #e85d22;
 `;
 
 export const LogoImage = styled.Image`
     width: ${({ theme }) => theme.size.componentSize(90)};
-    height: ${({ theme }) => theme.size.componentSize(45)};
-
-    margin-right: ${({ theme }) => theme.size.dimentionsSize(5)};
+    height: ${({ theme }) => theme.size.componentSize(38)};
 `;
 
 export const ContentPondsShrimp = styled.View`
-    height: ${({ theme }) => theme.size.componentSize(30)};
-
+    width: 100%;
+    padding: 12px 15px;
+    flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    flex-direction: row;
+`;
 
-    padding: 5px;
+export const LocationContainer = styled.View`
+    flex-direction: row;
+    align-items: center;
+    flex: 1;
 `;
 
 export const LocationText = styled(Text)`
-    font-size: ${({ theme }) => theme.size.fontSize(14)};
+    font-size: ${({ theme }) => theme.size.fontSize(16)};
     font-weight: bold;
-    color: ${({ theme }) => theme.colors.black};
+    color: #e85d22;
+    margin-left: 5px;
 `;
 
 export const PondText = styled(Text)`
-    font-size: ${({ theme }) => theme.size.fontSize(15)};
-    font-weight: bold;
-
-    margin-left: ${({ theme }) => theme.size.dimentionsSize(-7)};
-`;
-
-export const ButtonShare = styled.View`
-    height: ${({ theme }) => theme.size.componentSize(30)};
-
-    justify-content: center;
-    align-items: center;
-
-    padding-left: ${({ theme }) => theme.size.componentSize(10)};
+    font-size: ${({ theme }) => theme.size.fontSize(14)};
+    color: #333;
 `;
 
 export const ContainerInfo = styled.View`
     width: 100%;
     flex-direction: row;
+    padding: 0 15px 15px 15px;
 `;
 
 export const ContentImageShrimp = styled.View`
-    width: 30.5%;
-    height: ${({ theme }) => theme.size.componentSize(125)};
+    width: 45%;
+    aspect-ratio: 1.1;
+    border-radius: 15px;
+    overflow: hidden;
 `;
 
 export const ShrimpImage = styled(ImageComponent)`
     width: 100%;
-    height: ${({ theme }) => theme.size.componentSize(125)};
-
-    border-bottom-left-radius: 5px;
+    height: 100%;
 `;
 
 export const ContentDataShrimp = styled.View`
-    width: 70%;
+    width: 55%;
+    padding-left: 15px;
+    justify-content: center;
 `;
 
 export const ContentTextInfo = styled.View`
-    width: 100%;
-    justify-content: center;
-    align-items: center;
-
-    background-color: ${({ theme }) => theme.colors.quaternary};
+    margin-bottom: 8px;
 `;
 
 export const TextInfo = styled(Text)`
-    height: ${({ theme }) => theme.size.componentSize(20)};
-    font-size: ${({ theme }) => theme.size.fontSize(12)};
+    font-size: ${({ theme }) => theme.size.fontSize(14)};
     font-weight: bold;
-
-    color: ${({ theme }) => theme.colors.black};
+    color: #e85d22;
 `;
 
 export const ContainerDataShrimp = styled.View`
-    height: ${({ theme }) => theme.size.componentSize(77)};
-
+    background-color: #FEF5ED;
+    border-radius: 12px;
+    padding: 10px;
     justify-content: center;
-    align-items: center;
-    flex-direction: row;
-    flex-wrap: wrap;
-
-    padding: 5px 0;
-    padding-top: ${({ shrimpDimentions, theme }) => {
-        switch (shrimpDimentions) {
-            case 1:
-                return theme.size.dimentionsSize(4);
-
-            case 2:
-                return theme.size.dimentionsSize(2);
-
-            case 3:
-                return theme.size.dimentionsSize(2.4);
-
-            case 4:
-                return theme.size.dimentionsSize(2.4);
-
-            case 5:
-                return theme.size.dimentionsSize(0.5);
-
-            default:
-                return 0;
-        }
-    }};
 `;
 
 export const ContentTextShrimp = styled.View`
-    justify-content: center;
-    align-items: center;
     flex-direction: row;
-
-    padding: 0 1px;
+    align-items: center;
+    margin-bottom: 2px;
 `;
 
 export const ShrimpIcon = styled.Image`
-    width: ${({ theme }) => theme.size.componentSize(24)};
-    height: ${({ theme }) => theme.size.componentSize(24)};
+    width: ${({ theme }) => theme.size.componentSize(22)};
+    height: ${({ theme }) => theme.size.componentSize(22)};
+    margin-right: 6px;
 `;
 
 export const TextShrimp = styled(Text)`
@@ -157,53 +117,39 @@ export const TextShrimp = styled(Text)`
         switch (shrimpDimentions) {
             case 1:
                 return theme.size.fontSize(18);
-
             case 2:
                 return theme.size.fontSize(18);
-
             case 3:
                 return theme.size.fontSize(13);
-
             case 4:
                 return theme.size.fontSize(12.8);
-
             case 5:
                 return theme.size.fontSize(12.8);
-
             default:
                 return 0;
         }
     }};
-
     font-weight: bold;
-
-    color: ${({ theme }) => theme.colors.black};
+    color: #333;
 `;
 
 export const TextUnitMeasurement = styled(Text)`
     font-size: ${({ shrimpDimentions, theme }) => {
         switch (shrimpDimentions) {
             case 1:
-                return theme.size.fontSize(16);
-
+                return theme.size.fontSize(14);
             case 2:
-                return theme.size.fontSize(16);
-
+                return theme.size.fontSize(14);
             case 3:
                 return theme.size.fontSize(10);
-
             case 4:
                 return theme.size.fontSize(12);
-
             case 5:
                 return theme.size.fontSize(12);
-
             default:
                 return 0;
         }
     }};
-
     font-weight: bold;
-
-    color: ${({ theme }) => theme.colors.black};
+    color: #333;
 `;

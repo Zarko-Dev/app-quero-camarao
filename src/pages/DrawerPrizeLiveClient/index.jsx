@@ -204,11 +204,16 @@ export const DrawerPrizeLiveClient = ({ navigation }) => {
                                         </BadgeCardDrawerPrize>
                                     </HeaderCardDrawerPrize>
 
-                                   {item.names?.map((name, index) => (
-                                        <TitleCardDrawerPrize key={index}>
-                                            Nome Sorteio: {name}
+                                   {item.name ? (
+                                        <TitleCardDrawerPrize>
+                                            {item.name}
                                         </TitleCardDrawerPrize>
-                                        ))}
+                                    ) : null}
+                                   {item.theme ? (
+                                        <TitleCardDrawerPrize>
+                                            Tema: {item.theme}
+                                        </TitleCardDrawerPrize>
+                                    ) : null}
                                         <BodyCardDrawerPrize>
                                             {item.status ? (
                                                 (item?.participants || []).includes(
@@ -225,9 +230,9 @@ export const DrawerPrizeLiveClient = ({ navigation }) => {
                                                     <ContentTitleParticipating
                                                         notParticipant
                                                     >
-                                                        <TitleParticipating>
+                                                        <TitleParticipating notParticipant>
                                                             Clique em participar
-                                                            do sorteio e inform
+                                                            do sorteio e informe
                                                             o código
                                                         </TitleParticipating>
                                                     </ContentTitleParticipating>
@@ -248,7 +253,12 @@ export const DrawerPrizeLiveClient = ({ navigation }) => {
                                         </BodyCardDrawerPrize>
                                         <FooterCardDrawerPrize>
                                             <TitleDateDrawPrize>
-                                                Criado em: 20/10/2021
+                                                Criado em:{" "}
+                                                {item.createdAt?.toDate
+                                                    ? item.createdAt.toDate().toLocaleDateString("pt-BR")
+                                                    : item.createdAt?.seconds
+                                                    ? new Date(item.createdAt.seconds * 1000).toLocaleDateString("pt-BR")
+                                                    : "—"}
                                             </TitleDateDrawPrize>
                                         </FooterCardDrawerPrize>
                                         {(userRules || []).includes("Admin") && (

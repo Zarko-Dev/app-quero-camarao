@@ -3,11 +3,11 @@ import styled from "styled-components/native";
 
 export const Container = styled.View`
     flex: 1;
-    /* justify-content: space-between; */
+    background-color: #f5f5f5;
 `;
 
 export const Content = styled.View`
-    padding: 5px;
+    padding: 16px;
 `;
 
 export const Title = styled(Text)`
@@ -31,11 +31,11 @@ export const Subtitle = styled(Text)`
 export const TitleSelect = styled.Text`
     font-size: ${({ theme }) => theme.size.fontSize(13)};
     font-weight: bold;
-
-    margin-top: ${({ theme }) => theme.size.dimentionsSize(1)};
-    margin-bottom: ${({ theme }) => theme.size.dimentionsSize(1.5)};
-
+    margin-top: ${({ theme }) => theme.size.dimentionsSize(1.5)};
+    margin-bottom: ${({ theme }) => theme.size.dimentionsSize(0.8)};
     color: ${({ theme }) => theme.colors.primary};
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 `;
 
 export const TitleTags = styled(Text)`
@@ -79,11 +79,18 @@ export const ContentTagParticipant = styled.View`
     justify-content: space-between;
     align-items: center;
     flex-direction: row;
-    padding: 8px 12px;
-    background-color: ${({ theme }) => theme.colors.primary};
-    margin-bottom: ${({ theme }) => theme.size.dimentionsSize(1)};
+    padding: 10px 14px;
+    background-color: #fff;
+    border-left-width: 4px;
+    border-left-color: ${({ theme }) => theme.colors.primary};
+    margin-bottom: 6px;
     border-radius: 8px;
     width: 100%;
+    elevation: 1;
+    shadow-color: #000;
+    shadow-offset: 0px 1px;
+    shadow-opacity: 0.06;
+    shadow-radius: 2px;
 `;
 
 export const Tag = styled.Text`
@@ -101,8 +108,8 @@ export const Tag = styled.Text`
 export const TagParticipant = styled.Text`
     flex: 1;
     font-size: ${({ theme }) => theme.size.fontSize(13)};
-    font-weight: bold;
-    color: #fff;
+    font-weight: 500;
+    color: #333;
 `;
 
 export const ButtonRemoveTag = styled.TouchableOpacity``;
@@ -118,7 +125,7 @@ export const ContentActions = styled.View`
 
 export const ConfirmeButtom = styled.TouchableOpacity`
     width: 45%;
-    height: ${({ theme }) => theme.size.componentSize(25)};
+    height: ${({ theme }) => theme.size.componentSize(48)};
 
     justify-content: center;
     align-items: center;
@@ -126,7 +133,8 @@ export const ConfirmeButtom = styled.TouchableOpacity`
     background-color: ${({ theme }) => theme.colors.primary};
     margin-bottom: ${({ theme }) => theme.size.dimentionsSize(1)};
 
-    border-radius: 5px;
+    border-radius: 12px;
+    elevation: 2;
 `;
 
 export const SaveDrawPriseRule = styled(ConfirmeButtom)`

@@ -12,13 +12,13 @@ export const handleRedirectPage = async (usersWinner, navigation) => {
 
     const whatsappMessage = `*Quero Camarão* 🦐
 
-?? *${usersWinner.length > 1 ? "Vencedores" : "Vencedor"} do Sorteio* ??
+🏆 *${usersWinner.length > 1 ? "Vencedores" : "Vencedor"} do Sorteio* 🏆
 
 ${Object.entries(grouped).map(([drawName, winners]) => `
-?? *${drawName}*
+🎉 *${drawName}*
 
 ${winners.map((winner, index) => `
-?? *${index + 1}Âº Vencedor(a)*
+🏆 *${index + 1}º Vencedor(a)*
 *Nome*: ${winner?.name ?? "Não informado"}
 *Telefone*: ${winner?.phone ?? "Não informado"}
 *CPF*: ${winner?.cpf ? `***.***.${winner.cpf.slice(-5)}` : "Não informado"}

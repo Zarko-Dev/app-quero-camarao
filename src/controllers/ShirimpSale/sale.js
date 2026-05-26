@@ -2,6 +2,8 @@ import {
     collection,
     doc,
     getDocs,
+    limit,
+    orderBy,
     query,
     setDoc,
     where,
@@ -104,6 +106,29 @@ export const getShirimpSaleByCreatedAtLastSevenDays = async () => {
                 ">=",
                 new Date(new Date().setDate(new Date().getDate() - 7)),
             ),
+        );
+
+        const shirimpSaleSnapshot = await getDocs(queryConfig);
+
+        if (shirimpSaleSnapshot.empty) {
+            return [];
+        }
+
+        return shirimpSaleSnapshot.docs.map((dataDoc) => dataDoc.data());
+    } catch (error) {
+        Sentry.captureException(error);
+
+        return [];
+    }
+};
+
+export const getShirimpSaleLastTen = async () => {
+    try {
+        const shirimpSaleRef = collection(firestore, models.shirimpSale);
+        const queryConfig = query(
+            shirimpSaleRef,
+            orderBy("createdAt", "desc"),
+            limit(10),
         );
 
         const shirimpSaleSnapshot = await getDocs(queryConfig);

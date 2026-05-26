@@ -379,8 +379,8 @@ export const Publication = ({ navigation, route }) => {
             />
             <DialogComponent
                 visible={alertEmptyImage}
-                title="Sua publicaÃ§Ã£o nÃ£o possui imagem"
-                text="A imagem Ã© importante para aumentar o engajamento de sua publicaÃ§Ã£o, deseja adicionar a imagem?"
+                title="Sua publicação não possui imagem"
+                text="A imagem é importante para aumentar o engajamento de sua publicação, deseja adicionar a imagem?"
                 textActionButton="Adicionar Imagem"
                 hideDialog={hideDialog}
                 actionButton={hideDialog}

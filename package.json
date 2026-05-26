@@ -3,6 +3,7 @@
     "version": "1.1.12",
     "main": "node_modules/expo/AppEntry.js",
     "scripts": {
+        "test:unit": "node --test tests/**/*.test.cjs",
         "start:expo": "npx expo start --tunnel",
         "start:android": "yarn android && npx react-native start",
         "start:webserver": "npx serve web-build",

@@ -21,7 +21,7 @@ import {
 } from "./styles";
 
 import ShririmpBanner from "../../assets/images/camaraoBanner.png";
-import { getShirimpSaleByCreatedAtLastSevenDays } from "../../controllers/ShirimpSale/sale";
+import { getShirimpSaleLastTen } from "../../controllers/ShirimpSale/sale";
 import { BannerShirimpSaleSkeleton } from "../Skeleton/BannerShirimpSaleSkeleton";
 import { dataRoutes } from "../../routes/dataRoutes";
 
@@ -40,8 +40,7 @@ export const BannerShrimpSalePrice = () => {
     useFocusEffect(
         useCallback(() => {
             const getData = async () => {
-                const resultData =
-                    await getShirimpSaleByCreatedAtLastSevenDays();
+                const resultData = await getShirimpSaleLastTen();
                 let nextData = [];
 
                 if (resultData.length === 0) {

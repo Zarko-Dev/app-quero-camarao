@@ -64,12 +64,27 @@ export const CardUser = styled.TouchableOpacity`
     justify-content: flex-start;
     align-items: center;
 
-    padding: 10px;
+    padding: 16px 14px;
     margin-top: ${({ theme }) => theme.size.dimentionsSize(1)};
     margin-bottom: ${({ theme }) => theme.size.dimentionsSize(1)};
-    border-radius: 4px;
+    border-radius: 12px;
 
     border: 2px solid ${({ theme }) => theme.colors.primary};
+    background-color: ${({ theme }) => theme.colors.white};
+    elevation: 3;
+    shadow-color: #000;
+    shadow-offset: 0px 2px;
+    shadow-opacity: 0.1;
+    shadow-radius: 4px;
+`;
+
+export const InfoRow = styled.View`
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    margin-top: ${({ theme }) => theme.size.dimentionsSize(1.5)};
+    align-self: stretch;
+    padding-horizontal: 8px;
 `;
 
 export const ContentShareUser = styled.View`
@@ -101,24 +116,16 @@ export const UserNameTitle = styled(Text)`
 `;
 
 export const LocationTitle = styled(Text)`
-    text-align: center;
-
-    font-size: ${({ theme }) => theme.size.fontSize(22)};
-    font-weight: bold;
-
-    margin-top: ${({ theme }) => theme.size.dimentionsSize(2)};
-
+    font-size: ${({ theme }) => theme.size.fontSize(18)};
+    font-weight: 500;
+    flex: 1;
     color: ${({ theme }) => theme.colors.black};
 `;
 
 export const PhoneTitle = styled(Text)`
-    text-align: center;
-
-    font-size: ${({ theme }) => theme.size.fontSize(22)};
-    font-weight: bold;
-
-    margin-top: ${({ theme }) => theme.size.dimentionsSize(2)};
-
+    font-size: ${({ theme }) => theme.size.fontSize(18)};
+    font-weight: 500;
+    flex: 1;
     color: ${({ theme }) => theme.colors.black};
 `;
 

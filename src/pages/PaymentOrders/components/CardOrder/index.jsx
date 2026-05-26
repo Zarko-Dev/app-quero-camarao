@@ -63,6 +63,7 @@ import {
     ShrimpIcon,
     TextAlert,
     TextButton,
+    TextButtonDelete,
     TextDateOrder,
     TextMoney,
     TextOrderNumber,
@@ -100,13 +101,20 @@ export const CardOrder = ({ data, reload, reloadAction }) => {
         idOrder,
         status,
         paymentValue,
-        dataPublication,
+        dataPublication: rawDataPublication,
         dataCupomPayment,
         paymentLog,
         updatedAt,
         paymentUrl,
         userId,
     } = data;
+
+    const dataPublication = {
+        ...(rawDataPublication || {}),
+        shrimps: Array.isArray(rawDataPublication?.shrimps)
+            ? rawDataPublication.shrimps
+            : [],
+    };
 
     const verifyIsPendingOrder = async () => {
         if (status === "pending" || status === "inprocess") {
@@ -541,9 +549,9 @@ export const CardOrder = ({ data, reload, reloadAction }) => {
                     <ContentActionsButton>
                         <DeleteButton onPress={handleDeleteOrder}>
                             {!isLoadingDeleteOrder ? (
-                                <TextButton>Excluir Ordem</TextButton>
+                                <TextButtonDelete>Excluir Ordem</TextButtonDelete>
                             ) : (
-                                <ActivityIndicator animating color="white" />
+                                <ActivityIndicator animating color="#c0392b" />
                             )}
                         </DeleteButton>
                         <PaymentPostButton onPress={handleRedoPayment}>

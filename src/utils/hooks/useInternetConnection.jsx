@@ -32,19 +32,19 @@ export function useInternetConnection(enabled = true) {
                 qualityToastAtRef.current = now;
                 Toast.show({
                     type: "error",
-                    text1: "Conex„o com a internet est· ruim!",
-                    text2: "Isso pode dificultar a utilizaÁ„o da aplicaÁ„o!",
+                    text1: "Conex√£o com a internet est√° ruim!",
+                    text2: "Isso pode dificultar a utiliza√ß√£o da aplica√ß√£o!",
                 });
             } else if (latency > 3000) {
                 qualityToastAtRef.current = now;
                 Toast.show({
                     type: "info",
-                    text1: "Conex„o com a internet est· moderada!",
-                    text2: "Isso pode causar lentid„o na aplicaÁ„o",
+                    text1: "Conex√£o com a internet est√° moderada!",
+                    text2: "Isso pode causar lentid√£o na aplica√ß√£o",
                 });
             }
         } catch (error) {
-            console.log("Sem conex„o");
+            console.log("Sem conex√£o");
         }
     };
 

@@ -3,11 +3,11 @@ import { useCallback, useState } from "react";
 import Toast from "react-native-toast-message";
 import { v4 } from "uuid";
 import { useFocusEffect } from "@react-navigation/native";
-import { ActivityIndicator } from "react-native-paper";
+import { ActivityIndicator, Button, Dialog, Portal } from "react-native-paper";
 import { Feather } from "@expo/vector-icons";
-import { View } from "react-native";
+import { View, TouchableOpacity, ScrollView } from "react-native";
 import { Input } from "../../../components/Input";
-import { ScrollView } from "react-native";
+import { InputNoMask } from "../../../components/InputNoMask";
 import {
     ButtonEndDrawerPrizeAction,
     ButtonInitDrawerPrizeAction,
@@ -34,19 +34,53 @@ import {
     getActiveDrawPrizeLive,
     setWinnerDrawPrizeLive,
     getDrawPrizeLiveById,
-    updateDrawPrizeLiveNames
+    updateDrawPrizeLiveNames,
+    getAllActiveDrawPrizesLive,
+    updateDrawPrizeCode,
+    updateDrawPrizeName,
+    updateDrawPrizeTheme,
+    seedParticipantsDrawPrizeLive,
 } from "../../../controllers/DrawPrizes/live";
+import { getAllUsers } from "../../../controllers/User/getAll";
 import { saveDrawPrize} from "../../../controllers/DrawPrizes/create";
 import { getDataUserByIds } from "../../../controllers/User/authentication";
 import { dataRoutes } from "../../../routes/dataRoutes";
 import { ActionCountButton } from "../DrawPrize/styles";
 import { DrawPrizeNameDialog } from "../DrawPrizeWinnersResult/components/DrawPrizeNameDialog";
+import {
+    buildEligibleParticipants,
+    pickRandomUniqueWinners,
+} from "../../../utils/drawEligibility";
+import {
+    validateDrawCode,
+    validateDrawName,
+    validateDrawTheme,
+    validateDrawCreation,
+    buildDrawSummary,
+    sortDrawsByCreatedDesc,
+    applyDrawCodeEdit,
+    applyDrawNameEdit,
+    applyDrawThemeEdit,
+} from "../../../utils/multipleLiveDraws";
+
+const NAME_ERROR_MESSAGES = {
+    code_required: "Informe o código do sorteio",
+    code_too_long: "Código do sorteio muito longo (máx 50)",
+    name_required: "Informe o nome do sorteio",
+    name_too_short: "Nome do sorteio muito curto",
+    name_too_long: "Nome do sorteio muito longo (máx 50)",
+    theme_required: "Informe o tema do sorteio",
+    theme_too_short: "Tema do sorteio muito curto",
+    theme_too_long: "Tema do sorteio muito longo (máx 50)",
+};
 
 export const DrawPrizeLive = ({ navigation }) => {
     const [drawerCode, setDrawerCode] = useState();
     const [drawerCodeFixed, setDrawerCodeFixed] = useState();
     const [drawerNameFixed, setDrawerNameFixed] = useState();
-    const [drawerName, setDrawerName] = useState(); 
+    const [drawerName, setDrawerName] = useState();
+    const [drawerTheme, setDrawerTheme] = useState();
+    const [drawerThemeFixed, setDrawerThemeFixed] = useState();
     const [drawerPrizeLiveId, setDrawerPrizeLiveId] = useState();
     const [showDrawPrizeNameDialog, setShowDrawPrizeNameDialog] = useState(false);
     const [drawPrizeNames, setDrawPrizeNames] = useState([]);
@@ -63,18 +97,42 @@ export const DrawPrizeLive = ({ navigation }) => {
         loadingReloadDataDrawerPrizeLive,
         setLoadingReloadDataDrawerPrizeLive,
     ] = useState(false);
+    const [activeDraws, setActiveDraws] = useState([]);
+    const [winners, setWinners] = useState([]);
+    const [indicatedWinnerEmail, setIndicatedWinnerEmail] = useState("");
+    const [showEditNameDialog, setShowEditNameDialog] = useState(false);
+    const [editNameValue, setEditNameValue] = useState("");
+    const [editTargetId, setEditTargetId] = useState(null);
+    const [showEditInfoDialog, setShowEditInfoDialog] = useState(false);
+    const [showEditCodeDialog, setShowEditCodeDialog] = useState(false);
+    const [editCodeValue, setEditCodeValue] = useState("");
+    const [showEditThemeDialog, setShowEditThemeDialog] = useState(false);
+    const [editThemeValue, setEditThemeValue] = useState("");
+    const [editThemeTargetId, setEditThemeTargetId] = useState(null);
+
+    const loadActiveDraws = useCallback(async () => {
+        const response = await getAllActiveDrawPrizesLive();
+        if (response.error) return;
+        const summaries = response.data.map(buildDrawSummary);
+        setActiveDraws(sortDrawsByCreatedDesc(summaries));
+    }, []);
 
     useFocusEffect(
         useCallback(() => {
             const getDrawerPriseLive = async () => {
-                const response = await getActiveDrawPrizeLive();
+                const [response] = await Promise.all([
+                    getActiveDrawPrizeLive(),
+                    loadActiveDraws(),
+                ]);
 
                if (!response.error) {
                 setDrawerCodeFixed(response.data.code);
-                setDrawerNameFixed(response.data.names?.[0] ?? '');
-                setDrawPrizeNames(response.data.names ?? []); // ??
+                setDrawerNameFixed(response.data.name ?? response.data.names?.[0] ?? '');
+                setDrawerThemeFixed(response.data.theme ?? '');
+                setDrawPrizeNames(response.data.names ?? []);
                 setDrawerPrizeLiveId(response.data.id);
                 setParticipants(response.data?.participants ?? []);
+                setWinners(response.data?.winners ?? []);
                 setCountPrizes(response.data?.participants?.length > 0 ? 1 : 0);
                 }
 
@@ -82,35 +140,292 @@ export const DrawPrizeLive = ({ navigation }) => {
             };
 
             getDrawerPriseLive();
-        }, []),
+        }, [loadActiveDraws]),
     );
 
   const handleStartDrawPrizeLive = async () => {
-    if (drawerCode) { // ?? valida os dois campos
-        setLoadingStartDrawPrize(true);
+    if (!drawerCode) {
+        Toast.show({
+            type: "error",
+            text1: "Informe o código do sorteio",
+        });
+        return;
+    }
 
-        const id = v4();
-        const response = await createDrawPrizeLiveByCode(id, drawerCode); // ?? passa o nome
+    const validation = validateDrawCreation({
+        name: drawerName,
+        theme: drawerTheme,
+    });
+    if (!validation.valid) {
+        Toast.show({
+            type: "error",
+            text1: NAME_ERROR_MESSAGES[validation.error],
+        });
+        return;
+    }
 
-        if (response) {
-            setDrawerCodeFixed(drawerCode);
-            setDrawerNameFixed(drawerName); // ?? seta o nome fixo
-             setDrawPrizeNames([]); // ?? já inicia o array com o primeiro
-            setDrawerPrizeLiveId(id);
+    setLoadingStartDrawPrize(true);
 
-            setLoadingStartDrawPrize(false);
-        } else {
-            Toast.show({
-                type: "error",
-                text1: "Erro ao criar o sorteio, tente novamente em instantes!",
-            });
+    const id = v4();
+    const response = await createDrawPrizeLiveByCode(
+        id,
+        drawerCode,
+        validation.value.name,
+        validation.value.theme,
+    );
+
+    if (response) {
+        setDrawerCodeFixed(drawerCode);
+        setDrawerNameFixed(validation.value.name);
+        setDrawerThemeFixed(validation.value.theme);
+        setDrawPrizeNames([]);
+        setDrawerPrizeLiveId(id);
+        const newSummary = buildDrawSummary({
+            id,
+            code: drawerCode,
+            name: validation.value.name,
+            theme: validation.value.theme,
+            status: true,
+            participants: [],
+            winners: [],
+            createdAt: { seconds: Math.floor(Date.now() / 1000) },
+        });
+        setActiveDraws((prev) =>
+            sortDrawsByCreatedDesc([newSummary, ...prev]),
+        );
+        setLoadingStartDrawPrize(false);
+    } else {
+        setLoadingStartDrawPrize(false);
+        Toast.show({
+            type: "error",
+            text1: "Erro ao criar o sorteio, tente novamente em instantes!",
+        });
+    }
+};
+
+const [loadingSeedParticipants, setLoadingSeedParticipants] = useState(false);
+
+const handleSeedParticipants = async () => {
+    if (!drawerPrizeLiveId) {
+        Toast.show({ type: "error", text1: "Nenhum sorteio focado" });
+        return;
+    }
+    setLoadingSeedParticipants(true);
+    try {
+        const users = await getAllUsers();
+        const ids = (users || [])
+            .map((u) => u.uid)
+            .filter(Boolean)
+            .slice(0, 10);
+        if (ids.length === 0) {
+            Toast.show({ type: "error", text1: "Nenhum usuário disponível" });
+            return;
         }
+        const ok = await seedParticipantsDrawPrizeLive(drawerPrizeLiveId, ids);
+        if (ok) {
+            const refreshed = await getDrawPrizeLiveById(drawerPrizeLiveId);
+            if (!refreshed.error) {
+                setParticipants(refreshed.data.participants ?? []);
+                setCountPrizes(refreshed.data.participants?.length > 0 ? 1 : 0);
+            }
+            Toast.show({ type: "success", text1: `${ids.length} participantes adicionados` });
+        } else {
+            Toast.show({ type: "error", text1: "Erro ao inserir participantes" });
+        }
+    } finally {
+        setLoadingSeedParticipants(false);
+    }
+};
+
+const handleCreateNewDraw = () => {
+    setDrawerCode("");
+    setDrawerCodeFixed(undefined);
+    setDrawerName("");
+    setDrawerNameFixed(undefined);
+    setDrawerTheme("");
+    setDrawerThemeFixed(undefined);
+    setDrawerPrizeLiveId(undefined);
+    setDrawPrizeNames([]);
+    setParticipants([]);
+    setWinners([]);
+    setCountPrizes(0);
+};
+
+const handleFocusDraw = async (draw) => {
+    const response = await getDrawPrizeLiveById(draw.id);
+    if (response.error) {
+        Toast.show({ type: "error", text1: "Erro ao carregar sorteio" });
+        return;
+    }
+    const data = response.data;
+    setDrawerCodeFixed(data.code);
+    setDrawerNameFixed(data.name ?? data.names?.[0] ?? "");
+    setDrawerThemeFixed(data.theme ?? "");
+    setDrawPrizeNames(data.names ?? []);
+    setDrawerPrizeLiveId(data.id);
+    setParticipants(data.participants ?? []);
+    setWinners(data.winners ?? []);
+    setCountPrizes(data.participants?.length > 0 ? 1 : 0);
+};
+
+const openEditInfoDialog = () => {
+    setEditNameValue(drawerNameFixed ?? "");
+    setEditThemeValue(drawerThemeFixed ?? "");
+    setEditCodeValue(drawerCodeFixed ?? "");
+    setShowEditInfoDialog(true);
+};
+
+const handleConfirmEditInfo = async () => {
+    const nameValidation = validateDrawName(editNameValue);
+    const themeValidation = validateDrawTheme(editThemeValue);
+    const codeValidation = validateDrawCode(editCodeValue);
+
+    if (!nameValidation.valid) {
+        Toast.show({ type: "error", text1: NAME_ERROR_MESSAGES[nameValidation.error] });
+        return;
+    }
+    if (!themeValidation.valid) {
+        Toast.show({ type: "error", text1: NAME_ERROR_MESSAGES[themeValidation.error] });
+        return;
+    }
+    if (!codeValidation.valid) {
+        Toast.show({ type: "error", text1: NAME_ERROR_MESSAGES[codeValidation.error] });
+        return;
+    }
+
+    const updates = [];
+    if (nameValidation.value !== drawerNameFixed)
+        updates.push(updateDrawPrizeName(drawerPrizeLiveId, nameValidation.value));
+    if (themeValidation.value !== drawerThemeFixed)
+        updates.push(updateDrawPrizeTheme(drawerPrizeLiveId, themeValidation.value));
+    if (codeValidation.value !== drawerCodeFixed)
+        updates.push(updateDrawPrizeCode(drawerPrizeLiveId, codeValidation.value));
+
+    if (updates.length > 0) {
+        const results = await Promise.all(updates);
+        if (results.some((r) => r === false)) {
+            Toast.show({ type: "error", text1: "Erro ao salvar, tente novamente!" });
+            return;
+        }
+    }
+
+    setDrawerNameFixed(nameValidation.value);
+    setDrawerThemeFixed(themeValidation.value);
+    setDrawerCodeFixed(codeValidation.value);
+    let updated = activeDraws;
+    updated = applyDrawNameEdit(updated, drawerPrizeLiveId, nameValidation.value);
+    updated = applyDrawThemeEdit(updated, drawerPrizeLiveId, themeValidation.value);
+    updated = applyDrawCodeEdit(updated, drawerPrizeLiveId, codeValidation.value);
+    setActiveDraws(updated);
+    setShowEditInfoDialog(false);
+    Toast.show({ type: "success", text1: "Sorteio atualizado!" });
+};
+
+const openEditCodeDialog = () => {
+    setEditCodeValue(drawerCodeFixed ?? "");
+    setShowEditCodeDialog(true);
+};
+
+const handleConfirmEditCode = async () => {
+    const validation = validateDrawCode(editCodeValue);
+    if (!validation.valid) {
+        Toast.show({
+            type: "error",
+            text1: NAME_ERROR_MESSAGES[validation.error],
+        });
+        return;
+    }
+
+    const response = await updateDrawPrizeCode(drawerPrizeLiveId, validation.value);
+    if (response) {
+        setShowEditCodeDialog(false);
+        setEditCodeValue("");
+        setDrawerCodeFixed(validation.value);
+        setActiveDraws((prev) => applyDrawCodeEdit(prev, drawerPrizeLiveId, validation.value));
+        Toast.show({
+            type: "success",
+            text1: "Código do sorteio atualizado!",
+        });
     } else {
         Toast.show({
             type: "error",
-            text1: !drawerCode 
-                ? "Informe o código do sorteio" // ?? mensagens separadas
-                : "Informe o nome do sorteio",
+            text1: "Erro ao atualizar código, tente novamente!",
+        });
+    }
+};
+
+const openEditNameDialog = (draw) => {
+    setEditTargetId(draw.id);
+    setEditNameValue(draw.name ?? "");
+    setShowEditNameDialog(true);
+};
+
+const openEditThemeDialog = (draw) => {
+    setEditThemeTargetId(draw.id);
+    setEditThemeValue(draw.theme ?? "");
+    setShowEditThemeDialog(true);
+};
+
+const handleConfirmEditTheme = async () => {
+    const validation = validateDrawTheme(editThemeValue);
+    if (!validation.valid) {
+        Toast.show({
+            type: "error",
+            text1: NAME_ERROR_MESSAGES[validation.error],
+        });
+        return;
+    }
+
+    const response = await updateDrawPrizeTheme(editThemeTargetId, validation.value);
+    if (response) {
+        setShowEditThemeDialog(false);
+        const targetId = editThemeTargetId;
+        setEditThemeTargetId(null);
+        setEditThemeValue("");
+        if (targetId === drawerPrizeLiveId) {
+            setDrawerThemeFixed(validation.value);
+        }
+        setActiveDraws((prev) => applyDrawThemeEdit(prev, targetId, validation.value));
+        Toast.show({
+            type: "success",
+            text1: "Tema do sorteio atualizado!",
+        });
+    } else {
+        Toast.show({
+            type: "error",
+            text1: "Erro ao atualizar tema, tente novamente!",
+        });
+    }
+};
+
+const handleConfirmEditName = async () => {
+    const validation = validateDrawName(editNameValue);
+    if (!validation.valid) {
+        Toast.show({
+            type: "error",
+            text1: NAME_ERROR_MESSAGES[validation.error],
+        });
+        return;
+    }
+
+    const response = await updateDrawPrizeName(editTargetId, validation.value);
+    if (response) {
+        setShowEditNameDialog(false);
+        const targetId = editTargetId;
+        setEditTargetId(null);
+        setEditNameValue("");
+        if (targetId === drawerPrizeLiveId) {
+            setDrawerNameFixed(validation.value);
+        }
+        setActiveDraws((prev) => applyDrawNameEdit(prev, targetId, validation.value));
+        Toast.show({
+            type: "success",
+            text1: "Nome do sorteio atualizado!",
+        });
+    } else {
+        Toast.show({
+            type: "error",
+            text1: "Erro ao atualizar nome, tente novamente!",
         });
     }
 };
@@ -224,22 +539,52 @@ const handleInitDrawPrizeLive = async () => {
         updatedAt: item.updatedAt.toDate(),
     }))
 
-    const dataUsersPrize = fixResponse.filter(
-        (user) =>
-            ((user.address && user.address.state && user.address.city) ||
-            (user.state && user.city)) &&
-            !previousWinners.some((winner) => winner.email === user.email),
-    )
+    const dataUsersPrize = buildEligibleParticipants({
+        participants: fixResponse,
+        previousWinners,
+        logger: (message) => console.log(message),
+    })
 
-    const shuffledUsers = [...dataUsersPrize]
+    // --- Ganhador indicado pelo admin ---
+    // IMPORTANTE: indicated: true identifica que esta pessoa foi escolhida pelo admin.
+    // DrawPrizeLive NUNCA escreve blocked: true no Firebase — esse campo só existe em
+    // newDrawPrizeRules (DrawPrizeNew). O indicado aqui é salvo apenas em drawPrizesLive.winners.
+    let indicatedWinner = null;
+    let poolForRandom = dataUsersPrize;
+    let randomCount = countPrizes;
 
-    for (let index = 0; index < countPrizes; index++) {
-        if (shuffledUsers.length === 0) break
-        const randomIndex = Math.floor(Math.random() * shuffledUsers.length)
-        const randomElement = shuffledUsers[randomIndex]
-        usersWinner.push(randomElement)
-        shuffledUsers.splice(randomIndex, 1)
+    const emailToIndicate = indicatedWinnerEmail.trim().toLowerCase();
+    if (emailToIndicate) {
+        const found = dataUsersPrize.find(
+            (p) =>
+                p.email?.toLowerCase() === emailToIndicate ||
+                p.cpf === emailToIndicate,
+        );
+
+        if (!found) {
+            Toast.show({
+                type: "error",
+                text1: "Ganhador indicado não encontrado ou não elegível",
+                text2: "Verifique o email e tente novamente",
+            });
+            setLoadingInitDrawPrize(false);
+            return;
+        }
+
+        indicatedWinner = { ...found, indicated: true };
+        poolForRandom = dataUsersPrize.filter(
+            (p) =>
+                (p.uid || p.email || p.cpf) !==
+                (found.uid || found.email || found.cpf),
+        );
+        randomCount = Math.max(0, countPrizes - 1);
     }
+    // ------------------------------------
+
+    const selectedWinners = pickRandomUniqueWinners(poolForRandom, randomCount)
+
+    if (indicatedWinner) usersWinner.push(indicatedWinner);
+    usersWinner.push(...selectedWinners)
 
     if (usersWinner.length === 0) {
         Toast.show({
@@ -267,8 +612,9 @@ const handleInitDrawPrizeLive = async () => {
 
     await new Promise(resolve => setTimeout(resolve, 1000))
     
-    setDrawPrizeNames((prev) => [...prev, prizeName]) // ?? aqui
-    setCurrentDrawPrizeName("") // ?? faltou isso
+    setDrawPrizeNames((prev) => [...prev, prizeName])
+    setCurrentDrawPrizeName("")
+    setIndicatedWinnerEmail("")
 
     setLoadingInitDrawPrize(false)
 
@@ -282,12 +628,16 @@ const handleInitDrawPrizeLive = async () => {
     const handleReloadDataDrawerPrizeLive = async () => {
         setLoadingReloadDataDrawerPrizeLive(true);
 
-        const response = await getActiveDrawPrizeLive();
+        const [response] = await Promise.all([
+            getActiveDrawPrizeLive(),
+            loadActiveDraws(),
+        ]);
 
         if (!response.error) {
             setDrawerCodeFixed(response.data.code);
             setDrawerPrizeLiveId(response.data.id);
             setParticipants(response.data?.participants ?? []);
+            setWinners(response.data?.winners ?? []);
             setCountPrizes(response.data?.participants?.length > 0 ? 1 : 0);
 
             Toast.show({
@@ -307,7 +657,17 @@ const handleInitDrawPrizeLive = async () => {
     return (
         <>
             <Container>
-                 <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+                 <ScrollView
+                    style={{ flex: 1, width: "100%" }}
+                    contentContainerStyle={{
+                        flexGrow: 1,
+                        alignItems: "center",
+                        paddingHorizontal: 16,
+                        paddingTop: 12,
+                        paddingBottom: 80,
+                    }}
+                    showsVerticalScrollIndicator={false}
+                >
                 {initialLoading ? (
                     <ActivityIndicator
                         animating
@@ -325,22 +685,18 @@ const handleInitDrawPrizeLive = async () => {
                                     : "Informe o código do sorteio"}
                             </Title>
                             {drawerCodeFixed && (
-                                <ReloadButton
-                                    onPress={handleReloadDataDrawerPrizeLive}
-                                >
-                                    {loadingReloadDataDrawerPrizeLive ? (
-                                        <ActivityIndicator
-                                            animating
-                                            color="white"
-                                        />
-                                    ) : (
-                                        <Feather
-                                            name="refresh-cw"
-                                            size={24}
-                                            color="white"
-                                        />
-                                    )}
-                                </ReloadButton>
+                                <View style={{ flexDirection: "row", gap: 8 }}>
+                                    <ReloadButton onPress={handleCreateNewDraw}>
+                                        <Feather name="plus" size={22} color="white" />
+                                    </ReloadButton>
+                                    <ReloadButton onPress={handleReloadDataDrawerPrizeLive}>
+                                        {loadingReloadDataDrawerPrizeLive ? (
+                                            <ActivityIndicator animating color="white" />
+                                        ) : (
+                                            <Feather name="refresh-cw" size={22} color="white" />
+                                        )}
+                                    </ReloadButton>
+                                </View>
                             )}
                         </HeaderDrawerPrizeLive>
                       {!drawerCodeFixed ? (
@@ -351,16 +707,41 @@ const handleInitDrawPrizeLive = async () => {
                                         value={drawerCode}
                                         autoCapitalize="sentences"
                                     />
-                                  
+                                    <Input
+                                        label="Nome do sorteio"
+                                        onChange={setDrawerName}
+                                        value={drawerName}
+                                        autoCapitalize="sentences"
+                                    />
+                                    <Input
+                                        label="Tema do sorteio"
+                                        onChange={setDrawerTheme}
+                                        value={drawerTheme}
+                                        autoCapitalize="sentences"
+                                    />
                                 </>
                             ) : (
-                                <>    
-                                      <TitleCode>{drawerCodeFixed}</TitleCode>
-                                   <View style={{ flexDirection: "row", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                                        {drawPrizeNames.map((name, index) => (
-                                            <TitleCode key={index}>{name}</TitleCode>
-                                        ))}
-                                    </View>
+                                <>
+                                      <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                                          <TitleCode>
+                                              {drawerNameFixed ? `${drawerNameFixed}` : ""}
+                                              {drawerThemeFixed ? `  •  ${drawerThemeFixed}` : ""}
+                                              {`  •  ${drawerCodeFixed}`}
+                                          </TitleCode>
+                                          <ReloadButton onPress={openEditInfoDialog}>
+                                              <Feather name="edit-2" size={16} color="white" />
+                                          </ReloadButton>
+                                      </View>
+                                      {winners.length > 0 ? (
+                                          <View style={{ width: "100%", marginTop: 4 }}>
+                                              <TitleCode>Ganhadores:</TitleCode>
+                                              {winners.map((winner, index) => (
+                                                  <TitleCode key={index} style={{ marginTop: 2 }}>
+                                                      • {winner.name ?? winner.email ?? "—"}
+                                                  </TitleCode>
+                                              ))}
+                                          </View>
+                                      ) : null}
                                 </>
                             )}
                         {!drawerCodeFixed && (
@@ -380,6 +761,43 @@ const handleInitDrawPrizeLive = async () => {
                             </ButtonStartDrawerPrizeAction>
                         )}
                     </ContentDrawerPrizeLive>
+                )}
+
+                {!initialLoading && activeDraws.filter((d) => d.id !== drawerPrizeLiveId).length > 0 && (
+                    <ContentParticipants>
+                        <TitleQuantityParticipants>
+                            {drawerCodeFixed ? "Outros sorteios ativos" : "Sorteios ativos"} ({activeDraws.filter((d) => d.id !== drawerPrizeLiveId).length})
+                        </TitleQuantityParticipants>
+                        {activeDraws.filter((d) => d.id !== drawerPrizeLiveId).map((draw) => (
+                            <View
+                                key={draw.id}
+                                style={{
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                    gap: 10,
+                                    paddingVertical: 6,
+                                    width: "100%",
+                                }}
+                            >
+                                <TouchableOpacity
+                                    style={{ flex: 1 }}
+                                    onPress={() => handleFocusDraw(draw)}
+                                    activeOpacity={0.7}
+                                >
+                                    <TitleCode>
+                                        {draw.name || "(sem nome)"} - {draw.code}
+                                    </TitleCode>
+                                    <TitleQuantityParticipants>
+                                        Participantes: {draw.participantsCount} / Ganhadores: {draw.winnersCount}
+                                    </TitleQuantityParticipants>
+                                </TouchableOpacity>
+                                <ReloadButton onPress={() => openEditNameDialog(draw)}>
+                                    <Feather name="edit-2" size={18} color="white" />
+                                </ReloadButton>
+                            </View>
+                        ))}
+                    </ContentParticipants>
                 )}
 
                 {drawerCodeFixed && (
@@ -426,6 +844,19 @@ const handleInitDrawPrizeLive = async () => {
                                 )}
                             </ButtonViewParticipants>
                         </ContentParticipants>
+
+                        <CardSelection>
+                            <TitleQuantityParticipants>
+                                Ganhador indicado (opcional)
+                            </TitleQuantityParticipants>
+                            <Input
+                                label="Email ou CPF do ganhador garantido"
+                                onChange={setIndicatedWinnerEmail}
+                                value={indicatedWinnerEmail}
+                                autoCapitalize="none"
+                                keyboardType="email-address"
+                            />
+                        </CardSelection>
 
                         <CardSelection>
                             <TitleQuantityParticipants>
@@ -498,7 +929,7 @@ const handleInitDrawPrizeLive = async () => {
                 actionButton={handleEndDrawPrizeLive}
                 dismissable={false}
             />
-              <DrawPrizeNameDialog  
+              <DrawPrizeNameDialog
                 visible={showDrawPrizeNameDialog}
                 title="Nome do Sorteio"
                 text="Informe o nome deste sorteio!"
@@ -507,10 +938,49 @@ const handleInitDrawPrizeLive = async () => {
                 actionButton={() => executeDrawPrizeLive(currentDrawPrizeName)}
                 dismissable={false}
                 inputValue={currentDrawPrizeName}
-                actionInputValue={setCurrentDrawPrizeName}                                  
+                actionInputValue={setCurrentDrawPrizeName}
             />
-           
+            <Portal>
+                <Dialog visible={showEditInfoDialog} onDismiss={() => setShowEditInfoDialog(false)} dismissable={false}>
+                    <Dialog.Title>Editar Sorteio</Dialog.Title>
+                    <Dialog.Content>
+                        <InputNoMask
+                            label="Nome"
+                            onChange={setEditNameValue}
+                            value={editNameValue}
+                            autoCapitalize="sentences"
+                        />
+                        <InputNoMask
+                            label="Tema"
+                            onChange={setEditThemeValue}
+                            value={editThemeValue}
+                            autoCapitalize="sentences"
+                        />
+                        <InputNoMask
+                            label="Código"
+                            onChange={setEditCodeValue}
+                            value={editCodeValue}
+                        />
+                    </Dialog.Content>
+                    <Dialog.Actions>
+                        <Button onPress={handleConfirmEditInfo}>Salvar</Button>
+                        <Button onPress={() => setShowEditInfoDialog(false)}>Cancelar</Button>
+                    </Dialog.Actions>
+                </Dialog>
+            </Portal>
+            <DrawPrizeNameDialog
+                visible={showEditNameDialog}
+                title="Editar Nome do Sorteio"
+                text="Informe o novo nome para este sorteio!"
+                textActionButton="Salvar"
+                hideDialog={() => setShowEditNameDialog(false)}
+                actionButton={handleConfirmEditName}
+                dismissable={false}
+                inputValue={editNameValue}
+                actionInputValue={setEditNameValue}
+            />
+
         </>
-        
+
     );
 };
