@@ -28,7 +28,7 @@
       "bundleIdentifier": "com.logicphire.querocamarao"
     },
     "android": {
-      "versionCode": 49,
+      "versionCode": 50,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFE2CC"
