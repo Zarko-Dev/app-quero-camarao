@@ -10,6 +10,8 @@ import { SearchBarSelect } from "./components/SearchBarSelect";
 import { View } from "react-native";
 
 import {
+    BadgeCount,
+    BadgeCountText,
     ButtonHeader,
     ButtonOption,
     ButtonOptionText,
@@ -128,21 +130,69 @@ const SelectComponent = ({
         }
     };
 
-  const renderOptions = (item) => (
-    <View>
-        <ButtonOption onPress={() => handleSelectOption(item)}>
-            <ButtonOptionText>{typeof item === "string" ? item : ""}</ButtonOptionText>
-            {multipleSelect && dataMultipleSelect.includes(item) && (
-                <Feather
-                    name="check"
-                    size={20}
-                    color={theme.colors.primary}
-                />
-            )}
-        </ButtonOption>
-        <DividerOptions />
-    </View>
-);
+  const parseLabel = (label) => {
+    if (typeof label !== "string") return { name: "", cpf: "", type: "" };
+    // format: "Nome - CPF (Tipo)"
+    const dashIdx = label.lastIndexOf(" - ");
+    if (dashIdx === -1) return { name: label, cpf: "", type: "" };
+    const name = label.substring(0, dashIdx).trim();
+    const rest = label.substring(dashIdx + 3).trim();
+    const parenIdx = rest.indexOf(" (");
+    const cpf = parenIdx !== -1 ? rest.substring(0, parenIdx).trim() : rest;
+    const type = parenIdx !== -1 ? rest.substring(parenIdx + 2, rest.length - 1) : "";
+    return { name, cpf, type };
+  };
+
+  const renderOptions = (item) => {
+    const isSelected = multipleSelect && dataMultipleSelect.includes(item);
+    const { name, cpf, type } = parseLabel(item);
+    const isProdutor = type === "Produtor";
+    return (
+        <View>
+            <ButtonOption selected={isSelected} onPress={() => handleSelectOption(item)}>
+                <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                        <ButtonOptionText selected={isSelected} style={{ marginRight: 0 }}>
+                            {name || item}
+                        </ButtonOptionText>
+                        {type ? (
+                            <View style={{
+                                backgroundColor: isProdutor ? "#e8f4ea" : "#e8f0ff",
+                                borderRadius: 4,
+                                paddingHorizontal: 6,
+                                paddingVertical: 2,
+                            }}>
+                                <ButtonOptionText style={{
+                                    fontSize: 11,
+                                    fontWeight: "600",
+                                    color: isProdutor ? "#2e7d32" : "#1565c0",
+                                    flex: 0,
+                                }}>
+                                    {type}
+                                </ButtonOptionText>
+                            </View>
+                        ) : null}
+                    </View>
+                    {cpf ? (
+                        <ButtonOptionText style={{
+                            fontSize: 12,
+                            color: "#888",
+                            fontWeight: "400",
+                            marginTop: 2,
+                            flex: 0,
+                        }}>
+                            {cpf}
+                        </ButtonOptionText>
+                    ) : null}
+                </View>
+                {isSelected && (
+                    <Feather name="check-circle" size={20} color={theme.colors.primary} />
+                )}
+            </ButtonOption>
+            <DividerOptions />
+        </View>
+    );
+};
 
     return (
         <Container style={style}>
@@ -150,8 +200,17 @@ const SelectComponent = ({
                 onPress={() => setModalVisible(true)}
                 disabled={disabled}
             >
-                <TextButton>{initialSelectedTitle || text}</TextButton>
-                <Feather name="chevron-down" size={18} color="black" />
+                <TextButton>
+                    {multipleSelect && dataMultipleSelect.length > 0
+                        ? title
+                        : initialSelectedTitle || text}
+                </TextButton>
+                {multipleSelect && dataMultipleSelect.length > 0 && (
+                    <BadgeCount>
+                        <BadgeCountText>{dataMultipleSelect.length}</BadgeCountText>
+                    </BadgeCount>
+                )}
+                <Feather name="chevron-down" size={18} color="#E8572A" />
             </SelectButton>
             <Modal
                 animationType="slide"
@@ -164,7 +223,7 @@ const SelectComponent = ({
                             <Feather
                                 name="arrow-left"
                                 size={24}
-                                color="black"
+                                color="white"
                             />
                         </ButtonHeader>
                         <HeaderTitle multipleSelect={dataMultipleSelect}>

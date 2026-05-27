@@ -88,7 +88,7 @@ export const NavigationMenu = () => {
                     component={MyPublications}
                     options={{
                         title: "Meus camarões",
-                        header: (props) => <Header {...props} />,
+                        headerShown: false,
                         drawerIcon: ({ color }) => (
                             <MaterialCommunityIcons name="fish" size={21} color={color} />
                         ),
@@ -101,7 +101,7 @@ export const NavigationMenu = () => {
                     component={PaymentOrders}
                     options={{
                         title: "Meus Pagamentos",
-                        header: (props) => <Header {...props} />,
+                        headerShown: false,
                         drawerIcon: ({ color }) => (
                             <MaterialCommunityIcons name="cash-multiple" size={21} color={color} />
                         ),

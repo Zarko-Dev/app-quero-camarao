@@ -1,5 +1,6 @@
 /* eslint-disable react/no-array-index-key */
 
+import { Feather } from "@expo/vector-icons";
 import { useSelector } from "react-redux";
 
 import { formatKilo } from "../../utils/formatKilo";
@@ -8,7 +9,6 @@ import shrimpIcon from "../../assets/images/shrimpIcon.png";
 import logo from "../../assets/images/logo.png";
 
 import {
-    ButtonShare,
     Container,
     ContainerDataShrimp,
     ContainerInfo,
@@ -19,6 +19,7 @@ import {
     ContentPondsShrimp,
     ContentTextInfo,
     ContentTextShrimp,
+    LocationContainer,
     LocationText,
     LogoImage,
     PondText,
@@ -28,7 +29,6 @@ import {
     TextShrimp,
     TextUnitMeasurement,
 } from "./styles";
-import { BoxShadowIos } from "../../styles/IosShadow";
 
 export const ShrimpCardShared = ({ shrimpCardRef }) => {
     const { dataShrimp } = useSelector((state) => state.shrimpCardShared);
@@ -40,14 +40,16 @@ export const ShrimpCardShared = ({ shrimpCardRef }) => {
                 fileName: "publicacaoquerocamarao",
             }}
         >
-            <ContainerShrimp style={BoxShadowIos}>
+            <ContainerShrimp>
                 <ContentLogo>
                     <LogoImage source={logo} />
                 </ContentLogo>
                 <ContentPondsShrimp>
-                    <LocationText>{dataShrimp.location}</LocationText>
+                    <LocationContainer>
+                        <Feather name="map-pin" size={18} color="#e85d22" />
+                        <LocationText>{dataShrimp.location}</LocationText>
+                    </LocationContainer>
                     <PondText>{dataShrimp.ponds}</PondText>
-                    <ButtonShare />
                 </ContentPondsShrimp>
                 <ContainerInfo>
                     <ContentImageShrimp>
@@ -59,30 +61,23 @@ export const ShrimpCardShared = ({ shrimpCardRef }) => {
                         <ContentTextInfo>
                             <TextInfo>Gramatura/Quilos</TextInfo>
                         </ContentTextInfo>
-                        <ContainerDataShrimp
-                            shrimpDimentions={dataShrimp.shrimps.length}
-                        >
+                        <ContainerDataShrimp>
                             {dataShrimp.shrimps.map((shrimp, index) => (
                                 <ContentTextShrimp key={index}>
                                     <ShrimpIcon source={shrimpIcon} />
                                     <TextShrimp
-                                        shrimpDimentions={
-                                            dataShrimp.shrimps.length
-                                        }
+                                        shrimpDimentions={dataShrimp.shrimps.length}
                                     >
                                         {`${shrimp.grammage}`}
                                         <TextUnitMeasurement
-                                            shrimpDimentions={
-                                                dataShrimp.shrimps.length
-                                            }
+                                            shrimpDimentions={dataShrimp.shrimps.length}
                                         >
                                             g
-                                        </TextUnitMeasurement>{" "}
-                                        / {`${formatKilo(shrimp.kilo)}`}
+                                        </TextUnitMeasurement>
+                                        {" / "}
+                                        {`${formatKilo(shrimp.kilo)}`}
                                         <TextUnitMeasurement
-                                            shrimpDimentions={
-                                                dataShrimp.shrimps.length
-                                            }
+                                            shrimpDimentions={dataShrimp.shrimps.length}
                                         >
                                             Kg
                                         </TextUnitMeasurement>

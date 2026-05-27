@@ -25,11 +25,12 @@ export const getAllUsers = async () => {
         const dataUsers = [];
 
         querySnapshot.forEach((document) => {
+            const data = document.data();
             dataUsers.push({
-                ...document.data(),
-                createdAt: convertSecondsToDate(
-                    document.data().createdAt.seconds,
-                ),
+                ...data,
+                createdAt: data.createdAt?.seconds
+                    ? convertSecondsToDate(data.createdAt.seconds)
+                    : null,
             });
         });
 
@@ -58,11 +59,12 @@ export const getUsersByEmails = async (emails) => {
         const dataUsers = [];
 
         querySnapshot.forEach((document) => {
+            const data = document.data();
             dataUsers.push({
-                ...document.data(),
-                createdAt: convertSecondsToDate(
-                    document.data().createdAt.seconds,
-                ),
+                ...data,
+                createdAt: data.createdAt?.seconds
+                    ? convertSecondsToDate(data.createdAt.seconds)
+                    : null,
             });
         });
 

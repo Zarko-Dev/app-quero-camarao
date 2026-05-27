@@ -2,7 +2,7 @@ import { TextInput } from "react-native-paper";
 import styled from "styled-components/native";
 
 export const Container = styled.View`
-    width: ${({ decrease }) => (decrease ? "75%" : "100%")};
+    flex: ${({ decrease }) => (decrease ? "1" : "0 0 100%")};
 
     justify-content: center;
     align-items: center;

@@ -222,12 +222,10 @@ export const DrawPrizeNew = ({ navigation }) => {
             <SelectComponent
                 title="Selecionar Regra"
                 options={dataRules
-                    .filter(r => r.cpfs && r.cpfs.some(u => !u.blocked))
                     .map((r, index) => `${r.store} (${index + 1})`)}
                 action={(value) => {
                     const index = parseInt(value.match(/\((\d+)\)/)?.[1]) - 1
-                    const filteredRules = dataRules.filter(r => r.cpfs && r.cpfs.some(u => !u.blocked))
-                    const rule = filteredRules[index]
+                    const rule = dataRules[index]
                     setSelectedRule(rule)
                     loadParticipantNames(rule)
                 }}

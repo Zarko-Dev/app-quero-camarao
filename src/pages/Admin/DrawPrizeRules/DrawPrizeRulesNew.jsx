@@ -254,7 +254,10 @@ const clientes = selectedCpfs.filter(
   }
 
   const handleSaveAll = async () => {
-  
+    if (!ruleName.trim()) {
+      Alert.alert("Atenção", "Informe um nome para a regra.")
+      return
+    }
     if (selectedCpfs.length === 0) {
       Alert.alert("Atenção", "Selecione pelo menos um participante.")
       return
@@ -269,7 +272,8 @@ const clientes = selectedCpfs.filter(
 
       const result = await saveUsersDrawPrizeRules({
         id: generateId(),
-        store: "Todos",
+        name: ruleName.trim(),
+        store: ruleName.trim(),
         states: [],
         cities: [],
         cpfs: cpfsToSave
@@ -358,6 +362,21 @@ const clientes = selectedCpfs.filter(
         {/* MODO TODOS */}
         {modeAll && (
           <>
+            <TitleSelect>Nome da Regra</TitleSelect>
+            <TextInput
+              placeholder="Ex: Sorteio Outubro 2025"
+              value={ruleName}
+              onChangeText={setRuleName}
+              style={{
+                borderWidth: 1.5,
+                borderColor: "#E8572A",
+                borderRadius: 12,
+                padding: 12,
+                marginBottom: 12,
+                fontSize: 14,
+                backgroundColor: "#fff7f2",
+              }}
+            />
             <Subtitle>Selecione todos os participantes de uma vez só</Subtitle>
 
            <TitleSelect>Todos os Participantes</TitleSelect>
@@ -414,12 +433,13 @@ const clientes = selectedCpfs.filter(
               value={ruleName}
               onChangeText={setRuleName}
               style={{
-                borderWidth: 1,
-                borderColor: "#ccc",
-                borderRadius: 8,
-                padding: 10,
+                borderWidth: 1.5,
+                borderColor: "#E8572A",
+                borderRadius: 12,
+                padding: 12,
                 marginBottom: 12,
                 fontSize: 14,
+                backgroundColor: "#fff7f2",
               }}
             />
             <Subtitle>Selecione o estado, cidades e participantes do sorteio</Subtitle>

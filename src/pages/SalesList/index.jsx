@@ -1,6 +1,6 @@
 /* eslint-disable operator-linebreak */
 import { FlatList, TouchableOpacity, View } from "react-native";
-import { FontAwesome, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useMemo, useState } from "react";
 import { ActivityIndicator } from "react-native-paper";
@@ -32,16 +32,11 @@ import {
     FlyerShrimpMiniIcon,
     FlyerLabelText,
     FlyerValueText,
-    FlyerFooter,
-    FlyerButtonChatProductor,
-    FlyerButtonText,
 } from "./styles";
 import { getShirimpSaleByCreatedAtLastThirtyDays } from "../../controllers/ShirimpSale/sale";
-import { getDataUserByIds } from "../../controllers/User/authentication";
-import { dataRoutes } from "../../routes/dataRoutes";
 import shrimpIcon from "../../assets/images/shrimpIcon.png";
 import ShririmpBanner from "../../assets/images/camaraoBanner.png";
-import { redirectWhatsappLink } from "../../utils/redirectFunctions";
+import { buildEncarteLink } from "../../utils/encarteProdutor";
 
 export const SalesList = ({ navigation }) => {
     const [loading, setLoading] = useState(true);
@@ -97,9 +92,14 @@ export const SalesList = ({ navigation }) => {
                         doc.sales.forEach((sale, index) => {
                             flatSales.push({
                                 id: `${doc.id}-${sale.grammage ?? "grammage"}-${index}`,
+                                publicationId: doc.publicationId || doc.id || "",
                                 location: doc.location || "-",
                                 contactNumber: doc.contactNumber || "",
                                 userId: doc.userId || "",
+                                encarteLink: buildEncarteLink({
+                                    providedLink: sale.encarteLink || doc.encarteLink || "",
+                                    publicationId: doc.publicationId || doc.id || "",
+                                }),
                                 grammage: sale.grammage ?? "-",
                                 grammageValue: sale.grammageValue ?? "-",
                                 saleDate: sale.saleDate ?? "-",
@@ -123,8 +123,47 @@ export const SalesList = ({ navigation }) => {
         }, []),
     );
 
+    const parseSaleDate = (saleDate) => {
+        if (!saleDate || typeof saleDate !== "string") return null;
+        const parts = saleDate.split("/");
+        if (parts.length !== 3) return null;
+        const [day, month, year] = parts.map((p) => parseInt(p, 10));
+        if (Number.isNaN(day) || Number.isNaN(month) || Number.isNaN(year)) return null;
+        const date = new Date(year, month - 1, day);
+        date.setHours(0, 0, 0, 0);
+        return date;
+    };
+
+    const getWeekRange = () => {
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+        const dayOfWeek = now.getDay();
+        const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        const start = new Date(now);
+        start.setDate(now.getDate() + diffToMonday);
+        const end = new Date(start);
+        end.setDate(start.getDate() + 6);
+        end.setHours(23, 59, 59, 999);
+        return { start, end };
+    };
+
     const filteredData = useMemo(() => {
         let result = dataSales;
+
+        if (activeFilter === "Prontos") {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            result = result.filter((item) => {
+                const d = parseSaleDate(item.saleDate);
+                return d && d.getTime() <= today.getTime();
+            });
+        } else if (activeFilter === "Esta semana") {
+            const { start, end } = getWeekRange();
+            result = result.filter((item) => {
+                const d = parseSaleDate(item.saleDate);
+                return d && d.getTime() >= start.getTime() && d.getTime() <= end.getTime();
+            });
+        }
 
         if (searchValue) {
             const term = searchValue.toLowerCase();
@@ -136,34 +175,7 @@ export const SalesList = ({ navigation }) => {
         }
 
         return result;
-    }, [dataSales, searchValue]);
-
-    const handleChatProductor = async (item) => {
-        const sizeLabel = classifyShrimpSize(item.grammage);
-        const whatsappMessage =
-            `Olá, venho através do aplicativo *Quero Camarão* 🦐\n\n` +
-            `Vi seu encarte do *Preço Atual do Camarão* em *${item.location}*:\n` +
-            `- Camarão de: *${sizeLabel}*\n` +
-            `- Preço Kg: *R$ ${item.grammageValue},00*\n` +
-            `- Despesca: *${item.saleDate}*\n\n` +
-            `Gostaria de mais informações. Poderia me ajudar?`;
-
-        const dataProductor = await getDataUserByIds([item.userId]);
-
-        if (dataProductor && dataProductor[0]) {
-            const contactNumber = dataProductor[0].phone?.replace(/\D/g, "");
-            if (!contactNumber) return;
-
-            navigation.navigate(dataRoutes.redirect, {
-                subtext: "Estamos lhe redirecionado ao whatsapp do produtor que selecionou",
-                actionRediret: redirectWhatsappLink(
-                    contactNumber,
-                    whatsappMessage,
-                    navigation,
-                ),
-            });
-        }
-    };
+    }, [dataSales, searchValue, activeFilter]);
 
     return (
         <Container>
@@ -270,7 +282,15 @@ export const SalesList = ({ navigation }) => {
                                         </FlyerValueText>
                                     </FlyerDataRow>
 
-
+                                    <FlyerDataRow $withDivider>
+                                        <FlyerIconContainer>
+                                            <Feather name="calendar" size={15} color="#e85d22" />
+                                        </FlyerIconContainer>
+                                        <FlyerLabelText>Despesca:</FlyerLabelText>
+                                        <FlyerValueText>
+                                            {item.saleDate || "-"}
+                                        </FlyerValueText>
+                                    </FlyerDataRow>
 
                                     <FlyerDataRow $isLocation>
                                         <FlyerIconContainer>

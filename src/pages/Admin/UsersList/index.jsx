@@ -22,6 +22,7 @@ import {
     ContentSearch,
     ContentUserInfo,
     ContentWhatsapp,
+    InfoRow,
     UserDate,
     UserImage,
     UserName,
@@ -119,15 +120,24 @@ export const UsersList = ({ navigation, route }) => {
                     <ContentUserInfo>
                         <UserName>{truncateName(dataUser.name, 23)}</UserName>
                         {dataUser?.drawName ? (
-                            <UserDate>Sorteio: {dataUser.drawName}</UserDate>
+                            <InfoRow>
+                                <Feather name="award" size={12} color="#888" />
+                                <UserDate>{dataUser.drawName}</UserDate>
+                            </InfoRow>
                         ) : null}
-                        <UserDate>
-                            {dataUser?.address?.city ?? dataUser?.city}/
-                            {dataUser?.address?.state ?? dataUser?.state}
-                        </UserDate>
-                        <UserDate>
-                            Desde: {convertDate(dataUser.createdAt, true)}
-                        </UserDate>
+                        <InfoRow>
+                            <Feather name="map-pin" size={12} color="#888" />
+                            <UserDate>
+                                {dataUser?.address?.city ?? dataUser?.city ?? "—"}/
+                                {dataUser?.address?.state ?? dataUser?.state ?? "—"}
+                            </UserDate>
+                        </InfoRow>
+                        <InfoRow>
+                            <Feather name="calendar" size={12} color="#888" />
+                            <UserDate>
+                                Desde: {convertDate(dataUser.createdAt, true)}
+                            </UserDate>
+                        </InfoRow>
                     </ContentUserInfo>
             </ContentData>
             {dataUser.noDetail && (

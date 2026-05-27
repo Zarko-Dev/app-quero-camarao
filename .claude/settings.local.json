@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node --test tests/multipleLiveDraws.test.cjs)",
+      "Bash(yarn test:unit)",
+      "Bash(node -e \"require\\('@babel/core'\\).transformFileSync\\('src/pages/Admin/DrawPrizeLive/index.jsx', {presets: ['@babel/preset-env', '@babel/preset-react']}\\); console.log\\('OK'\\)\")",
+      "Bash(node -e \"const p = require\\('@babel/parser'\\); const fs = require\\('fs'\\); p.parse\\(fs.readFileSync\\('src/pages/Admin/DrawPrizeLive/index.jsx','utf8'\\), {sourceType:'module', plugins:['jsx']}\\); console.log\\('PARSE OK'\\)\")",
+      "Bash(node --test tests/**/*.test.cjs)",
+      "Bash(git checkout *)",
+      "Bash(node scripts/unblock-user.mjs)",
+      "Bash(git log *)",
+      "Bash(curl -s -H \"Authorization: Bearer APP_USR-3913923120228200-050409-c3ab5e49863b4e847d174f3d7ff61ef0-1366471627\" https://api.mercadopago.com/v1/payment_methods)"
+    ]
+  }
+}
