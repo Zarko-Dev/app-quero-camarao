@@ -104,13 +104,15 @@
         "expo-build-properties",
         {
           "android": {
-            "enablePageSize16KB": true,
-            "ndkVersion": "27.1.12297006",
             "compileSdkVersion": 35,
             "targetSdkVersion": 35,
             "buildToolsVersion": "35.0.0"
           }
         }
+      ],
+      [
+        "./plugins/withAndroidNdk27.js",
+        {}
       ],
       [
         "expo-document-picker",
