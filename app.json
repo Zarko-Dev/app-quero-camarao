@@ -13,7 +13,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#FFE2CC"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "buildNumber": "60",
       "supportsTablet": true,
@@ -120,7 +122,9 @@
           "iCloudContainerEnvironment": "Production"
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      "@sentry/react-native",
+      ["react-native-share", {}]
     ],
     "extra": {
       "eas": {
