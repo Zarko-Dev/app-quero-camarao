@@ -15,9 +15,11 @@ export const SetUserStorage = async (dataUser) => {
 
 export const GetUserStorage = async () => {
     try {
-        const result = JSON.parse(await AsyncStorage.getItem(KEY));
+        const raw = await AsyncStorage.getItem(KEY);
+        if (!raw) return false;
+        const result = JSON.parse(raw);
 
-        return result.dataUser;
+        return result?.dataUser ?? false;
     } catch (e) {
         return false;
     }
