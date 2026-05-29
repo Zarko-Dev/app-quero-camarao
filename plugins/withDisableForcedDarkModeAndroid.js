@@ -5,9 +5,10 @@ const {
 } = require("@expo/config-plugins");
 
 function setForceDarkModeToFalse(styles) {
+    // SDK 53 generates AppTheme with DayNight.NoActionBar parent (was Light in SDK 52)
     styles = AndroidConfig.Styles.assignStylesValue(styles, {
         add: true,
-        parent: AndroidConfig.Styles.getAppThemeLightNoActionBarGroup(),
+        parent: { name: "AppTheme", parent: "Theme.AppCompat.DayNight.NoActionBar" },
         name: `android:forceDarkAllowed`,
         value: "false",
     });
