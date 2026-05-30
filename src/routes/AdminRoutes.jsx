@@ -50,7 +50,6 @@ export const NavigationAdminMenu = () => (
                 drawerIcon: ({ color }) => (
                     <MaterialCommunityIcons name="view-dashboard-outline" size={21} color={color} />
                 ),
-                headerShown: false,
             }}
         />
         <Screen
