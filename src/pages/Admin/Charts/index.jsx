@@ -308,8 +308,6 @@ export const Charts = ({ navigation }) => {
                                 x: 5,
                                 y: [0, 15],
                             }}
-                            height={400}
-                            width={800}
                             labels={({ datum }) => datum.y}
                         />
                     </VictoryChart>
