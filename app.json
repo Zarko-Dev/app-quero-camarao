@@ -23,6 +23,7 @@
         "NSFaceIDUsageDescription": "Permitir que a Quero Camarão use seu Face ID para acessar o aplicativo.",
         "NSCameraUsageDescription": "Permitir que a Quero Camarão acesse sua camera? Esta ação permite que seja tirado fotos que serão utilizadas no aplicativo, como fotos dos produtos.",
         "NSUserTrackingUsageDescription": "Para proporcionar uma experiência personalizada e segura, coletamos informações, como seu endereço de e-mail e informações de pagamento. Esses dados são usados exclusivamente para fins de autenticação, pagamento e comunicação.",
+        "NSPhotoLibraryUsageDescription": "Permitir que a Quero Camarão acesse sua biblioteca de fotos para selecionar imagens utilizadas no aplicativo.",
         "NSDocumentsFolderUsageDescription": "Permitir que a Quero Camarão salve arquivos no dispositivo.",
         "NSDownloadsFolderUsageDescription": "Permitir que a Quero Camarão salve arquivos no dispositivo.",
         "ITSAppUsesNonExemptEncryption": false
