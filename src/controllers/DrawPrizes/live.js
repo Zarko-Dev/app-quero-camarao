@@ -411,6 +411,21 @@ export const updateDrawPrizeLiveNames = async (drawPrizeId, prizeName) => {
     }
 };
 
+export const saveIndicatedParticipants = async (drawPrizeId, participantIds) => {
+    try {
+        const drawPrizeLiveDoc = doc(firestore, models.drawPrizesLive, drawPrizeId);
+        await setDoc(
+            drawPrizeLiveDoc,
+            { indicatedParticipants: participantIds, updatedAt: new Date() },
+            { merge: true },
+        );
+        return true;
+    } catch (error) {
+        Sentry.captureException(error);
+        return false;
+    }
+};
+
 export const setWinnerDrawPrizeLive = async (drawPrizeId, winners) => {
     try {
         const response = await getDrawPrizeLiveById(drawPrizeId);

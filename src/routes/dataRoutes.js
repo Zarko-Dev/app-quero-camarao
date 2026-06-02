@@ -58,6 +58,7 @@ export const dataRoutes = {
         drawPrizeRulesNew: "Draw Prize Rules New",
         drawPrizeSelect: "Draw Prize Select",
         drawPrizeLive: "Draw Prize Live",
+        parabens: "Parabéns",
     },
 };
 
