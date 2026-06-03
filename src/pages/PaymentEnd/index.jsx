@@ -52,6 +52,7 @@ export const PaymentEnd = ({ route, navigation }) => {
 
     const { params } = route;
     const animation = useRef(null);
+    const hasNavigatedToPayment = useRef(false);
 
     const [animationStatus, setAnimationStatus] = useState();
     const [verifyPayment, setVerifyPayment] = useState({
@@ -359,7 +360,10 @@ export const PaymentEnd = ({ route, navigation }) => {
                 break;
 
             case "null":
-                navigation.navigate(dataRoutes.payment);
+                if (!hasNavigatedToPayment.current) {
+                    hasNavigatedToPayment.current = true;
+                    navigation.navigate(dataRoutes.payment);
+                }
                 break;
 
             default:
@@ -473,7 +477,10 @@ export const PaymentEnd = ({ route, navigation }) => {
                     actions();
                 }, 4000);
             } else {
-                navigation.navigate(dataRoutes.payment);
+                if (!hasNavigatedToPayment.current) {
+                    hasNavigatedToPayment.current = true;
+                    navigation.navigate(dataRoutes.payment);
+                }
             }
 
             return undefined;

@@ -120,7 +120,7 @@ export const ResumeCrad = ({ loading, actionLoading }) => {
                 let finalValue = 0;
 
                 for (let index = 0; index < discountValue; index++) {
-                    if (index < dataPaymentCopy.dataPonds.length) {
+                    if (index < (dataPaymentCopy?.dataPonds?.length ?? 0)) {
                         if (index === 0) {
                             finalValue += pondValue;
                         } else {
