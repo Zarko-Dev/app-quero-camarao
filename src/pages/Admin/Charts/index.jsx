@@ -271,11 +271,6 @@ export const Charts = ({ navigation }) => {
                         yKeys={["views"]}
                         padding={{ left: 8, right: 8, top: 16, bottom: 8 }}
                         domainPadding={{ left: 8, right: 8, top: 20 }}
-                        axisOptions={{
-                            tickCount: { x: 8, y: 5 },
-                            lineColor: "#e0e0e0",
-                            labelColor: "#8fa3b2",
-                        }}
                     >
                         {({ points }) => (
                             <Line
@@ -283,7 +278,6 @@ export const Charts = ({ navigation }) => {
                                 color={theme.colors.primary}
                                 strokeWidth={3}
                                 curveType="natural"
-                                animate={{ type: "timing", duration: 500 }}
                             />
                         )}
                     </CartesianChart>
