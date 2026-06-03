@@ -289,17 +289,16 @@ export const ResumeCrad = ({ loading, actionLoading }) => {
     };
 
     const handleActionButtonDialogNewCupom = () => {
-        const discounts =
-            dataPayment.dataPonds.length > 1
-                ? (dataPayment.dataPonds.length - 1) * 60
-                : 0;
+        const pondCount = dataPayment?.dataPonds?.length ?? 0;
+        const discounts = pondCount > 1 ? (pondCount - 1) * 60 : 0;
+        const subtotal = dataPayment?.resumeConfig?.subtotal ?? 0;
 
         const newDataPayment = {
             ...dataPayment,
             resumeConfig: {
                 discounts,
-                subtotal: dataPayment.resumeConfig.subtotal,
-                total: dataPayment.resumeConfig.subtotal - discounts,
+                subtotal,
+                total: subtotal - discounts,
             },
         };
 
@@ -310,6 +309,8 @@ export const ResumeCrad = ({ loading, actionLoading }) => {
         setShowAlertVisible(false);
         setModalVisible(true);
     };
+
+    if (!dataPaymentCopy?.resumeConfig) return null;
 
     return (
         <Container>
