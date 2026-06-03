@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Modal } from "react-native";
-import { VictoryChart, VictoryLine } from "victory-native";
+import { LineChart } from "react-native-gifted-charts";
 import { FontAwesome } from "@expo/vector-icons";
 
 import {
@@ -22,7 +22,6 @@ import {
 } from "./styles";
 import { BoxShadowIos } from "../../../../../styles/IosShadow";
 import { theme } from "../../../../../styles/Theme";
-import { material } from "../../../../../styles/Theme/charts";
 
 export const ModalChart = ({ isVisible = false, onClose, viewLogs }) => {
     const [dataViewLogs, setDataViewLogs] = useState([]);
@@ -91,7 +90,11 @@ export const ModalChart = ({ isVisible = false, onClose, viewLogs }) => {
 
             const count = result[date] || null;
 
-            formattedResult.push({ x: dayString, y: count });
+            formattedResult.push({
+                value: count || 0,
+                label: dayString,
+                dataPointText: count ? String(count) : "",
+            });
         }
 
         setDataChart(formattedResult);
@@ -217,38 +220,28 @@ export const ModalChart = ({ isVisible = false, onClose, viewLogs }) => {
                                 />
                             </ContentInputSelect>
                         </ContainerDropdownSelects>
-                        <VictoryChart
-                            width={Number(
-                                theme.size.componentSize(330).replace("px", ""),
-                            )}
-                            padding={35}
-                            theme={material}
-                        >
-                            <VictoryLine
-                                style={{
-                                    data: {
-                                        stroke: theme.colors.primary,
-                                        strokeWidth: 3,
-                                        strokeLinecap: "round",
-                                    },
-                                }}
-                                data={dataChart}
-                                animate={{
-                                    duration: 2000,
-                                    onLoad: { duration: 1000 },
-                                }}
-                                categories={{
-                                    x: dataChart.map((item) => item.x),
-                                }}
-                                domainPadding={{
-                                    x: 5,
-                                    y: [0, 15],
-                                }}
-                                height={400}
-                                width={800}
-                                labels={({ datum }) => datum.y}
-                            />
-                        </VictoryChart>
+                        <LineChart
+                            data={dataChart}
+                            color={theme.colors.primary}
+                            thickness={3}
+                            curved
+                            isAnimated
+                            animationDuration={600}
+                            dataPointsColor={theme.colors.primary}
+                            dataPointsRadius={4}
+                            xAxisLabelTextStyle={{ color: "#8fa3b2", fontSize: 10 }}
+                            yAxisTextStyle={{ color: "#8fa3b2", fontSize: 10 }}
+                            yAxisColor="#e0e0e0"
+                            xAxisColor="#e0e0e0"
+                            rulesColor="#f0f0f0"
+                            rulesType="solid"
+                            initialSpacing={8}
+                            endSpacing={8}
+                            spacing={18}
+                            height={180}
+                            noOfSections={4}
+                            showTextOnFocus
+                        />
                     </Content>
                 </ModalContent>
             </Modal>
