@@ -1,7 +1,7 @@
 /* eslint-disable operator-linebreak */
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useState } from "react";
-import { CartesianChart, Line } from "victory-native";
+import { LineChart } from "react-native-gifted-charts";
 import Toast from "react-native-toast-message";
 
 import { dataRoutes } from "../../../routes/dataRoutes";
@@ -60,26 +60,15 @@ export const Charts = ({ navigation }) => {
     const getCurrentDateRange = () => {
         const currentDate = new Date();
         const currentDay = currentDate.getDate();
-
         return currentDay <= 15 ? "01-15" : "16-31";
     };
 
     const formatMonth = (month) => {
         const monthsMap = {
-            Janeiro: 1,
-            Fevereiro: 2,
-            Março: 3,
-            Abril: 4,
-            Maio: 5,
-            Junho: 6,
-            Julho: 7,
-            Agosto: 8,
-            Setembro: 9,
-            Outubro: 10,
-            Novembro: 11,
-            Dezembro: 12,
+            Janeiro: 1, Fevereiro: 2, Março: 3, Abril: 4,
+            Maio: 5, Junho: 6, Julho: 7, Agosto: 8,
+            Setembro: 9, Outubro: 10, Novembro: 11, Dezembro: 12,
         };
-
         return monthsMap[month];
     };
 
@@ -94,33 +83,28 @@ export const Charts = ({ navigation }) => {
                 const logYear = logDate.getFullYear();
                 const logMonth = logDate.getMonth() + 1;
 
-                if (
-                    logYear !== normalizedYear ||
-                    logMonth !== selectedMonthNumber
-                ) {
+                if (logYear !== normalizedYear || logMonth !== selectedMonthNumber) {
                     return;
                 }
 
                 const day = String(logDate.getDate()).padStart(2, "0");
-
-                if (result[day]) {
-                    result[day] += 1;
-                } else {
-                    result[day] = 1;
-                }
+                result[day] = (result[day] || 0) + 1;
             });
         });
 
         const formattedResult = [];
-
         let [startDay, endDay] = dateRange.split("-").map(Number);
-
         if (startDay < 1) startDay = 1;
         if (endDay > 31) endDay = 31;
 
         for (let day = startDay; day <= endDay; day++) {
-            const count = result[String(day).padStart(2, "0")] || 0;
-            formattedResult.push({ day, views: count });
+            const dayString = String(day).padStart(2, "0");
+            const count = result[dayString] || 0;
+            formattedResult.push({
+                value: count,
+                label: dayString,
+                dataPointText: count > 0 ? String(count) : "",
+            });
         }
 
         setDataChart(formattedResult);
@@ -133,11 +117,8 @@ export const Charts = ({ navigation }) => {
         data.forEach((entry) => {
             entry.logViews.forEach((log) => {
                 const date = new Date(log.createdAt);
-                const monthNumber = String(date.getMonth() + 1).padStart(2, "0");
-                const yearNumber = String(date.getFullYear());
-
-                uniqueMonths.add(monthNumber);
-                uniqueYears.add(yearNumber);
+                uniqueMonths.add(String(date.getMonth() + 1).padStart(2, "0"));
+                uniqueYears.add(String(date.getFullYear()));
             });
         });
 
@@ -148,16 +129,10 @@ export const Charts = ({ navigation }) => {
             const extendedMonth = new Intl.DateTimeFormat("pt-BR", {
                 month: "long",
             }).format(new Date(`2000-${month}-02`));
-
-            return (
-                extendedMonth.charAt(0).toUpperCase() + extendedMonth.slice(1)
-            );
+            return extendedMonth.charAt(0).toUpperCase() + extendedMonth.slice(1);
         });
 
-        return {
-            month: formattedMonths,
-            year: sortedYears,
-        };
+        return { month: formattedMonths, year: sortedYears };
     };
 
     const prepareData = async () => {
@@ -171,24 +146,14 @@ export const Charts = ({ navigation }) => {
 
         if (!result.error && Array.isArray(result.data)) {
             const dataMonthYear = extractUniqueMonthsAndYears(result.data);
-            const months = dataMonthYear.month?.length
-                ? dataMonthYear.month
-                : [fallbackMonth];
-            const years = dataMonthYear.year?.length
-                ? dataMonthYear.year
-                : [fallbackYear];
+            const months = dataMonthYear.month?.length ? dataMonthYear.month : [fallbackMonth];
+            const years = dataMonthYear.year?.length ? dataMonthYear.year : [fallbackYear];
 
             setMonthOptions(months);
             setYearOptions(years);
             setSelectRageDate(currentRageDate);
             setDataViewLogs(result.data);
-
-            processData(
-                result.data,
-                currentYear,
-                currentExtendedMonth,
-                currentRageDate,
-            );
+            processData(result.data, currentYear, currentExtendedMonth, currentRageDate);
             return;
         }
 
@@ -217,17 +182,17 @@ export const Charts = ({ navigation }) => {
         }, []),
     );
 
-    const handleSelectMonth = async (dataMonth) => {
+    const handleSelectMonth = (dataMonth) => {
         setCurrentExtendedMonth(dataMonth);
         processData(dataViewLogs, currentYear, dataMonth, selectRageDate);
     };
 
-    const handleSelectYear = async (dataYear) => {
+    const handleSelectYear = (dataYear) => {
         setCurrentYear(dataYear);
         processData(dataViewLogs, dataYear, currentExtendedMonth, selectRageDate);
     };
 
-    const handleSelectRangeDate = async (dataRangeDate) => {
+    const handleSelectRangeDate = (dataRangeDate) => {
         setSelectRageDate(dataRangeDate);
         processData(dataViewLogs, currentYear, currentExtendedMonth, dataRangeDate);
     };
@@ -265,22 +230,32 @@ export const Charts = ({ navigation }) => {
                             />
                         </ContentInputSelect>
                     </ContainerDropdownSelects>
-                    <CartesianChart
+                    <LineChart
                         data={dataChart}
-                        xKey="day"
-                        yKeys={["views"]}
-                        padding={{ left: 8, right: 8, top: 16, bottom: 8 }}
-                        domainPadding={{ left: 8, right: 8, top: 20 }}
-                    >
-                        {({ points }) => (
-                            <Line
-                                points={points.views}
-                                color={theme.colors.primary}
-                                strokeWidth={3}
-                                curveType="natural"
-                            />
-                        )}
-                    </CartesianChart>
+                        color={theme.colors.primary}
+                        thickness={3}
+                        curved
+                        isAnimated
+                        animationDuration={600}
+                        hideDataPoints={false}
+                        dataPointsColor={theme.colors.primary}
+                        dataPointsRadius={4}
+                        xAxisLabelTextStyle={{ color: "#8fa3b2", fontSize: 10 }}
+                        yAxisTextStyle={{ color: "#8fa3b2", fontSize: 10 }}
+                        yAxisColor="#e0e0e0"
+                        xAxisColor="#e0e0e0"
+                        rulesColor="#f0f0f0"
+                        rulesType="solid"
+                        initialSpacing={8}
+                        endSpacing={8}
+                        spacing={18}
+                        height={180}
+                        noOfSections={4}
+                        textShiftY={-6}
+                        textShiftX={-4}
+                        textFontSize={10}
+                        showTextOnFocus
+                    />
                     <CharButton
                         style={BoxShadowIos}
                         onPress={handleRedirectPublicationViewLogsList}

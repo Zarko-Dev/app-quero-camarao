@@ -129,8 +129,7 @@
       ],
       "expo-asset",
       "@sentry/react-native",
-      ["react-native-share", {}],
-      "@shopify/react-native-skia"
+      ["react-native-share", {}]
     ],
     "extra": {
       "eas": {
