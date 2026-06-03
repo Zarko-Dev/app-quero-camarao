@@ -149,11 +149,14 @@ export const Parabens = () => {
     const [draws, setDraws] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const loadDraws = useCallback(async () => {
-        setLoading(true);
-        const response = await getAllActiveDrawPrizesLive();
-        setDraws(response.error ? [] : response.data);
-        setLoading(false);
+    const loadDraws = useCallback(() => {
+        const fetch = async () => {
+            setLoading(true);
+            const response = await getAllActiveDrawPrizesLive();
+            setDraws(response.error ? [] : response.data);
+            setLoading(false);
+        };
+        fetch();
     }, []);
 
     useFocusEffect(loadDraws);
