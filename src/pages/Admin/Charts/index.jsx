@@ -1,7 +1,7 @@
 /* eslint-disable operator-linebreak */
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useState } from "react";
-import { VictoryChart, VictoryLine } from "victory-native";
+import { CartesianChart, Line } from "victory-native";
 import Toast from "react-native-toast-message";
 
 import { dataRoutes } from "../../../routes/dataRoutes";
@@ -22,7 +22,6 @@ import {
     TitleButton,
 } from "./styles";
 import { theme } from "../../../styles/Theme";
-import { material } from "../../../styles/Theme/charts";
 import { BoxShadowIos } from "../../../styles/IosShadow";
 import { AdminChartCardSkeleton } from "../../../components/Skeleton/AdminChartCardSkeleton";
 
@@ -120,10 +119,8 @@ export const Charts = ({ navigation }) => {
         if (endDay > 31) endDay = 31;
 
         for (let day = startDay; day <= endDay; day++) {
-            const dayString = day < 10 ? `0${day}` : `${day}`;
-            const count = result[dayString] || 0;
-
-            formattedResult.push({ x: dayString, y: count });
+            const count = result[String(day).padStart(2, "0")] || 0;
+            formattedResult.push({ day, views: count });
         }
 
         setDataChart(formattedResult);
@@ -222,30 +219,17 @@ export const Charts = ({ navigation }) => {
 
     const handleSelectMonth = async (dataMonth) => {
         setCurrentExtendedMonth(dataMonth);
-
         processData(dataViewLogs, currentYear, dataMonth, selectRageDate);
     };
 
     const handleSelectYear = async (dataYear) => {
         setCurrentYear(dataYear);
-
-        processData(
-            dataViewLogs,
-            dataYear,
-            currentExtendedMonth,
-            selectRageDate,
-        );
+        processData(dataViewLogs, dataYear, currentExtendedMonth, selectRageDate);
     };
 
     const handleSelectRangeDate = async (dataRangeDate) => {
         setSelectRageDate(dataRangeDate);
-
-        processData(
-            dataViewLogs,
-            currentYear,
-            currentExtendedMonth,
-            dataRangeDate,
-        );
+        processData(dataViewLogs, currentYear, currentExtendedMonth, dataRangeDate);
     };
 
     const handleRedirectPublicationViewLogsList = () => {
@@ -281,36 +265,28 @@ export const Charts = ({ navigation }) => {
                             />
                         </ContentInputSelect>
                     </ContainerDropdownSelects>
-                    <VictoryChart
-                        width={Number(
-                            theme.size.componentSize(330).replace("px", ""),
-                        )}
-                        padding={35}
-                        theme={material}
+                    <CartesianChart
+                        data={dataChart}
+                        xKey="day"
+                        yKeys={["views"]}
+                        padding={{ left: 8, right: 8, top: 16, bottom: 8 }}
+                        domainPadding={{ left: 8, right: 8, top: 20 }}
+                        axisOptions={{
+                            tickCount: { x: 8, y: 5 },
+                            lineColor: "#e0e0e0",
+                            labelColor: "#8fa3b2",
+                        }}
                     >
-                        <VictoryLine
-                            style={{
-                                data: {
-                                    stroke: theme.colors.primary,
-                                    strokeWidth: 3,
-                                    strokeLinecap: "round",
-                                },
-                            }}
-                            data={dataChart}
-                            animate={{
-                                duration: 2000,
-                                onLoad: { duration: 1000 },
-                            }}
-                            categories={{
-                                x: dataChart.map((item) => item.x),
-                            }}
-                            domainPadding={{
-                                x: 5,
-                                y: [0, 15],
-                            }}
-                            labels={({ datum }) => datum.y}
-                        />
-                    </VictoryChart>
+                        {({ points }) => (
+                            <Line
+                                points={points.views}
+                                color={theme.colors.primary}
+                                strokeWidth={3}
+                                curveType="natural"
+                                animate={{ type: "timing", duration: 500 }}
+                            />
+                        )}
+                    </CartesianChart>
                     <CharButton
                         style={BoxShadowIos}
                         onPress={handleRedirectPublicationViewLogsList}

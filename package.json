@@ -36,6 +36,7 @@
         "@reduxjs/toolkit": "^1.9.5",
         "@sentry/react-native": "~6.14.0",
         "@shopify/flash-list": "1.7.6",
+        "@shopify/react-native-skia": "^2.6.4",
         "expo": "^53.0.0",
         "expo-application": "~6.1.5",
         "expo-asset": "~11.1.7",
@@ -90,7 +91,7 @@
         "react-redux": "^8.1.2",
         "redux": "^4.2.1",
         "styled-components": "^6.0.7",
-        "victory-native": "36.6.12",
+        "victory-native": "^40.2.1",
         "xlsx": "^0.18.5",
         "yup": "^1.2.0"
     },
