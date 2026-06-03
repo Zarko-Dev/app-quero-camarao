@@ -43,7 +43,7 @@ export const NavigationMenu = () => {
             screenOptions={{
                 drawerStyle: { width: "86%", backgroundColor: "#ffffff" },
                 drawerLabelStyle: {
-                    marginLeft: -18,
+                    marginLeft: 4,
                     fontSize: 15,
                     fontWeight: "600",
                 },
