@@ -26,7 +26,7 @@ export const ShrimpCard = memo(() => {
 
     return (
         <Container>
-            {dataPayment.dataPonds.map((item) => (
+            {(dataPayment?.dataPonds ?? []).map((item) => (
                 <Fragment key={item.id}>
                     <ContentCardInfo>
                         <ContentImageShrimp>

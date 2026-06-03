@@ -86,10 +86,10 @@ export const PaymentButton = ({ loading }) => {
 
         const newDataPonds = {
             id: v4(),
-            ponds: dataPayment.dataPonds.length,
+            ponds: dataPayment?.dataPonds?.length ?? 0,
             location: `${dataPayment.city}/${dataPayment.state}`,
             contactNumber: `+55${formatphone(dataUser.phone)}`,
-            shrimps: dataPayment.dataPonds.map((pond, index) => ({
+            shrimps: (dataPayment?.dataPonds ?? []).map((pond, index) => ({
                 imageShrimpUri: dataUrlImage[index],
                 grammage: pond.grammage,
                 kilo: pond.kilo,
