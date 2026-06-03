@@ -35,16 +35,14 @@ export const DialogInputComponent = ({
                 />
             </Dialog.Content>
             <Dialog.Actions>
-                <Button onPress={actionButton}>{textActionButton}</Button>
-                {textSecondaryActionButton ? (
-                    <Button onPress={secondaryActionButton}>
-                        {textSecondaryActionButton}
-                    </Button>
-                ) : (
-                    showCancelButton && (
-                        <Button onPress={hideDialog}>Cancelar</Button>
-                    )
-                )}
+                {[
+                    <Button key="primary" onPress={actionButton}>{textActionButton}</Button>,
+                    textSecondaryActionButton
+                        ? <Button key="secondary" onPress={secondaryActionButton}>{textSecondaryActionButton}</Button>
+                        : showCancelButton
+                            ? <Button key="cancel" onPress={hideDialog}>Cancelar</Button>
+                            : null,
+                ]}
             </Dialog.Actions>
         </Dialog>
     </Portal>
