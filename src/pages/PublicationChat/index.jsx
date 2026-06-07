@@ -32,6 +32,7 @@ export const PublicationChat = ({ route, navigation }) => {
             publicationId: publication.id,
             buyerId,
             onMessages: (msgs) => {
+                // msgs already ordered asc by Firestore; reverse for inverted FlatList
                 setMessages([...msgs].reverse());
             },
         });
@@ -79,7 +80,7 @@ export const PublicationChat = ({ route, navigation }) => {
                 <FlatList
                     ref={listRef}
                     data={messages}
-                    keyExtractor={(_, i) => String(i)}
+                    keyExtractor={(item) => item.id ?? String(Math.random())}
                     inverted
                     contentContainerStyle={{ padding: 12 }}
                     renderItem={({ item }) => {

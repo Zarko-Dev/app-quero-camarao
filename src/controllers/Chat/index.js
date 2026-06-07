@@ -1,4 +1,14 @@
-import { doc, getDoc, setDoc, updateDoc, arrayUnion, onSnapshot } from "firebase/firestore";
+import {
+    addDoc,
+    collection,
+    doc,
+    getDoc,
+    onSnapshot,
+    orderBy,
+    query,
+    serverTimestamp,
+    setDoc,
+} from "firebase/firestore";
 import * as Sentry from "@sentry/react-native";
 import { firestore } from "../../services/Firebase";
 import { models } from "../../services/Firebase/models";
@@ -6,25 +16,32 @@ import { models } from "../../services/Firebase/models";
 const chatDocId = (publicationId, buyerId) =>
     `${publicationId}_${String(buyerId).replace(/[@.]/g, "_")}`;
 
+const messagesRef = (chatId) =>
+    collection(firestore, models.chats, chatId, "messages");
+
 export const sendChatMessage = async ({ publicationId, sellerId, buyerId, senderId, text }) => {
     try {
         const id = chatDocId(publicationId, buyerId);
-        const ref = doc(firestore, models.chats, id);
-        const snap = await getDoc(ref);
-        const msg = { senderId, text: text.trim(), createdAt: new Date() };
+        const chatRef = doc(firestore, models.chats, id);
+        const snap = await getDoc(chatRef);
+
         if (!snap.exists()) {
-            await setDoc(ref, {
+            await setDoc(chatRef, {
                 id,
                 publicationId,
                 sellerId,
                 buyerId,
-                messages: [msg],
-                createdAt: new Date(),
-                updatedAt: new Date(),
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
             });
-        } else {
-            await updateDoc(ref, { messages: arrayUnion(msg), updatedAt: new Date() });
         }
+
+        await addDoc(messagesRef(id), {
+            senderId,
+            text: text.trim(),
+            createdAt: serverTimestamp(),
+        });
+
         return true;
     } catch (error) {
         Sentry.captureException(error);
@@ -34,8 +51,8 @@ export const sendChatMessage = async ({ publicationId, sellerId, buyerId, sender
 
 export const subscribeToChat = ({ publicationId, buyerId, onMessages }) => {
     const id = chatDocId(publicationId, buyerId);
-    const ref = doc(firestore, models.chats, id);
-    return onSnapshot(ref, (snap) => {
-        onMessages(snap.exists() ? snap.data().messages ?? [] : []);
+    const q = query(messagesRef(id), orderBy("createdAt", "asc"));
+    return onSnapshot(q, (snap) => {
+        onMessages(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
     });
 };
