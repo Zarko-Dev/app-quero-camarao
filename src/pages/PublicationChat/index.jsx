@@ -3,7 +3,7 @@ import { FlatList, KeyboardAvoidingView, Platform, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useSelector } from "react-redux";
 
-import { sendChatMessage, subscribeToChat } from "../../controllers/Chat";
+import { sendChatMessage, subscribeToChat, markChatAsSeen } from "../../controllers/Chat";
 import {
     Bubble,
     BubbleText,
@@ -18,7 +18,7 @@ import {
 } from "./styles";
 
 export const PublicationChat = ({ route, navigation }) => {
-    const { publication, sellerId, sellerName } = route.params;
+    const { publication, sellerId, sellerName, chatId } = route.params;
     const { dataUser } = useSelector((state) => state.login);
     const [messages, setMessages] = useState([]);
     const [text, setText] = useState("");
@@ -28,6 +28,10 @@ export const PublicationChat = ({ route, navigation }) => {
     const buyerId = myId;
 
     useEffect(() => {
+        if (chatId && myId) {
+            markChatAsSeen(chatId, myId);
+        }
+
         const unsub = subscribeToChat({
             publicationId: publication.id,
             buyerId,
@@ -49,6 +53,9 @@ export const PublicationChat = ({ route, navigation }) => {
             buyerId,
             senderId: myId,
             text: trimmed,
+            sellerName: sellerName || "",
+            buyerName: dataUser?.name || "",
+            publicationTitle: publication?.publicationTitle || publication?.location || "",
         });
     };
 
