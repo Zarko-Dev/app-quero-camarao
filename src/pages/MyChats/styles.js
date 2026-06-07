@@ -7,6 +7,9 @@ export const Container = styled.SafeAreaView`
 `;
 
 export const ScreenHeader = styled.View`
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
     padding: 16px;
     background-color: #fff;
     border-bottom-width: 1px;

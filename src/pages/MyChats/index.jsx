@@ -100,11 +100,14 @@ export const MyChats = ({ navigation }) => {
     return (
         <Container>
             <ScreenHeader>
+                <Feather name="arrow-left" size={22} color="#36536e" onPress={() => navigation.goBack()} />
                 <HeaderTitle>Minhas Conversas</HeaderTitle>
-                {unreadTotal > 0 && (
+                {unreadTotal > 0 ? (
                     <HeaderSub>
                         {unreadTotal} mensagem{unreadTotal > 1 ? "s" : ""} não lida{unreadTotal > 1 ? "s" : ""}
                     </HeaderSub>
+                ) : (
+                    <HeaderSub />
                 )}
             </ScreenHeader>
             {chats.length === 0 ? (
