@@ -80,6 +80,7 @@ export const MyChats = ({ navigation }) => {
         navigation.navigate(dataRoutes.publicationChat, {
             publication: { id: chat.publicationId },
             sellerId: chat.sellerId,
+            buyerId: chat.buyerId,
             sellerName: chat.sellerName || "Vendedor",
             chatId: chat.id,
         });

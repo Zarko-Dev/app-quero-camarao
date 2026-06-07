@@ -18,26 +18,24 @@ import {
 } from "./styles";
 
 export const PublicationChat = ({ route, navigation }) => {
-    const { publication, sellerId, sellerName, chatId } = route.params;
+    const { publication, sellerId, sellerName, chatId, buyerId: paramBuyerId } = route.params;
     const { dataUser } = useSelector((state) => state.login);
     const [messages, setMessages] = useState([]);
     const [text, setText] = useState("");
     const listRef = useRef(null);
 
     const myId = dataUser?.email ?? dataUser?.uid;
-    const buyerId = myId;
+    const buyerId = paramBuyerId ?? myId;
 
     useEffect(() => {
-        if (chatId && myId) {
-            markChatAsSeen(chatId, myId);
-        }
-
         const unsub = subscribeToChat({
             publicationId: publication.id,
             buyerId,
             onMessages: (msgs) => {
-                // msgs already ordered asc by Firestore; reverse for inverted FlatList
                 setMessages([...msgs].reverse());
+                if (chatId && myId) {
+                    markChatAsSeen(chatId, myId);
+                }
             },
         });
         return unsub;
