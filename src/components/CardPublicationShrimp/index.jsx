@@ -358,6 +358,15 @@ export const CardPublicationShrimp = memo(
                     visible={showModalImagesShrimp}
                     onClose={() => setShowModalImagesShrimp(false)}
                     actionBuy={handleRedirectPage}
+                    actionChat={() => {
+                        setShowModalImagesShrimp(false);
+                        navigation.navigate(dataRoutes.publicationChat, {
+                            publication: item,
+                            sellerId: item.userId,
+                            sellerName: item.sellerName ?? "Produtor",
+                        });
+                    }}
+                    showChatButton={isAuthenticated && dataUser?.email !== item.userId}
                     dataShrimp={shrimpImageData.data}
                     isLoading={isLoadingTalkProductor}
                 />
