@@ -2,7 +2,7 @@
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
-import { BarChart, LineChart } from "react-native-gifted-charts";
+import { BarChart } from "react-native-gifted-charts";
 import Toast from "react-native-toast-message";
 
 import { dataRoutes } from "../../../routes/dataRoutes";
@@ -22,10 +22,19 @@ import {
     ContentInputSelect,
     TitleButton,
 } from "./styles";
-import { theme } from "../../../styles/Theme";
 import { BoxShadowIos } from "../../../styles/IosShadow";
 import { AdminChartCardSkeleton } from "../../../components/Skeleton/AdminChartCardSkeleton";
 
+// ─── paleta ────────────────────────────────────────────────────────────────
+const C_CURRENT  = "#2563eb"; // azul forte – mês atual
+const C_PREV     = "#94a3b8"; // cinza azulado – mês anterior
+const C_TOP      = "#0ea5e9"; // azul céu – top pubs
+const C_AXIS     = "#94a3b8";
+const C_RULES    = "#e2e8f0";
+const C_TITLE    = "#1e2d3d";
+const C_ACCENT   = "#f55b1f";
+
+// ─── helpers ───────────────────────────────────────────────────────────────
 const withTimeout = (promise, ms = 30000) =>
     Promise.race([
         promise,
@@ -34,458 +43,389 @@ const withTimeout = (promise, ms = 30000) =>
         ),
     ]);
 
-const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
-const executeWithRetry = async (requestFactory, retries = 1) => {
-    try {
-        return await requestFactory();
-    } catch (error) {
-        if (retries <= 0) throw error;
+const executeWithRetry = async (fn, retries = 1) => {
+    try { return await fn(); }
+    catch (e) {
+        if (retries <= 0) throw e;
         await wait(1200);
-        return executeWithRetry(requestFactory, retries - 1);
+        return executeWithRetry(fn, retries - 1);
     }
 };
 
-const formatMonth = (month) => {
-    const monthsMap = {
-        Janeiro: 1, Fevereiro: 2, Março: 3, Abril: 4,
-        Maio: 5, Junho: 6, Julho: 7, Agosto: 8,
-        Setembro: 9, Outubro: 10, Novembro: 11, Dezembro: 12,
-    };
-    return monthsMap[month];
+const MONTH_MAP = {
+    Janeiro:1, Fevereiro:2, Março:3, Abril:4, Maio:5, Junho:6,
+    Julho:7, Agosto:8, Setembro:9, Outubro:10, Novembro:11, Dezembro:12,
 };
+const MONTH_NAMES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+                     "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
-const SectionTitle = ({ children }) => (
-    <Text style={{ fontSize: 13, fontWeight: "700", color: "#36536e", marginBottom: 8, marginTop: 4 }}>
+const fmtMonth = (m) => MONTH_MAP[m] ?? 1;
+const prevMonth = (month, year) => {
+    const n = fmtMonth(month);
+    return n === 1 ? { month: 12, year: Number(year) - 1 }
+                   : { month: n - 1, year: Number(year) };
+};
+const monthName = (n) => MONTH_NAMES[n - 1];
+
+// ─── componentes locais ────────────────────────────────────────────────────
+const SectionLabel = ({ children }) => (
+    <Text style={{ fontSize: 11, color: C_AXIS, marginBottom: 8, paddingHorizontal: 8 }}>
         {children}
     </Text>
 );
 
+const StatRow = ({ label, value, color }) => (
+    <View style={{ alignItems: "center" }}>
+        <Text style={{ fontSize: 11, color: C_AXIS }}>{label}</Text>
+        <Text style={{ fontSize: 26, fontWeight: "800", color }}>{value}</Text>
+        <Text style={{ fontSize: 10, color: C_AXIS }}>views</Text>
+    </View>
+);
+
+// ─── tela principal ─────────────────────────────────────────────────────────
 export const Charts = ({ navigation }) => {
-    const [isLoading, setIsLoading] = useState(false);
-    const [dataViewLogs, setDataViewLogs] = useState([]);
-    const [selectRageDate, setSelectRageDate] = useState("01-15");
-    const [monthOptions, setMonthOptions] = useState([]);
-    const [currentExtendedMonth, setCurrentExtendedMonth] = useState(getCurrentExtendedMonth());
-    const [yearOptions, setYearOptions] = useState([]);
-    const [currentYear, setCurrentYear] = useState(getCurrentYear());
+    const [isLoading,             setIsLoading]             = useState(false);
+    const [dataViewLogs,          setDataViewLogs]          = useState([]);
+    const [selectRageDate,        setSelectRageDate]        = useState("01-15");
+    const [monthOptions,          setMonthOptions]          = useState([]);
+    const [currentExtendedMonth,  setCurrentExtendedMonth]  = useState(getCurrentExtendedMonth());
+    const [yearOptions,           setYearOptions]           = useState([]);
+    const [currentYear,           setCurrentYear]           = useState(getCurrentYear());
+    const [dataChart,             setDataChart]             = useState([]);
+    const [dataPrevChart,         setDataPrevChart]         = useState([]);
+    const [dataHourChart,         setDataHourChart]         = useState([]);
+    const [dataTopPubs,           setDataTopPubs]           = useState([]);
 
-    // chart data
-    const [dataChart, setDataChart] = useState([]);
-    const [dataPrevChart, setDataPrevChart] = useState([]);
-    const [dataHourChart, setDataHourChart] = useState([]);
-    const [dataTopPubs, setDataTopPubs] = useState([]);
+    const getCurrentDateRange = () => new Date().getDate() <= 15 ? "01-15" : "16-31";
 
-    const getCurrentDateRange = () => {
-        const currentDay = new Date().getDate();
-        return currentDay <= 15 ? "01-15" : "16-31";
-    };
-
-    const getPrevMonth = (month, year) => {
-        const monthNum = formatMonth(month);
-        if (monthNum === 1) return { month: 12, year: Number(year) - 1 };
-        return { month: monthNum - 1, year: Number(year) };
-    };
-
-    const getMonthName = (monthNum) => {
-        const names = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-        return names[monthNum - 1];
-    };
-
-    const processData = (data, selectedYear, selectedMonth, dateRange) => {
-        const result = {};
-        const selectedMonthNumber = formatMonth(selectedMonth);
-        const normalizedYear = Number(selectedYear);
-
-        // previous month
-        const prev = getPrevMonth(selectedMonth, selectedYear);
-        const resultPrev = {};
+    // ── processa gráfico de barras diário (agrupado: atual + anterior) ──────
+    const processData = (data, selYear, selMonth, dateRange) => {
+        const monthNum  = fmtMonth(selMonth);
+        const year      = Number(selYear);
+        const prev      = prevMonth(selMonth, selYear);
+        const curr = {}, ante = {};
 
         data.forEach((entry) => {
             entry.logViews.forEach((log) => {
-                const logDate = new Date(log.createdAt);
-                const logYear = logDate.getFullYear();
-                const logMonth = logDate.getMonth() + 1;
-
-                const day = String(logDate.getDate()).padStart(2, "0");
-
-                if (logYear === normalizedYear && logMonth === selectedMonthNumber) {
-                    result[day] = (result[day] || 0) + 1;
-                }
-                if (logYear === prev.year && logMonth === prev.month) {
-                    resultPrev[day] = (resultPrev[day] || 0) + 1;
-                }
+                const d = new Date(log.createdAt);
+                const day = String(d.getDate()).padStart(2, "0");
+                if (d.getFullYear() === year && d.getMonth() + 1 === monthNum)
+                    curr[day] = (curr[day] || 0) + 1;
+                if (d.getFullYear() === prev.year && d.getMonth() + 1 === prev.month)
+                    ante[day] = (ante[day] || 0) + 1;
             });
         });
 
-        let [startDay, endDay] = dateRange.split("-").map(Number);
-        if (startDay < 1) startDay = 1;
-        if (endDay > 31) endDay = 31;
+        let [start, end] = dateRange.split("-").map(Number);
+        start = Math.max(start, 1); end = Math.min(end, 31);
 
-        const formattedResult = [];
-        const formattedPrev = [];
-
-        for (let day = startDay; day <= endDay; day++) {
-            const dayString = String(day).padStart(2, "0");
-            const count = result[dayString] || 0;
-            const countPrev = resultPrev[dayString] || 0;
-            formattedResult.push({ value: count, label: dayString, dataPointText: count > 0 ? String(count) : "" });
-            formattedPrev.push({ value: countPrev });
+        const result = [];
+        for (let day = start; day <= end; day++) {
+            const ds = String(day).padStart(2, "0");
+            const vCurr = curr[ds] || 0;
+            const vPrev = ante[ds] || 0;
+            const label = ds;
+            result.push(
+                {
+                    value: vCurr,
+                    label,
+                    frontColor: C_CURRENT,
+                    topLabelComponent: vCurr > 0
+                        ? () => <Text style={{ fontSize: 8, color: C_CURRENT, fontWeight: "700" }}>{vCurr}</Text>
+                        : undefined,
+                },
+                {
+                    value: vPrev,
+                    frontColor: C_PREV,
+                    topLabelComponent: vPrev > 0
+                        ? () => <Text style={{ fontSize: 8, color: C_AXIS }}>{vPrev}</Text>
+                        : undefined,
+                    spacing: 2,
+                },
+            );
         }
+        setDataChart(result);
 
-        setDataChart(formattedResult);
-        setDataPrevChart(formattedPrev);
+        // para o comparativo de totais
+        const totCurr = Object.values(curr).reduce((s, v) => s + v, 0);
+        const totPrev = Object.values(ante).reduce((s, v) => s + v, 0);
+        setDataPrevChart([{ total: totPrev }, { total: totCurr }]);
     };
 
-    const processHourData = (data, selectedYear, selectedMonth) => {
-        const selectedMonthNumber = formatMonth(selectedMonth);
-        const normalizedYear = Number(selectedYear);
-        const hours = Array(24).fill(0);
+    // ── horário de pico ─────────────────────────────────────────────────────
+    const processHourData = (data, selYear, selMonth) => {
+        const monthNum = fmtMonth(selMonth);
+        const year     = Number(selYear);
+        const hours    = Array(24).fill(0);
 
         data.forEach((entry) => {
             entry.logViews.forEach((log) => {
-                const logDate = new Date(log.createdAt);
-                if (logDate.getFullYear() === normalizedYear && logDate.getMonth() + 1 === selectedMonthNumber) {
-                    hours[logDate.getHours()]++;
-                }
+                const d = new Date(log.createdAt);
+                if (d.getFullYear() === year && d.getMonth() + 1 === monthNum)
+                    hours[d.getHours()]++;
             });
         });
 
+        const maxVal = Math.max(...hours, 1);
         setDataHourChart(
             hours.map((value, h) => ({
                 value,
-                label: h % 3 === 0 ? `${String(h).padStart(2,"0")}h` : "",
-                frontColor: value === Math.max(...hours) ? "#f55b1f" : "#ffa07a",
+                label: h % 4 === 0 ? `${String(h).padStart(2,"0")}h` : "",
+                frontColor: value === maxVal && value > 0 ? C_ACCENT : C_CURRENT,
+                topLabelComponent: value > 0
+                    ? () => (
+                        <Text style={{ fontSize: 7, fontWeight: "700",
+                            color: value === maxVal ? C_ACCENT : C_AXIS,
+                            marginBottom: 1 }}>
+                            {value}
+                        </Text>
+                    )
+                    : undefined,
             }))
         );
     };
 
-    const processTopPubs = (data, selectedYear, selectedMonth) => {
-        const selectedMonthNumber = formatMonth(selectedMonth);
-        const normalizedYear = Number(selectedYear);
-        const counts = {};
-        const labels = {};
+    // ── top 5 publicações ───────────────────────────────────────────────────
+    const processTopPubs = (data, selYear, selMonth) => {
+        const monthNum = fmtMonth(selMonth);
+        const year     = Number(selYear);
+        const counts = {}, labels = {};
 
         data.forEach((entry) => {
-            let count = 0;
+            let n = 0;
             entry.logViews.forEach((log) => {
-                const logDate = new Date(log.createdAt);
-                if (logDate.getFullYear() === normalizedYear && logDate.getMonth() + 1 === selectedMonthNumber) {
-                    count++;
-                }
+                const d = new Date(log.createdAt);
+                if (d.getFullYear() === year && d.getMonth() + 1 === monthNum) n++;
             });
-            if (count > 0) {
-                counts[entry.id] = count;
+            if (n > 0) {
+                counts[entry.id] = n;
                 labels[entry.id] = entry.location?.split("/")[0]?.trim() ?? "—";
             }
         });
 
-        const sorted = Object.entries(counts)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 5);
-
+        const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
         setDataTopPubs(
             sorted.map(([id, value]) => ({
                 value,
                 label: labels[id],
-                frontColor: "#36536e",
+                frontColor: C_TOP,
                 topLabelComponent: () => (
-                    <Text style={{ fontSize: 9, color: "#36536e", fontWeight: "700", marginBottom: 2 }}>{value}</Text>
+                    <Text style={{ fontSize: 9, color: C_TOP, fontWeight: "700", marginBottom: 2 }}>{value}</Text>
                 ),
             }))
         );
     };
 
-    const extractUniqueMonthsAndYears = (data) => {
-        const uniqueMonths = new Set();
-        const uniqueYears = new Set();
-
-        data.forEach((entry) => {
-            entry.logViews.forEach((log) => {
-                const date = new Date(log.createdAt);
-                uniqueMonths.add(String(date.getMonth() + 1).padStart(2, "0"));
-                uniqueYears.add(String(date.getFullYear()));
-            });
+    const extractMonthsYears = (data) => {
+        const ms = new Set(), ys = new Set();
+        data.forEach((e) => e.logViews.forEach((l) => {
+            const d = new Date(l.createdAt);
+            ms.add(String(d.getMonth() + 1).padStart(2, "0"));
+            ys.add(String(d.getFullYear()));
+        }));
+        const months = Array.from(ms).sort().map((m) => {
+            const s = new Intl.DateTimeFormat("pt-BR", { month: "long" }).format(new Date(`2000-${m}-02`));
+            return s.charAt(0).toUpperCase() + s.slice(1);
         });
+        return { month: months, year: Array.from(ys).sort() };
+    };
 
-        const sortedMonths = Array.from(uniqueMonths).sort((a, b) => a - b);
-        const sortedYears = Array.from(uniqueYears).sort((a, b) => a - b);
-
-        const formattedMonths = sortedMonths.map((month) => {
-            const ext = new Intl.DateTimeFormat("pt-BR", { month: "long" }).format(new Date(`2000-${month}-02`));
-            return ext.charAt(0).toUpperCase() + ext.slice(1);
-        });
-
-        return { month: formattedMonths, year: sortedYears };
+    const runAll = (data, year, month, range) => {
+        processData(data, year, month, range);
+        processHourData(data, year, month);
+        processTopPubs(data, year, month);
     };
 
     const prepareData = async () => {
         const result = await executeWithRetry(() => withTimeout(getViewLogs(), 30000), 1);
-        const currentRageDate = getCurrentDateRange();
-        const fallbackMonth = getCurrentExtendedMonth();
-        const fallbackYear = getCurrentYear();
+        const range   = getCurrentDateRange();
+        const fbMonth = getCurrentExtendedMonth();
+        const fbYear  = getCurrentYear();
 
         if (!result.error && Array.isArray(result.data)) {
-            const dataMonthYear = extractUniqueMonthsAndYears(result.data);
-            const months = dataMonthYear.month?.length ? dataMonthYear.month : [fallbackMonth];
-            const years = dataMonthYear.year?.length ? dataMonthYear.year : [fallbackYear];
-
+            const my     = extractMonthsYears(result.data);
+            const months = my.month?.length ? my.month : [fbMonth];
+            const years  = my.year?.length  ? my.year  : [fbYear];
             setMonthOptions(months);
             setYearOptions(years);
-            setSelectRageDate(currentRageDate);
+            setSelectRageDate(range);
             setDataViewLogs(result.data);
-            processData(result.data, currentYear, currentExtendedMonth, currentRageDate);
-            processHourData(result.data, currentYear, currentExtendedMonth);
-            processTopPubs(result.data, currentYear, currentExtendedMonth);
+            runAll(result.data, currentYear, currentExtendedMonth, range);
             return;
         }
-
-        setMonthOptions([fallbackMonth]);
-        setYearOptions([fallbackYear]);
-        setSelectRageDate(currentRageDate);
-        setDataViewLogs([]);
-        processData([], fallbackYear, fallbackMonth, currentRageDate);
-        processHourData([], fallbackYear, fallbackMonth);
-        processTopPubs([], fallbackYear, fallbackMonth);
+        setMonthOptions([fbMonth]); setYearOptions([fbYear]);
+        setSelectRageDate(range); setDataViewLogs([]);
+        runAll([], fbYear, fbMonth, range);
     };
 
-    useFocusEffect(
-        useCallback(() => {
-            setIsLoading(true);
-            prepareData()
-                .catch((error) => {
-                    Toast.show({
-                        type: "error",
-                        text1: "Erro ao carregar gráficos",
-                        text2: error?.message === "ADMIN_CHARTS_TIMEOUT"
-                            ? "Tempo limite da consulta."
-                            : "Falha ao buscar dados.",
-                    });
-                })
-                .finally(() => setIsLoading(false));
-        }, []),
-    );
+    useFocusEffect(useCallback(() => {
+        setIsLoading(true);
+        prepareData()
+            .catch((e) => Toast.show({
+                type: "error",
+                text1: "Erro ao carregar gráficos",
+                text2: e?.message === "ADMIN_CHARTS_TIMEOUT" ? "Tempo limite." : "Falha ao buscar dados.",
+            }))
+            .finally(() => setIsLoading(false));
+    }, []));
 
-    const handleSelectMonth = (dataMonth) => {
-        setCurrentExtendedMonth(dataMonth);
-        processData(dataViewLogs, currentYear, dataMonth, selectRageDate);
-        processHourData(dataViewLogs, currentYear, dataMonth);
-        processTopPubs(dataViewLogs, currentYear, dataMonth);
-    };
+    const onMonth = (m) => { setCurrentExtendedMonth(m); runAll(dataViewLogs, currentYear, m, selectRageDate); };
+    const onYear  = (y) => { setCurrentYear(y);           runAll(dataViewLogs, y, currentExtendedMonth, selectRageDate); };
+    const onRange = (r) => { setSelectRageDate(r);         processData(dataViewLogs, currentYear, currentExtendedMonth, r); };
 
-    const handleSelectYear = (dataYear) => {
-        setCurrentYear(dataYear);
-        processData(dataViewLogs, dataYear, currentExtendedMonth, selectRageDate);
-        processHourData(dataViewLogs, dataYear, currentExtendedMonth);
-        processTopPubs(dataViewLogs, dataYear, currentExtendedMonth);
-    };
-
-    const handleSelectRangeDate = (dataRangeDate) => {
-        setSelectRageDate(dataRangeDate);
-        processData(dataViewLogs, currentYear, currentExtendedMonth, dataRangeDate);
-    };
-
-    const handleRedirectPublicationViewLogsList = () => {
-        navigation.navigate(dataRoutes.admin.publicationViewLogsList, {
-            dataViewLogsList: dataViewLogs,
-        });
-    };
-
-    const prevMonthInfo = getPrevMonth(currentExtendedMonth, currentYear);
-    const prevMonthName = getMonthName(prevMonthInfo.month);
-    const peakHour = dataHourChart.length
-        ? dataHourChart.reduce((max, d, i) => (d.value > max.value ? { value: d.value, hour: i } : max), { value: -1, hour: 0 })
+    const prevInfo    = prevMonth(currentExtendedMonth, currentYear);
+    const prevName    = monthName(prevInfo.month);
+    const totCurr     = dataPrevChart[1]?.total ?? 0;
+    const totPrev     = dataPrevChart[0]?.total ?? 0;
+    const diff        = totCurr - totPrev;
+    const peakHour    = dataHourChart.length
+        ? dataHourChart.reduce((mx, d, i) => d.value > mx.value ? { value: d.value, hour: i } : mx, { value: -1, hour: 0 })
         : null;
 
-    if (isLoading) {
-        return (
-            <Container>
-                <AdminChartCardSkeleton />
-            </Container>
-        );
-    }
+    if (isLoading) return <Container><AdminChartCardSkeleton /></Container>;
 
     return (
         <Container>
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
 
-                {/* 1. Visualizações Diárias */}
-                <CardChart title="Visualizações Diárias das Publicações">
+                {/* ── 1. Visualizações Diárias (barras agrupadas) ── */}
+                <CardChart title="Visualizações Diárias">
                     <ContainerDropdownSelects>
                         <ContentInputSelect width="38%">
-                            <SelectComponent initialTitle={currentExtendedMonth} options={monthOptions} action={handleSelectMonth} />
+                            <SelectComponent initialTitle={currentExtendedMonth} options={monthOptions} action={onMonth} />
                         </ContentInputSelect>
                         <ContentInputSelect width="30%">
-                            <SelectComponent initialTitle={currentYear} options={yearOptions} action={handleSelectYear} />
+                            <SelectComponent initialTitle={currentYear} options={yearOptions} action={onYear} />
                         </ContentInputSelect>
                         <ContentInputSelect width="30%">
-                            <SelectComponent initialTitle={selectRageDate} options={["01-15", "16-31"]} action={handleSelectRangeDate} />
+                            <SelectComponent initialTitle={selectRageDate} options={["01-15","16-31"]} action={onRange} />
                         </ContentInputSelect>
                     </ContainerDropdownSelects>
 
-                    {(() => {
-                        const totalViews = (dataChart ?? []).reduce((sum, d) => sum + (d.value ?? 0), 0);
-                        return (
-                            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6, marginTop: 8, paddingHorizontal: 8 }}>
-                                <Text style={{ fontSize: 13, color: "#36536e", fontWeight: "700" }}>
-                                    Total: <Text style={{ color: "#f55b1f" }}>{totalViews}</Text> visualizações
-                                </Text>
-                            </View>
-                        );
-                    })()}
-
-                    {/* Legend */}
-                    <View style={{ flexDirection: "row", gap: 16, paddingHorizontal: 8, marginBottom: 6 }}>
-                        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                            <View style={{ width: 12, height: 3, backgroundColor: "#f55b1f", borderRadius: 2 }} />
-                            <Text style={{ fontSize: 11, color: "#8fa3b2" }}>{currentExtendedMonth}</Text>
+                    {/* legenda */}
+                    <View style={{ flexDirection: "row", gap: 16, paddingHorizontal: 8, marginTop: 10, marginBottom: 6 }}>
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+                            <View style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: C_CURRENT }} />
+                            <Text style={{ fontSize: 11, color: C_AXIS }}>{currentExtendedMonth}</Text>
                         </View>
-                        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                            <View style={{ width: 12, height: 3, backgroundColor: "#36536e", borderRadius: 2 }} />
-                            <Text style={{ fontSize: 11, color: "#8fa3b2" }}>{prevMonthName}</Text>
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+                            <View style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: C_PREV }} />
+                            <Text style={{ fontSize: 11, color: C_AXIS }}>{prevName}</Text>
+                        </View>
+                        <View style={{ flex: 1, alignItems: "flex-end" }}>
+                            <Text style={{ fontSize: 12, color: C_TITLE, fontWeight: "700" }}>
+                                Total: <Text style={{ color: C_ACCENT }}>{totCurr}</Text>
+                            </Text>
                         </View>
                     </View>
 
-                    <LineChart
+                    <BarChart
                         data={dataChart}
-                        data2={dataPrevChart}
-                        color="#f55b1f"
-                        color2="#36536e"
-                        thickness={2.5}
-                        thickness2={1.5}
-                        curved
-                        isAnimated
-                        animationDuration={600}
-                        areaChart
-                        startFillColor="rgba(245,91,31,0.2)"
-                        endFillColor="rgba(245,91,31,0.02)"
-                        startFillColor2="rgba(54,83,110,0.1)"
-                        endFillColor2="rgba(54,83,110,0.01)"
-                        startOpacity={1}
-                        endOpacity={0.1}
-                        startOpacity2={0.5}
-                        endOpacity2={0.1}
-                        hideDataPoints={false}
-                        dataPointsColor="#f55b1f"
-                        dataPointsColor2="#36536e"
-                        dataPointsRadius={4}
-                        dataPointsRadius2={3}
-                        focusedDataPointColor="#c03800"
-                        focusedDataPointRadius={6}
-                        xAxisLabelTextStyle={{ color: "#8fa3b2", fontSize: 9 }}
-                        yAxisTextStyle={{ color: "#8fa3b2", fontSize: 10 }}
-                        yAxisColor="#e8eef4"
-                        xAxisColor="#e8eef4"
-                        rulesColor="#f0f5fb"
+                        barWidth={7}
+                        barBorderRadius={3}
+                        spacing={4}
+                        hideRules={false}
+                        rulesColor={C_RULES}
                         rulesType="solid"
-                        showVerticalLines
-                        verticalLinesColor="#f0f5fb"
-                        initialSpacing={8}
-                        endSpacing={8}
-                        spacing={18}
-                        height={200}
+                        xAxisLabelTextStyle={{ color: C_AXIS, fontSize: 8 }}
+                        yAxisTextStyle={{ color: C_AXIS, fontSize: 10 }}
+                        yAxisColor={C_RULES}
+                        xAxisColor={C_RULES}
                         noOfSections={5}
-                        textShiftY={-6}
-                        textShiftX={-4}
-                        textFontSize={11}
-                        textColor="#36536e"
-                        showTextOnFocus
-                        focusedDataPointLabelComponent={(item) => (
-                            <View style={{ backgroundColor: "#36536e", paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6, marginBottom: 4 }}>
-                                <Text style={{ color: "#fff", fontSize: 11, fontWeight: "700" }}>{item.value}</Text>
-                            </View>
-                        )}
+                        height={200}
+                        isAnimated
+                        animationDuration={500}
+                        initialSpacing={6}
+                        endSpacing={6}
+                        showGradient
+                        gradientColor="#dbeafe"
                     />
 
-                    <CharButton style={[BoxShadowIos, { alignSelf: "stretch", margin: 8, borderRadius: 8 }]} onPress={handleRedirectPublicationViewLogsList}>
+                    <CharButton style={[BoxShadowIos, { alignSelf: "stretch", margin: 8, borderRadius: 8 }]}
+                        onPress={() => navigation.navigate(dataRoutes.admin.publicationViewLogsList, { dataViewLogsList: dataViewLogs })}>
                         <TitleButton>Visualizações por Publicação</TitleButton>
                     </CharButton>
                 </CardChart>
 
-                {/* 2. Horário de Pico */}
+                {/* ── 2. Horário de Pico ── */}
                 <CardChart title="Horário de Pico">
                     {peakHour && peakHour.value > 0 && (
-                        <View style={{ backgroundColor: "rgba(245,91,31,0.12)", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6, marginBottom: 8, marginTop: 4 }}>
-                            <Text style={{ fontSize: 13, color: "#36536e", fontWeight: "700", textAlign: "center" }}>
-                                Pico às <Text style={{ color: "#f55b1f" }}>{String(peakHour.hour).padStart(2,"0")}h</Text> com <Text style={{ color: "#f55b1f" }}>{peakHour.value}</Text> visualizações
+                        <View style={{ backgroundColor: "#fff7ed", borderRadius: 8, paddingHorizontal: 14,
+                            paddingVertical: 8, marginVertical: 8, borderLeftWidth: 3, borderLeftColor: C_ACCENT }}>
+                            <Text style={{ fontSize: 13, color: C_TITLE, fontWeight: "700" }}>
+                                Pico às <Text style={{ color: C_ACCENT }}>{String(peakHour.hour).padStart(2,"0")}h</Text>
+                                {" "}com <Text style={{ color: C_ACCENT }}>{peakHour.value}</Text> visualizações
                             </Text>
                         </View>
                     )}
+                    <SectionLabel>{currentExtendedMonth} {currentYear}</SectionLabel>
                     <BarChart
                         data={dataHourChart}
-                        barWidth={10}
-                        spacing={5}
-                        roundedTop
-                        hideRules
-                        xAxisLabelTextStyle={{ color: "#8fa3b2", fontSize: 9 }}
-                        yAxisTextStyle={{ color: "#8fa3b2", fontSize: 10 }}
-                        yAxisColor="#e8eef4"
-                        xAxisColor="#e8eef4"
+                        barWidth={9}
+                        barBorderRadius={3}
+                        spacing={4}
+                        hideRules={false}
+                        rulesColor={C_RULES}
+                        xAxisLabelTextStyle={{ color: C_AXIS, fontSize: 9 }}
+                        yAxisTextStyle={{ color: C_AXIS, fontSize: 10 }}
+                        yAxisColor={C_RULES}
+                        xAxisColor={C_RULES}
                         noOfSections={4}
-                        height={150}
+                        height={160}
                         isAnimated
-                        animationDuration={600}
+                        animationDuration={500}
                         initialSpacing={4}
                         endSpacing={4}
                     />
                 </CardChart>
 
-                {/* 3. Top 5 Publicações */}
+                {/* ── 3. Top 5 Publicações ── */}
                 {dataTopPubs.length > 0 && (
                     <CardChart title="Top 5 Publicações">
-                        <SectionTitle>{currentExtendedMonth} {currentYear}</SectionTitle>
+                        <SectionLabel>{currentExtendedMonth} {currentYear}</SectionLabel>
                         <BarChart
                             data={dataTopPubs}
-                            barWidth={36}
-                            spacing={18}
-                            roundedTop
-                            hideRules
-                            xAxisLabelTextStyle={{ color: "#8fa3b2", fontSize: 10 }}
-                            yAxisTextStyle={{ color: "#8fa3b2", fontSize: 10 }}
-                            yAxisColor="#e8eef4"
-                            xAxisColor="#e8eef4"
+                            barWidth={38}
+                            barBorderRadius={4}
+                            spacing={16}
+                            hideRules={false}
+                            rulesColor={C_RULES}
+                            xAxisLabelTextStyle={{ color: C_AXIS, fontSize: 10 }}
+                            yAxisTextStyle={{ color: C_AXIS, fontSize: 10 }}
+                            yAxisColor={C_RULES}
+                            xAxisColor={C_RULES}
                             noOfSections={4}
                             height={160}
                             isAnimated
-                            animationDuration={600}
+                            animationDuration={500}
                             initialSpacing={12}
                             endSpacing={12}
                         />
                     </CardChart>
                 )}
 
-                {/* 4. Comparativo Mês Anterior — já está no gráfico principal como linha2 */}
-                {/* Resumo comparativo em números */}
-                {(() => {
-                    const totalAtual = (dataChart ?? []).reduce((s, d) => s + d.value, 0);
-                    const totalAnterior = (dataPrevChart ?? []).reduce((s, d) => s + d.value, 0);
-                    const diff = totalAtual - totalAnterior;
-                    if (totalAnterior === 0 && totalAtual === 0) return null;
-                    return (
-                        <CardChart title="Comparativo com Mês Anterior">
-                            <View style={{ flexDirection: "row", justifyContent: "space-around", paddingVertical: 12, width: "100%" }}>
-                                <View style={{ alignItems: "center" }}>
-                                    <Text style={{ fontSize: 11, color: "#8fa3b2" }}>{prevMonthName}</Text>
-                                    <Text style={{ fontSize: 22, fontWeight: "700", color: "#36536e" }}>{totalAnterior}</Text>
-                                    <Text style={{ fontSize: 10, color: "#8fa3b2" }}>views</Text>
-                                </View>
-                                <View style={{ alignItems: "center", justifyContent: "center" }}>
-                                    <Text style={{ fontSize: 20, fontWeight: "700", color: diff >= 0 ? "#4BB543" : "#f47575" }}>
-                                        {diff >= 0 ? "▲" : "▼"} {Math.abs(diff)}
-                                    </Text>
-                                    <Text style={{ fontSize: 10, color: diff >= 0 ? "#4BB543" : "#f47575" }}>
-                                        {totalAnterior > 0 ? `${Math.round((diff / totalAnterior) * 100)}%` : "—"}
-                                    </Text>
-                                </View>
-                                <View style={{ alignItems: "center" }}>
-                                    <Text style={{ fontSize: 11, color: "#8fa3b2" }}>{currentExtendedMonth}</Text>
-                                    <Text style={{ fontSize: 22, fontWeight: "700", color: "#f55b1f" }}>{totalAtual}</Text>
-                                    <Text style={{ fontSize: 10, color: "#8fa3b2" }}>views</Text>
-                                </View>
+                {/* ── 4. Comparativo Mês Anterior ── */}
+                {(totCurr > 0 || totPrev > 0) && (
+                    <CardChart title="Comparativo com Mês Anterior">
+                        <View style={{ flexDirection: "row", justifyContent: "space-around",
+                            paddingVertical: 16, width: "100%" }}>
+                            <StatRow label={prevName} value={totPrev} color={C_PREV} />
+                            <View style={{ alignItems: "center", justifyContent: "center" }}>
+                                <Text style={{ fontSize: 22, fontWeight: "800",
+                                    color: diff >= 0 ? "#16a34a" : "#dc2626" }}>
+                                    {diff >= 0 ? "▲" : "▼"} {Math.abs(diff)}
+                                </Text>
+                                <Text style={{ fontSize: 11, fontWeight: "600",
+                                    color: diff >= 0 ? "#16a34a" : "#dc2626" }}>
+                                    {totPrev > 0 ? `${Math.round((diff / totPrev) * 100)}%` : "—"}
+                                </Text>
                             </View>
-                        </CardChart>
-                    );
-                })()}
+                            <StatRow label={currentExtendedMonth} value={totCurr} color={C_CURRENT} />
+                        </View>
+                    </CardChart>
+                )}
 
             </ScrollView>
         </Container>
