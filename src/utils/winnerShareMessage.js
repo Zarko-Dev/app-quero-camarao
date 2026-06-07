@@ -54,7 +54,30 @@ const buildWinnersShareMessage = (winners = [], appLink = "") => {
     return `Quero Camarao\n\n${title} do Sorteio\n\n${drawBlocks}${linkBlock}`;
 };
 
+const buildCongratulatoryMessage = (winner, draw) => {
+    const name = winner?.name ?? "Participante";
+    const drawName = draw?.name ?? draw?.code ?? "Sorteio";
+    const theme = draw?.theme ?? "";
+    const date = draw?.createdAt?.toDate
+        ? draw.createdAt.toDate()
+        : draw?.createdAt instanceof Date
+        ? draw.createdAt
+        : new Date();
+    const formatted = date.toLocaleString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+    });
+    const themeBlock = theme ? `, ${theme}` : "";
+    return encodeURIComponent(
+        `Parabéns ${name}, por ganhar o sorteio ${drawName}${themeBlock}, realizado no dia ${formatted}. Este sorteio tem oferecimento de QUERO CAMARÃO.`
+    );
+};
+
 module.exports = {
     buildSingleWinnerShareMessage,
     buildWinnersShareMessage,
+    buildCongratulatoryMessage,
 };

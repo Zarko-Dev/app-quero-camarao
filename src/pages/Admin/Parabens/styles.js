@@ -143,3 +143,19 @@ export const WinnerBadgeText = styled(Text)`
     font-weight: 700;
     color: #e06020;
 `;
+
+export const ShareWinnerButton = styled.TouchableOpacity`
+    background-color: #25d366;
+    border-radius: 6px;
+    padding: 4px 10px;
+    margin-left: 6px;
+    flex-direction: row;
+    align-items: center;
+`;
+
+export const ShareWinnerButtonText = styled(Text)`
+    font-size: ${({ theme }) => theme.size.fontSize(10)};
+    font-weight: 700;
+    color: #fff;
+    margin-left: 3px;
+`;

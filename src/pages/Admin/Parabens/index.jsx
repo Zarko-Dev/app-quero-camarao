@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, Linking, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
 
@@ -10,6 +10,8 @@ import {
 } from "../../../controllers/DrawPrizes/live";
 import { getDataUserByIds } from "../../../controllers/User/authentication";
 import { SearchBar } from "../../../components/SearchBar";
+
+const { buildCongratulatoryMessage } = require("../../../utils/winnerShareMessage");
 
 import {
     CheckBox,
@@ -30,6 +32,8 @@ import {
     SaveButton,
     SaveButtonText,
     SearchWrap,
+    ShareWinnerButton,
+    ShareWinnerButtonText,
     WinnerBadge,
     WinnerBadgeText,
 } from "./styles";
@@ -83,6 +87,18 @@ const DrawSection = ({ draw, onSaved }) => {
             else next.add(uid);
             return next;
         });
+    };
+
+    const shareWinner = (winner, currentDraw) => {
+        const phone = String(winner?.phone ?? "").replace(/\D/g, "");
+        if (!phone) {
+            Toast.show({ type: "error", text1: "Vencedor sem telefone cadastrado" });
+            return;
+        }
+        const msg = buildCongratulatoryMessage(winner, currentDraw);
+        Linking.openURL(`whatsapp://send?phone=55${phone}&text=${msg}`).catch(() =>
+            Toast.show({ type: "error", text1: "Não foi possível abrir o WhatsApp" })
+        );
     };
 
     const handleSave = async () => {
@@ -170,6 +186,12 @@ const DrawSection = ({ draw, onSaved }) => {
                                                 <WinnerBadge>
                                                     <WinnerBadgeText>Vencedor</WinnerBadgeText>
                                                 </WinnerBadge>
+                                            )}
+                                            {isWinner && (
+                                                <ShareWinnerButton onPress={() => shareWinner(p, draw)} activeOpacity={0.8}>
+                                                    <Feather name="send" size={11} color="#fff" />
+                                                    <ShareWinnerButtonText>WA</ShareWinnerButtonText>
+                                                </ShareWinnerButton>
                                             )}
                                         </ParticipantItem>
                                     );
