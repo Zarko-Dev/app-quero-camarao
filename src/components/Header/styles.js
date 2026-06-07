@@ -53,5 +53,5 @@ export const ChatButton = styled.TouchableOpacity`
 
 export const ChatBadge = styled(Badge)`
     margin-bottom: ${({ theme }) => theme.size.dimentionsSize(3.5)};
-    background-color: ${({ theme }) => theme.colors.primary};
+    background-color: ${({ theme }) => theme.colors.green};
 `;
