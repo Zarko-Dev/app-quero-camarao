@@ -32,6 +32,7 @@ export const dataRoutes = {
     drawerPrizeLiveClient: "Drawer Prize Live Client",
     salesShrimps: "Sales Shrimps",
     salesList: "Sales List",
+    publicationChat: "Publication Chat",
     admin: {
         navigation: "Admin:Navigation",
         navigationTab: "Admin:Tab",

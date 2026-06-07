@@ -2,7 +2,7 @@ import { FontAwesome, Feather, MaterialCommunityIcons } from "@expo/vector-icons
 import { useNavigation } from "@react-navigation/native";
 import { useDispatch, useSelector } from "react-redux";
 import { memo, useMemo, useState } from "react";
-import { ActivityIndicator, Dimensions, Platform, Share, View } from "react-native";
+import { ActivityIndicator, Dimensions, Platform, Share, Text, TouchableOpacity, View } from "react-native";
 import { v4 } from "uuid";
 
 import { dataRoutes } from "../../routes/dataRoutes";
@@ -58,7 +58,7 @@ export const CardPublicationShrimp = memo(
         const dispatch = useDispatch();
 
         const navigation = useNavigation();
-        const { isAuthenticated } = useSelector((state) => state.login);
+        const { isAuthenticated, dataUser } = useSelector((state) => state.login);
         const { configData } = useSelector((state) => state.configSystem);
 
         const [isLoadingTalkProductor, setIsLoadingTalkProductor] =
@@ -311,16 +311,44 @@ export const CardPublicationShrimp = memo(
                             </GrammageContainer>
                         </ContentDataShrimp>
                     </ContainerInfo>
-                    <ButtonBuy onPress={handleRedirectPage}>
-                        {!isLoadingTalkProductor ? (
-                            <>
-                                <FontAwesome name="whatsapp" size={24} color="white" />
-                                <ButtonBuyText>Falar com o Produtor</ButtonBuyText>
-                            </>
-                        ) : (
-                            <ActivityIndicator animating size={20} color="white" />
+                    <View style={{ flexDirection: "row", alignItems: "center" }}>
+                        <ButtonBuy onPress={handleRedirectPage} style={{ flex: 1 }}>
+                            {!isLoadingTalkProductor ? (
+                                <>
+                                    <FontAwesome name="whatsapp" size={24} color="white" />
+                                    <ButtonBuyText>Falar com o Produtor</ButtonBuyText>
+                                </>
+                            ) : (
+                                <ActivityIndicator animating size={20} color="white" />
+                            )}
+                        </ButtonBuy>
+                        {dataUser?.email !== item.userId && (
+                            <TouchableOpacity
+                                onPress={() =>
+                                    navigation.navigate(dataRoutes.publicationChat, {
+                                        publication: item,
+                                        sellerId: item.userId,
+                                        sellerName: item.sellerName ?? "Produtor",
+                                    })
+                                }
+                                activeOpacity={0.8}
+                                style={{
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    backgroundColor: "#36536e",
+                                    borderRadius: 8,
+                                    paddingHorizontal: 10,
+                                    paddingVertical: 6,
+                                    marginLeft: 6,
+                                }}
+                            >
+                                <Feather name="message-square" size={14} color="#fff" />
+                                <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700", marginLeft: 4 }}>
+                                    Conversar
+                                </Text>
+                            </TouchableOpacity>
                         )}
-                    </ButtonBuy>
+                    </View>
                 </Container>
                 <RenderImage />
                 <ModalShrimpImages

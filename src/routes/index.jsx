@@ -41,6 +41,7 @@ import { SalesList } from "../pages/SalesList";
 import { SplashScreen } from "../pages/SplashScreen";
 import { DrawPrizeNewWinnerResult } from "../pages/Admin/DrawPrizeNewWinnerResult";
 import { DrawPrizeWinnersResult } from "../pages/Admin/DrawPrizeWinnersResult";
+import { PublicationChat } from "../pages/PublicationChat";
 
 const { Navigator, Screen } = createNativeStackNavigator();
 
@@ -334,6 +335,11 @@ export const Routes = () => (
                 options={{
                     headerShown: false,
                 }}
+            />
+            <Screen
+                name={dataRoutes.publicationChat}
+                component={PublicationChat}
+                options={{ headerShown: false }}
             />
         </Navigator>
     </NavigationContainer>
