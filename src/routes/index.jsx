@@ -52,6 +52,7 @@ export const Routes = () => (
             initialRouteName={dataRoutes.splash}
             screenOptions={{
                 headerTintColor: "white",
+                headerBackTitle: "",
             }}
         >
             <Screen
