@@ -1,6 +1,7 @@
 /* eslint-disable operator-linebreak */
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useState } from "react";
+import { View, Text } from "react-native";
 import { LineChart } from "react-native-gifted-charts";
 import Toast from "react-native-toast-message";
 
@@ -230,30 +231,50 @@ export const Charts = ({ navigation }) => {
                             />
                         </ContentInputSelect>
                     </ContainerDropdownSelects>
+                    {(() => {
+                        const totalViews = (dataChart ?? []).reduce((sum, d) => sum + (d.value ?? 0), 0);
+                        return (
+                            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10, marginTop: 4 }}>
+                                <Text style={{ fontSize: 13, color: "#36536e", fontWeight: "700" }}>
+                                    Total: <Text style={{ color: "#f55b1f" }}>{totalViews}</Text> visualizações
+                                </Text>
+                            </View>
+                        );
+                    })()}
                     <LineChart
                         data={dataChart}
-                        color={theme.colors.primary}
-                        thickness={3}
+                        color="#f55b1f"
+                        thickness={2.5}
                         curved
                         isAnimated
                         animationDuration={600}
+                        areaChart
+                        startFillColor="rgba(245,91,31,0.25)"
+                        endFillColor="rgba(245,91,31,0.02)"
+                        startOpacity={1}
+                        endOpacity={0.1}
                         hideDataPoints={false}
-                        dataPointsColor={theme.colors.primary}
+                        dataPointsColor="#f55b1f"
                         dataPointsRadius={4}
-                        xAxisLabelTextStyle={{ color: "#8fa3b2", fontSize: 10 }}
+                        focusedDataPointColor="#c03800"
+                        focusedDataPointRadius={6}
+                        xAxisLabelTextStyle={{ color: "#8fa3b2", fontSize: 9 }}
                         yAxisTextStyle={{ color: "#8fa3b2", fontSize: 10 }}
-                        yAxisColor="#e0e0e0"
-                        xAxisColor="#e0e0e0"
-                        rulesColor="#f0f0f0"
+                        yAxisColor="#e8eef4"
+                        xAxisColor="#e8eef4"
+                        rulesColor="#f0f5fb"
                         rulesType="solid"
+                        showVerticalLines
+                        verticalLinesColor="#f0f5fb"
                         initialSpacing={8}
                         endSpacing={8}
                         spacing={18}
-                        height={180}
-                        noOfSections={4}
+                        height={200}
+                        noOfSections={5}
                         textShiftY={-6}
                         textShiftX={-4}
-                        textFontSize={10}
+                        textFontSize={11}
+                        textColor="#36536e"
                         showTextOnFocus
                     />
                     <CharButton
