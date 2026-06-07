@@ -42,6 +42,7 @@ import { SplashScreen } from "../pages/SplashScreen";
 import { DrawPrizeNewWinnerResult } from "../pages/Admin/DrawPrizeNewWinnerResult";
 import { DrawPrizeWinnersResult } from "../pages/Admin/DrawPrizeWinnersResult";
 import { PublicationChat } from "../pages/PublicationChat";
+import { MyChats } from "../pages/MyChats";
 
 const { Navigator, Screen } = createNativeStackNavigator();
 
@@ -339,6 +340,11 @@ export const Routes = () => (
             <Screen
                 name={dataRoutes.publicationChat}
                 component={PublicationChat}
+                options={{ headerShown: false }}
+            />
+            <Screen
+                name={dataRoutes.myChats}
+                component={MyChats}
                 options={{ headerShown: false }}
             />
         </Navigator>
