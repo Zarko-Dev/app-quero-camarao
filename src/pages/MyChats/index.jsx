@@ -59,7 +59,10 @@ export const MyChats = ({ navigation }) => {
     const safeId = myId?.replace(/[@.]/g, "_") ?? "";
 
     useEffect(() => {
-        if (!myId) return;
+        if (!myId) {
+            setLoading(false);
+            return;
+        }
         const unsub = subscribeMyChats(myId, (data) => {
             setChats(data);
             setLoading(false);
