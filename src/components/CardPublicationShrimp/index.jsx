@@ -311,18 +311,18 @@ export const CardPublicationShrimp = memo(
                             </GrammageContainer>
                         </ContentDataShrimp>
                     </ContainerInfo>
-                    <View style={{ flexDirection: "row", alignItems: "center" }}>
-                        <ButtonBuy
-                            onPress={handleRedirectPage}
-                            style={{ width: 52, flex: undefined, paddingHorizontal: 0, justifyContent: "center", alignItems: "center" }}
-                        >
-                            {!isLoadingTalkProductor ? (
-                                <FontAwesome name="whatsapp" size={26} color="white" />
-                            ) : (
-                                <ActivityIndicator animating size={20} color="white" />
-                            )}
-                        </ButtonBuy>
-                        {dataUser?.email !== item.userId && (
+                    {dataUser?.email !== item.userId && (
+                        <View style={{ flexDirection: "row", alignItems: "center" }}>
+                            <ButtonBuy
+                                onPress={handleRedirectPage}
+                                style={{ width: 52, flex: undefined, paddingHorizontal: 0, justifyContent: "center", alignItems: "center" }}
+                            >
+                                {!isLoadingTalkProductor ? (
+                                    <FontAwesome name="whatsapp" size={26} color="white" />
+                                ) : (
+                                    <ActivityIndicator animating size={20} color="white" />
+                                )}
+                            </ButtonBuy>
                             <TouchableOpacity
                                 onPress={() =>
                                     navigation.navigate(dataRoutes.publicationChat, {
@@ -350,8 +350,8 @@ export const CardPublicationShrimp = memo(
                                     CHAT
                                 </Text>
                             </TouchableOpacity>
-                        )}
-                    </View>
+                        </View>
+                    )}
                 </Container>
                 <RenderImage />
                 <ModalShrimpImages
