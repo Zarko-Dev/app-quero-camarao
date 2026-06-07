@@ -57,7 +57,7 @@ export const ContentAlertIndicator = styled.View`
     align-items: center;
     flex-direction: row;
 
-    padding: 4px 12px;
+    padding: 5px 12px;
     border-radius: 20px;
 
     background-color: ${({ color, theme }) => color || theme.colors.white};
@@ -69,7 +69,7 @@ export const TextAlert = styled(Text)`
 
     margin-left: ${({ theme }) => theme.size.dimentionsSize(0.5)};
 
-    color: ${({ theme }) => theme.colors.white};
+    color: ${({ textColor }) => textColor || "#fff"};
 `;
 
 export const Body = styled.View`
