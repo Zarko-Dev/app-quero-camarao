@@ -312,12 +312,12 @@ export const CardPublicationShrimp = memo(
                         </ContentDataShrimp>
                     </ContainerInfo>
                     <View style={{ flexDirection: "row", alignItems: "center" }}>
-                        <ButtonBuy onPress={handleRedirectPage} style={{ flex: 1 }}>
+                        <ButtonBuy
+                            onPress={handleRedirectPage}
+                            style={{ width: 52, flex: undefined, paddingHorizontal: 0, justifyContent: "center", alignItems: "center" }}
+                        >
                             {!isLoadingTalkProductor ? (
-                                <>
-                                    <FontAwesome name="whatsapp" size={24} color="white" />
-                                    <ButtonBuyText>Falar com o Produtor</ButtonBuyText>
-                                </>
+                                <FontAwesome name="whatsapp" size={26} color="white" />
                             ) : (
                                 <ActivityIndicator animating size={20} color="white" />
                             )}
@@ -333,18 +333,21 @@ export const CardPublicationShrimp = memo(
                                 }
                                 activeOpacity={0.8}
                                 style={{
-                                    flexDirection: "row",
-                                    alignItems: "center",
+                                    flex: 1,
+                                    height: 44,
                                     backgroundColor: "#36536e",
                                     borderRadius: 8,
                                     paddingHorizontal: 10,
-                                    paddingVertical: 6,
-                                    marginLeft: 6,
+                                    marginLeft: 8,
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    gap: 6,
                                 }}
                             >
-                                <Feather name="message-square" size={14} color="#fff" />
-                                <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700", marginLeft: 4 }}>
-                                    Conversar
+                                <Feather name="message-circle" size={16} color="#fff" />
+                                <Text style={{ color: "#fff", fontSize: 13, fontWeight: "700" }}>
+                                    CHAT
                                 </Text>
                             </TouchableOpacity>
                         )}
