@@ -33,6 +33,7 @@ export const dataRoutes = {
     salesShrimps: "Sales Shrimps",
     salesList: "Sales List",
     publicationChat: "Publication Chat",
+    myChats: "My Chats",
     admin: {
         navigation: "Admin:Navigation",
         navigationTab: "Admin:Tab",
