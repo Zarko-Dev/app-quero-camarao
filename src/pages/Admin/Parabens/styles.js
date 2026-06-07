@@ -70,7 +70,7 @@ export const ParticipantItem = styled.TouchableOpacity`
     border-top-width: 1px;
     border-top-color: #f0f0f0;
     background-color: ${({ selected }) => (selected ? "#fff8f5" : "#fff")};
-    opacity: ${({ isWinner }) => (isWinner ? 0.45 : 1)};
+    opacity: ${({ isWinner }) => (isWinner ? 0.65 : 1)};
 `;
 
 export const ParticipantName = styled(Text)`
