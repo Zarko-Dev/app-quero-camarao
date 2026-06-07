@@ -136,7 +136,7 @@ export const CardPublicationShrimp = memo(
 
                     SendNotifications(
                         [notificationToken],
-                        "?? Sua publicação teve uma visualização!",
+                        "👀 Sua publicação teve uma visualização!",
                         `${userNameView} Visualizou sua publicação!`,
                     );
                 }
