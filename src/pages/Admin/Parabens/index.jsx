@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import { ActivityIndicator, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
@@ -9,6 +9,7 @@ import {
     saveIndicatedParticipants,
 } from "../../../controllers/DrawPrizes/live";
 import { getDataUserByIds } from "../../../controllers/User/authentication";
+import { SearchBar } from "../../../components/SearchBar";
 
 import {
     CheckBox,
@@ -28,7 +29,20 @@ import {
     ParticipantName,
     SaveButton,
     SaveButtonText,
+    SearchWrap,
+    WinnerBadge,
+    WinnerBadgeText,
 } from "./styles";
+
+const filterParticipantsByName = (participants, query) => {
+    const trimmed = query.trim();
+    if (!trimmed) return participants;
+    const lower = trimmed.toLowerCase();
+    return participants.filter((p) => {
+        const label = (p.name || p.displayName || "").toLowerCase();
+        return label.includes(lower);
+    });
+};
 
 const DrawSection = ({ draw, onSaved }) => {
     const [expanded, setExpanded] = useState(true);
@@ -36,6 +50,12 @@ const DrawSection = ({ draw, onSaved }) => {
     const [selected, setSelected] = useState(new Set(draw.indicatedParticipants ?? []));
     const [loadingParticipants, setLoadingParticipants] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
+
+    const visibleParticipants = useMemo(
+        () => filterParticipantsByName(participants, searchQuery),
+        [participants, searchQuery],
+    );
 
     useFocusEffect(
         useCallback(() => {
@@ -80,7 +100,15 @@ const DrawSection = ({ draw, onSaved }) => {
 
     return (
         <DrawCard>
-            <DrawHeader onPress={() => setExpanded((v) => !v)} activeOpacity={0.7}>
+            <DrawHeader
+                onPress={() => {
+                    setExpanded((v) => {
+                        if (v) setSearchQuery("");
+                        return !v;
+                    });
+                }}
+                activeOpacity={0.7}
+            >
                 <DrawTitle numberOfLines={1}>{draw.name || draw.code}</DrawTitle>
                 <DrawBadge>
                     <DrawBadgeText>{draw.participants?.length ?? 0} part.</DrawBadgeText>
@@ -102,32 +130,52 @@ const DrawSection = ({ draw, onSaved }) => {
                     ) : participants.length === 0 ? (
                         <EmptyText>Nenhum participante neste sorteio</EmptyText>
                     ) : (
-                        participants.map((p) => {
-                            const uid = p.uid || p.email || p.cpf;
-                            const isSelected = selected.has(uid);
-                            return (
-                                <ParticipantItem
-                                    key={uid}
-                                    selected={isSelected}
-                                    onPress={() => toggleParticipant(uid)}
-                                    activeOpacity={0.7}
-                                >
-                                    <CheckBox selected={isSelected}>
-                                        {isSelected && (
-                                            <Feather name="check" size={13} color="#fff" />
-                                        )}
-                                    </CheckBox>
-                                    <View style={{ flex: 1 }}>
-                                        <ParticipantName numberOfLines={1}>
-                                            {p.name || p.displayName || "—"}
-                                        </ParticipantName>
-                                        <ParticipantEmail numberOfLines={1}>
-                                            {p.email}
-                                        </ParticipantEmail>
-                                    </View>
-                                </ParticipantItem>
-                            );
-                        })
+                        <>
+                            <SearchWrap>
+                                <SearchBar
+                                    searchText={searchQuery}
+                                    onChange={setSearchQuery}
+                                    placeholder="Buscar participante..."
+                                />
+                            </SearchWrap>
+                            {visibleParticipants.length === 0 && searchQuery.trim() ? (
+                                <EmptyText>Nenhum resultado para "{searchQuery}"</EmptyText>
+                            ) : (
+                                visibleParticipants.map((p) => {
+                                    const uid = p.uid || p.email || p.cpf;
+                                    const isSelected = selected.has(uid);
+                                    const isWinner = (draw.winners ?? []).includes(uid);
+                                    return (
+                                        <ParticipantItem
+                                            key={uid}
+                                            selected={isSelected}
+                                            isWinner={isWinner}
+                                            onPress={() => !isWinner && toggleParticipant(uid)}
+                                            activeOpacity={isWinner ? 1 : 0.7}
+                                        >
+                                            <CheckBox selected={isSelected && !isWinner}>
+                                                {isSelected && !isWinner && (
+                                                    <Feather name="check" size={13} color="#fff" />
+                                                )}
+                                            </CheckBox>
+                                            <View style={{ flex: 1 }}>
+                                                <ParticipantName numberOfLines={1}>
+                                                    {p.name || p.displayName || "—"}
+                                                </ParticipantName>
+                                                <ParticipantEmail numberOfLines={1}>
+                                                    {p.email}
+                                                </ParticipantEmail>
+                                            </View>
+                                            {isWinner && (
+                                                <WinnerBadge>
+                                                    <WinnerBadgeText>Vencedor</WinnerBadgeText>
+                                                </WinnerBadge>
+                                            )}
+                                        </ParticipantItem>
+                                    );
+                                })
+                            )}
+                        </>
                     )}
 
                     <SaveButton onPress={handleSave} disabled={saving} activeOpacity={0.8}>

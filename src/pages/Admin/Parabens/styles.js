@@ -70,6 +70,7 @@ export const ParticipantItem = styled.TouchableOpacity`
     border-top-width: 1px;
     border-top-color: #f0f0f0;
     background-color: ${({ selected }) => (selected ? "#fff8f5" : "#fff")};
+    opacity: ${({ isWinner }) => (isWinner ? 0.45 : 1)};
 `;
 
 export const ParticipantName = styled(Text)`
@@ -122,4 +123,23 @@ export const LoadingWrap = styled.View`
     align-items: center;
     justify-content: center;
     padding: 40px;
+`;
+
+export const SearchWrap = styled.View`
+    padding: 8px 16px 4px;
+    border-bottom-width: 1px;
+    border-bottom-color: #f0f0f0;
+`;
+
+export const WinnerBadge = styled.View`
+    background-color: #ffe0cc;
+    border-radius: 6px;
+    padding: 1px 7px;
+    margin-left: 8px;
+`;
+
+export const WinnerBadgeText = styled(Text)`
+    font-size: ${({ theme }) => theme.size.fontSize(10)};
+    font-weight: 700;
+    color: #e06020;
 `;
