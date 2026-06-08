@@ -4,39 +4,30 @@ const fs = require("fs");
 
 // Injected inside the existing post_install block
 const INJECT = `
-  # ── Patch fmt for Xcode 26 / Apple Clang 18 ──────────────────────────────
+  # ── Patch fmt for Xcode 26 / Apple Clang 18 consteval regression ─────────
   require 'fileutils'
   sandbox_root = installer.sandbox.root.to_s
+  fmt_root = File.join(sandbox_root, 'fmt')
 
-  # Prepend undef+define to base.h so it wins over any PCH or existing define
-  %w[base.h core.h format.h format-inl.h].each do |hdr|
-    hdr_path = File.join(sandbox_root, 'fmt', 'include', 'fmt', hdr)
-    next unless File.exist?(hdr_path)
-    content = File.read(hdr_path)
-    prefix = "// fmt consteval patch\\n#undef FMT_USE_CONSTEVAL\\n#define FMT_USE_CONSTEVAL 0\\n"
-    unless content.start_with?(prefix)
-      File.write(hdr_path, prefix + content)
-    end
+  # Replace ALL 'consteval' with 'constexpr' in every fmt header and source.
+  # Apple Clang 18 (Xcode 26) has a consteval regression bug — this makes fmt
+  # fall back to constexpr semantics which compile correctly.
+  files_to_patch = Dir.glob(File.join(fmt_root, 'include', 'fmt', '*.h')) +
+                   Dir.glob(File.join(fmt_root, 'src', '*.{h,cc}'))
+
+  files_to_patch.each do |file_path|
+    next unless File.exist?(file_path)
+    content = File.read(file_path)
+    patched = content.gsub(/\\bconsteval\\b/, 'constexpr')
+    File.write(file_path, patched) if patched != content
   end
 
   installer.pods_project.targets.each do |target|
     target.build_configurations.each do |build_config|
       build_config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++20'
 
-      # Disable PCH for fmt so our defines are not shadowed by precompiled state
       if target.name == 'fmt'
         build_config.build_settings['GCC_PRECOMPILE_PREFIX_HEADER'] = 'NO'
-      end
-
-      defs = build_config.build_settings['GCC_PREPROCESSOR_DEFINITIONS']
-      if defs.is_a?(Array)
-        defs << 'FMT_USE_CONSTEVAL=0' unless defs.include?('FMT_USE_CONSTEVAL=0')
-      elsif defs.is_a?(String)
-        unless defs.include?('FMT_USE_CONSTEVAL=0')
-          build_config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] = defs + ' FMT_USE_CONSTEVAL=0'
-        end
-      else
-        build_config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] = ['$(inherited)', 'FMT_USE_CONSTEVAL=0']
       end
     end
   end
@@ -52,8 +43,13 @@ module.exports = function withCppStandard(config) {
             );
             let contents = fs.readFileSync(podfilePath, "utf-8");
 
-            if (contents.includes("fmt consteval patch")) {
+            if (contents.includes("Apple Clang 18 consteval regression")) {
                 return cfg;
+            }
+
+            // Remove old guard if present
+            if (contents.includes("fmt consteval patch")) {
+                // Will be replaced naturally since guard string changed
             }
 
             if (contents.includes("post_install do |installer|")) {
