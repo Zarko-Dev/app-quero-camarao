@@ -4,7 +4,7 @@
     "slug": "mobile-quero-camarao",
     "owner": "querocamarao",
     "scheme": "querocamarao",
-    "version": "1.1.19",
+    "version": "1.1.5",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -17,7 +17,7 @@
       "**/*"
     ],
     "ios": {
-      "buildNumber": "60",
+      "buildNumber": "61",
       "supportsTablet": true,
       "infoPlist": {
         "NSFaceIDUsageDescription": "Permitir que a Quero Camarão use seu Face ID para acessar o aplicativo.",
@@ -31,7 +31,7 @@
       "bundleIdentifier": "com.logicphire.querocamarao"
     },
     "android": {
-      "versionCode": 50,
+      "versionCode": 51,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFE2CC"
@@ -57,6 +57,10 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      [
+        "./plugins/withCppStandard.js",
+        {}
+      ],
       [
         "expo-splash-screen",
         {
@@ -113,7 +117,10 @@
             "newArchEnabled": true
           },
           "ios": {
-            "newArchEnabled": true
+            "newArchEnabled": true,
+            "extraBuildSettings": {
+              "CLANG_CXX_LANGUAGE_STANDARD": "c++20"
+            }
           }
         }
       ],
