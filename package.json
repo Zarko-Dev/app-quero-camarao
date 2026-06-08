@@ -1,6 +1,6 @@
 {
     "name": "mobile-quero-camarao",
-    "version": "1.1.6",
+    "version": "1.2.0",
     "main": "node_modules/expo/AppEntry.js",
     "scripts": {
         "test:unit": "node --test tests/**/*.test.cjs",
