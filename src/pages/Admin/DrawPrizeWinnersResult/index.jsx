@@ -8,7 +8,7 @@ import { ActivityIndicator } from "react-native-paper";
 import { Entypo, Feather } from "@expo/vector-icons";
 import { useTheme } from "styled-components";
 import { getDrawPrizeLiveById } from "../../../controllers/DrawPrizes/live";
-import { Share } from "react-native";
+import { Linking, Share } from "react-native";
 
 import lottieLoadingDrawPrize from "../../../assets/lotties/lottieLoadingDrawPrize.json";
 import lottieWinDrawPrize from "../../../assets/lotties/lottieWinDrawPrize.json";
@@ -82,7 +82,7 @@ useEffect(() => {
             const response = await getDrawPrizeLiveById(drawerPrizeLiveId);
             if (!response.error) {
                 const allWinners = response.data.winners ?? [];
-                if (newWinnersCount) {
+                if (newWinnersCount != null) {
                     setUsersWinner(allWinners.slice(-newWinnersCount));
                 } else {
                     setUsersWinner(allWinners);
@@ -143,42 +143,41 @@ useEffect(() => {
     };
 
     const shareSingleWinner = async (user) => {
-        try {
-            const message = buildSingleWinnerShareMessage(
-                user,
-                "https://querocamarao.com.br",
-            );
-            await Share.share({
-                message,
-                title: "Vencedor do Sorteio - Quero Camarão",
+        const rawPhone = user?.phone ?? "";
+        const digits = rawPhone.replace(/\D/g, "");
+        const phone = digits.startsWith("55") ? digits : `55${digits}`;
+
+        if (!phone || phone.length < 12) {
+            Toast.show({
+                type: "error",
+                text1: "Telefone do ganhador não disponível.",
             });
-        } catch (error) {
-            if (!isShareCancellation(error)) {
-                Toast.show({
-                    type: "error",
-                    text1: "Não foi possível compartilhar este ganhador.",
-                });
-            }
+            return;
+        }
+
+        const message = buildSingleWinnerShareMessage(user);
+        const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+
+        try {
+            await Linking.openURL(url);
+        } catch {
+            Toast.show({
+                type: "error",
+                text1: "Não foi possível abrir o WhatsApp.",
+            });
         }
     };
 
     const shareAllWinners = async () => {
         try {
-            const message = buildWinnersShareMessage(
-                usersWinner,
-                "https://querocamarao.com.br",
-            );
-            await Share.share({
-                message,
-                title: "Vencedores do Sorteio - Quero Camarão",
+            const message = buildWinnersShareMessage(usersWinner);
+            const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+            await Linking.openURL(url);
+        } catch {
+            Toast.show({
+                type: "error",
+                text1: "Não foi possível abrir o WhatsApp.",
             });
-        } catch (error) {
-            if (!isShareCancellation(error)) {
-                Toast.show({
-                    type: "error",
-                    text1: "Não foi possível compartilhar os vencedores.",
-                });
-            }
         }
     };
 

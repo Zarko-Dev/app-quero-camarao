@@ -1,4 +1,5 @@
 /* eslint-disable operator-linebreak */
+import { Feather } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
@@ -125,26 +126,25 @@ export const Charts = ({ navigation }) => {
         for (let day = start; day <= end; day++) {
             const ds = String(day).padStart(2, "0");
             const vCurr = curr[ds] || 0;
-            const vPrev = ante[ds] || 0;
-            const label = ds;
-            result.push(
-                {
-                    value: vCurr,
-                    label,
-                    frontColor: C_CURRENT,
-                    topLabelComponent: vCurr > 0
-                        ? () => <Text style={{ fontSize: 8, color: C_CURRENT, fontWeight: "700" }}>{vCurr}</Text>
-                        : undefined,
-                },
-                {
-                    value: vPrev,
-                    frontColor: C_PREV,
-                    topLabelComponent: vPrev > 0
-                        ? () => <Text style={{ fontSize: 8, color: C_AXIS }}>{vPrev}</Text>
-                        : undefined,
-                    spacing: 2,
-                },
-            );
+            result.push({
+                value: vCurr,
+                label: ds,
+                frontColor: C_CURRENT,
+                topLabelComponent: vCurr > 0
+                    ? () => (
+                        <Text style={{ fontSize: 9, color: C_ACCENT, fontWeight: "800",
+                            textAlign: "center" }}>
+                            {vCurr}
+                        </Text>
+                    )
+                    : undefined,
+                onPress: () => Toast.show({
+                    type: "info",
+                    text1: `Dia ${ds} — ${selMonth}`,
+                    text2: `${vCurr} visualizações`,
+                    visibilityTime: 2000,
+                }),
+            });
         }
         setDataChart(result);
 
@@ -172,17 +172,22 @@ export const Charts = ({ navigation }) => {
         setDataHourChart(
             hours.map((value, h) => ({
                 value,
-                label: h % 4 === 0 ? `${String(h).padStart(2,"0")}h` : "",
+                label: `${String(h).padStart(2,"0")}h`,
                 frontColor: value === maxVal && value > 0 ? C_ACCENT : C_CURRENT,
                 topLabelComponent: value > 0
                     ? () => (
-                        <Text style={{ fontSize: 7, fontWeight: "700",
-                            color: value === maxVal ? C_ACCENT : C_AXIS,
+                        <Text style={{ fontSize: 9, fontWeight: "700",
+                            color: value === maxVal ? C_ACCENT : "#64748b",
                             marginBottom: 1 }}>
                             {value}
                         </Text>
                     )
                     : undefined,
+                onPress: () => Toast.show({
+                    type: "info",
+                    text1: `${String(h).padStart(2,"0")}h — ${selMonth}`,
+                    text2: `${value} visualização${value !== 1 ? "s" : ""}`,
+                }),
             }))
         );
     };
@@ -323,13 +328,14 @@ export const Charts = ({ navigation }) => {
 
                     <BarChart
                         data={dataChart}
-                        barWidth={7}
-                        barBorderRadius={3}
-                        spacing={4}
+                        barWidth={12}
+                        barBorderRadius={4}
+                        spacing={6}
+                        labelWidth={20}
                         hideRules={false}
                         rulesColor={C_RULES}
                         rulesType="solid"
-                        xAxisLabelTextStyle={{ color: C_AXIS, fontSize: 8 }}
+                        xAxisLabelTextStyle={{ color: C_AXIS, fontSize: 9, textAlign: "center" }}
                         yAxisTextStyle={{ color: C_AXIS, fontSize: 10 }}
                         yAxisColor={C_RULES}
                         xAxisColor={C_RULES}
@@ -339,13 +345,12 @@ export const Charts = ({ navigation }) => {
                         animationDuration={500}
                         initialSpacing={6}
                         endSpacing={6}
-                        showGradient
-                        gradientColor="#dbeafe"
                     />
 
-                    <CharButton style={[BoxShadowIos, { alignSelf: "stretch", margin: 8, borderRadius: 8 }]}
+                    <CharButton
                         onPress={() => navigation.navigate(dataRoutes.admin.publicationViewLogsList, { dataViewLogsList: dataViewLogs })}>
                         <TitleButton>Visualizações por Publicação</TitleButton>
+                        <Feather name="arrow-right" size={14} color="#f55b1f" />
                     </CharButton>
                 </CardChart>
 
@@ -361,24 +366,28 @@ export const Charts = ({ navigation }) => {
                         </View>
                     )}
                     <SectionLabel>{currentExtendedMonth} {currentYear}</SectionLabel>
-                    <BarChart
-                        data={dataHourChart}
-                        barWidth={9}
-                        barBorderRadius={3}
-                        spacing={4}
-                        hideRules={false}
-                        rulesColor={C_RULES}
-                        xAxisLabelTextStyle={{ color: C_AXIS, fontSize: 9 }}
-                        yAxisTextStyle={{ color: C_AXIS, fontSize: 10 }}
-                        yAxisColor={C_RULES}
-                        xAxisColor={C_RULES}
-                        noOfSections={4}
-                        height={160}
-                        isAnimated
-                        animationDuration={500}
-                        initialSpacing={4}
-                        endSpacing={4}
-                    />
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                        <BarChart
+                            data={dataHourChart}
+                            barWidth={20}
+                            barBorderRadius={4}
+                            spacing={8}
+                            hideRules={false}
+                            rulesColor={C_RULES}
+                            xAxisLabelTextStyle={{ color: C_AXIS, fontSize: 9, textAlign: "center" }}
+                            labelWidth={34}
+                            yAxisTextStyle={{ color: C_AXIS, fontSize: 10 }}
+                            yAxisColor={C_RULES}
+                            xAxisColor={C_RULES}
+                            noOfSections={4}
+                            height={160}
+                            isAnimated
+                            animationDuration={500}
+                            initialSpacing={4}
+                            endSpacing={8}
+                            disableScroll
+                        />
+                    </ScrollView>
                 </CardChart>
 
                 {/* ── 3. Top 5 Publicações ── */}

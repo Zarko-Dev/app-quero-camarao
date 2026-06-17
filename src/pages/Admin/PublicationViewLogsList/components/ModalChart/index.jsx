@@ -239,8 +239,10 @@ export const ModalChart = ({ isVisible = false, onClose, viewLogs }) => {
                             endSpacing={8}
                             spacing={18}
                             height={180}
-                            noOfSections={4}
+                            stepValue={1}
+                            noOfSections={Math.max(...dataChart.map(d => d.value), 4)}
                             showTextOnFocus
+                            yAxisExtraHeight={8}
                         />
                     </Content>
                 </ModalContent>

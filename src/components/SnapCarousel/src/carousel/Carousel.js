@@ -1424,11 +1424,13 @@ export default class Carousel extends Component {
               }
             : {};
 
+        const { key: itemKey, ...restSpecificProps } = specificProps;
         return (
             <Component
+                key={itemKey}
                 style={[mainDimension, slideStyle, animatedStyle]}
                 pointerEvents="box-none"
-                {...specificProps}
+                {...restSpecificProps}
             >
                 {renderItem({ item, index }, parallaxProps)}
             </Component>

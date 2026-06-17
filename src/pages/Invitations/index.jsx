@@ -43,6 +43,7 @@ import {
     HeaderTitle,
     Indicator,
     InvitationInfo,
+    InvitationsDivider,
     InvitationsContent,
     InvitationsValue,
     MoneyCurrent,
@@ -51,7 +52,6 @@ import {
     MoneyTextContent,
     TextButton,
 } from "./styles";
-import { BoxShadowIos } from "../../styles/IosShadow";
 
 export const Invitations = () => {
     const { configData } = useSelector((state) => state.configSystem);
@@ -210,9 +210,9 @@ Se ainda não baixou o Quero Camarão, *baixe agora mesmo*! ????????????
 
     return (
         <Container>
-            <HeaderCard style={BoxShadowIos}>
+            <HeaderCard>
                 <HeaderContentTitle>
-                    <FontAwesome5 name="wallet" size={20} color="black" />
+                    <FontAwesome5 name="wallet" size={18} color="#36536e" />
                     <HeaderTitle>Minha Carteira</HeaderTitle>
                 </HeaderContentTitle>
                 <FlatList
@@ -227,10 +227,10 @@ Se ainda não baixou o Quero Camarão, *baixe agora mesmo*! ????????????
                         },
                     ]}
                     renderItem={({ item }) => (
-                        <View style={{ width: Dimensions.get("screen").width }}>
+                        <View style={{ width: Dimensions.get("screen").width - 32 }}>
                             <ContentMoney>
                                 <MoneyTextContent>
-                                    <MoneyCurrent>R$ </MoneyCurrent>
+                                    <MoneyCurrent>R$</MoneyCurrent>
                                     {isLoading ? (
                                         <ValueSkeleton />
                                     ) : (
@@ -245,33 +245,19 @@ Se ainda não baixou o Quero Camarão, *baixe agora mesmo*! ????????????
                     )}
                     horizontal
                     showsHorizontalScrollIndicator={false}
-                    keyExtractor={(item, index) => index}
+                    keyExtractor={(item, index) => String(index)}
                     pagingEnabled
                     viewabilityConfigCallbackPairs={viewabilityRef.current}
                 />
                 <ContentIndicators>
-                    {[
-                        {
-                            id: 0,
-                            value: dataWallet?.currentValue || 0,
-                            text: "Valor Disponível",
-                        },
-                        {
-                            id: 1,
-                            value: dataWallet?.acumulatedValue || 0,
-                            text: "Valor Acumulado",
-                        },
-                    ].map((item) => (
-                        <Indicator
-                            key={item.id}
-                            active={activeContentmoney === item.id}
-                        />
+                    {[0, 1].map((id) => (
+                        <Indicator key={id} active={activeContentmoney === id} />
                     ))}
                 </ContentIndicators>
             </HeaderCard>
-            <ContentCardInvitation style={BoxShadowIos}>
+            <ContentCardInvitation>
                 <ContentHeaderInvitation>
-                    <FontAwesome name="ticket" size={20} color="black" />
+                    <FontAwesome name="ticket" size={18} color="#36536e" />
                     <HeaderInvitation>Meus Convites</HeaderInvitation>
                 </ContentHeaderInvitation>
                 <ContentinvitationInfo>
@@ -285,6 +271,7 @@ Se ainda não baixou o Quero Camarão, *baixe agora mesmo*! ????????????
                         )}
                         <InvitationInfo>Convites Enviados</InvitationInfo>
                     </InvitationsContent>
+                    <InvitationsDivider />
                     <InvitationsContent>
                         {isLoading ? (
                             <TextSkeleton />
@@ -297,15 +284,16 @@ Se ainda não baixou o Quero Camarão, *baixe agora mesmo*! ????????????
                     </InvitationsContent>
                 </ContentinvitationInfo>
             </ContentCardInvitation>
-            <ContentCardInvitation style={BoxShadowIos}>
-                <ButtonSendInvitation onPress={handleShareInvitation}>
-                    {!isLoadingAction ? (
+            <ButtonSendInvitation onPress={handleShareInvitation} activeOpacity={0.8}>
+                {!isLoadingAction ? (
+                    <>
+                        <FontAwesome name="share-alt" size={16} color="#fff" />
                         <TextButton>Enviar Convite</TextButton>
-                    ) : (
-                        <ActivityIndicator animating color="white" />
-                    )}
-                </ButtonSendInvitation>
-            </ContentCardInvitation>
+                    </>
+                ) : (
+                    <ActivityIndicator animating color="white" />
+                )}
+            </ButtonSendInvitation>
         </Container>
     );
 };

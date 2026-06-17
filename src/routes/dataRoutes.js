@@ -15,6 +15,7 @@ export const dataRoutes = {
     discountCupons: "Discount Cupons",
     registerDiscountCupon: "Register Discount Cupom",
     resetPassword: "Reset Password",
+    createNewPassword: "Create New Password",
     profile: "Profile",
     personalData: "Personal Data",
     myPublications: "My Publications",

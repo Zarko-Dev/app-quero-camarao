@@ -16,22 +16,25 @@ const getWinnerLocation = (winner) => {
     return `${city}/${state}`;
 };
 
-const buildSingleWinnerShareMessage = (winner, appLink = "") => {
+const buildSingleWinnerShareMessage = (winner) => {
     const drawName = winner?.drawName ?? "Sorteio";
-    const linkBlock = appLink ? `\n\nAcompanhe: ${appLink}` : "";
 
     return [
-        "Quero Camarao",
+        "🦐🦐🦐 QUERO CAMARÃO 🦐🦐🦐",
         "",
-        `Vencedor(a): ${winner?.name ?? "Nao informado"}`,
-        `Sorteio: ${drawName}`,
-        `Telefone: ${normalizePhone(winner?.phone)}`,
-        `CPF: ${winner?.cpf ? `***.***.${String(winner.cpf).slice(-5)}` : "Nao informado"}`,
-        `Cidade: ${getWinnerLocation(winner)}`,
-    ].join("\n") + linkBlock;
+        "🏆 PARABÉNS AO VENCEDOR(A)!",
+        "",
+        `👤 ${winner?.name ?? "Nao informado"}`,
+        `🎯 Sorteio: ${drawName}`,
+        `📞 Telefone: ${normalizePhone(winner?.phone)}`,
+        `🪪 CPF: ${winner?.cpf ? `***.***.${String(winner.cpf).slice(-5)}` : "Nao informado"}`,
+        `📍 Cidade: ${getWinnerLocation(winner)}`,
+        "",
+        "🦐 Este sorteio tem oferecimento de QUERO CAMARÃO 🦐",
+    ].join("\n");
 };
 
-const buildWinnersShareMessage = (winners = [], appLink = "") => {
+const buildWinnersShareMessage = (winners = []) => {
     const grouped = winners.reduce((acc, winner) => {
         const key = winner?.drawName ?? "Sorteio";
         if (!acc[key]) acc[key] = [];
@@ -42,16 +45,15 @@ const buildWinnersShareMessage = (winners = [], appLink = "") => {
     const drawBlocks = Object.entries(grouped)
         .map(([drawName, list]) => {
             const lines = list.map((winner, index) =>
-                `${index + 1}. ${winner?.name ?? "Nao informado"} | ${getWinnerLocation(winner)} | ${normalizePhone(winner?.phone)}`
+                `${index + 1}. 👤 ${winner?.name ?? "Nao informado"} | 📍 ${getWinnerLocation(winner)} | 📞 ${normalizePhone(winner?.phone)}`
             );
-            return [`${drawName}`, ...lines].join("\n");
+            return [`🎯 ${drawName}`, ...lines].join("\n");
         })
         .join("\n\n");
 
     const title = winners.length > 1 ? "Vencedores" : "Vencedor";
-    const linkBlock = appLink ? `\n\nAcompanhe: ${appLink}` : "";
 
-    return `Quero Camarao\n\n${title} do Sorteio\n\n${drawBlocks}${linkBlock}`;
+    return `🦐🦐🦐 QUERO CAMARÃO 🦐🦐🦐\n\n🏆 ${title} do Sorteio\n\n${drawBlocks}\n\n🦐 Este sorteio tem oferecimento de QUERO CAMARÃO 🦐`;
 };
 
 const buildCongratulatoryMessage = (winner, draw) => {
@@ -72,7 +74,7 @@ const buildCongratulatoryMessage = (winner, draw) => {
     });
     const themeBlock = theme ? `, ${theme}` : "";
     return encodeURIComponent(
-        `Parabéns ${name}, por ganhar o sorteio ${drawName}${themeBlock}, realizado no dia ${formatted}. Este sorteio tem oferecimento de QUERO CAMARÃO.`
+        `🦐🦐🦐 QUERO CAMARÃO 🦐🦐🦐\n\n🏆 Parabéns ${name}, por ganhar o sorteio ${drawName}${themeBlock}, realizado no dia ${formatted}.\n\n🦐 Este sorteio tem oferecimento de QUERO CAMARÃO 🦐`
     );
 };
 

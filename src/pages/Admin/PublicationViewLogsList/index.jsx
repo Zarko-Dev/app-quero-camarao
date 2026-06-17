@@ -53,8 +53,11 @@ export const PublicationViewLogsList = ({ route, navigation }) => {
     };
 
     const handleRedirectListUsers = (dataViewLogs) => {
+        const sorted = [...dataViewLogs].sort(
+            (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+        );
         navigation.navigate(dataRoutes.admin.usersList, {
-            dataListUsers: dataViewLogs.map((item) => ({
+            dataListUsers: sorted.map((item) => ({
                 email: item.userId,
                 name: item.user,
                 userImage: item.userImage,

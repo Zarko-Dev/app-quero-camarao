@@ -4,6 +4,7 @@ import Toast from "react-native-toast-message";
 
 import { dataRoutes } from "../../routes/dataRoutes";
 import { resetUserPassword } from "../../controllers/User/resetPassword";
+import { getPasswordResetToken } from "../../controllers/User/getPasswordResetToken";
 import { isValidEmail } from "../../utils/ValidationEmail";
 
 import { Input } from "../../components/Input";
@@ -19,6 +20,9 @@ import {
     ContentTextRegister,
     Footer,
     LogoImage,
+    MethodTab,
+    MethodTabs,
+    MethodTabText,
     TextButton,
     TextButtonRegister,
     TextRegister,
@@ -26,16 +30,18 @@ import {
 import { BoxShadowIos } from "../../styles/IosShadow";
 
 export const RestPassowrd = ({ navigation, route }) => {
+    const [method, setMethod] = useState("email"); // "email" | "cpf"
     const [showAlertVisible, setShowAlertVisible] = useState(false);
     const [textAlert, setTextAlert] = useState({ title: "", text: "" });
     const [isLoading, setIsLoading] = useState(false);
     const [email, setEmail] = useState(route.params?.email || "");
+    const [identifier, setIdentifier] = useState("");
 
     const handleRedirectRegister = () => {
         navigation.navigate(dataRoutes.register);
     };
 
-    const handleResetPassword = async () => {
+    const handleResetByEmail = async () => {
         setIsLoading(true);
 
         if (email !== "" && isValidEmail(email)) {
@@ -48,7 +54,6 @@ export const RestPassowrd = ({ navigation, route }) => {
                     title: "Solicitação de senha enviada!",
                     text: "Verifique sua caixa de email, caso não encontre, verifique sua caixa de span!",
                 });
-
                 navigation.navigate(dataRoutes.login);
             } else {
                 setTextAlert({
@@ -63,24 +68,72 @@ export const RestPassowrd = ({ navigation, route }) => {
         setIsLoading(false);
     };
 
+    const handleResetByCpf = async () => {
+        const cleaned = identifier.replace(/\D/g, "");
+        if (cleaned.length < 8) {
+            Toast.show({ type: "error", text1: "Informe um CPF ou telefone válido" });
+            return;
+        }
+
+        setIsLoading(true);
+
+        const result = await getPasswordResetToken(cleaned);
+
+        if (result.error) {
+            Toast.show({
+                type: "error",
+                text1: "Conta não encontrada",
+                text2: "Verifique o CPF ou telefone informado.",
+            });
+        } else {
+            navigation.navigate(dataRoutes.createNewPassword, { token: result.token });
+        }
+
+        setIsLoading(false);
+    };
+
     return (
         <Container>
             <LogoImage source={originalLogo} />
 
+            <MethodTabs>
+                <MethodTab active={method === "email"} onPress={() => setMethod("email")}>
+                    <MethodTabText active={method === "email"}>Email</MethodTabText>
+                </MethodTab>
+                <MethodTab active={method === "cpf"} onPress={() => setMethod("cpf")}>
+                    <MethodTabText active={method === "cpf"}>CPF / Telefone</MethodTabText>
+                </MethodTab>
+            </MethodTabs>
+
             <ContentFormLogin>
-                <Input
-                    label="Informe seu Email"
-                    icon="at-sign"
-                    keyboardType="email-address"
-                    value={email}
-                    onChange={setEmail}
-                />
+                {method === "email" ? (
+                    <Input
+                        label="Informe seu Email"
+                        icon="at-sign"
+                        keyboardType="email-address"
+                        value={email}
+                        onChange={setEmail}
+                    />
+                ) : (
+                    <Input
+                        label="Informe seu CPF ou Telefone"
+                        icon="user"
+                        keyboardType="numeric"
+                        value={identifier}
+                        onChange={setIdentifier}
+                    />
+                )}
             </ContentFormLogin>
 
             <Footer>
-                <ButtonLogin style={BoxShadowIos} onPress={handleResetPassword}>
+                <ButtonLogin
+                    style={BoxShadowIos}
+                    onPress={method === "email" ? handleResetByEmail : handleResetByCpf}
+                >
                     {!isLoading ? (
-                        <TextButton>Solicitar Recuperação de Senha</TextButton>
+                        <TextButton>
+                            {method === "email" ? "Solicitar Recuperação de Senha" : "Continuar"}
+                        </TextButton>
                     ) : (
                         <ActivityIndicator animating color="white" />
                     )}
@@ -95,6 +148,7 @@ export const RestPassowrd = ({ navigation, route }) => {
                     </ButtonRegister>
                 </ContentTextRegister>
             </Footer>
+
             <DialogComponent
                 visible={showAlertVisible}
                 title={textAlert.title}

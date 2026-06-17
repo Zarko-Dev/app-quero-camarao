@@ -14,6 +14,8 @@ import {
 import * as Sentry from "@sentry/react-native";
 import { firestore } from "../../services/Firebase";
 import { models } from "../../services/Firebase/models";
+import { getUserNotificationToken } from "../User/notification";
+import { sendNotification } from "../../services/ExpoNotification/sendNotification";
 
 export const chatDocId = (publicationId, buyerId) =>
     `${publicationId}_${String(buyerId).replace(/[@.]/g, "_")}`;
@@ -26,16 +28,21 @@ export const sendChatMessage = async ({
     sellerId,
     buyerId,
     senderId,
-    text,
+    text = "",
+    audioUrl = null,
+    audioDuration = null,
+    imageUrl = null,
     sellerName = "",
     buyerName = "",
     publicationTitle = "",
 }) => {
     try {
         const id = chatDocId(publicationId, buyerId);
+        console.log("[Chat] sendChatMessage id=", id, "publicationId=", publicationId, "buyerId=", buyerId, "senderId=", senderId);
         const chatRef = doc(firestore, models.chats, id);
         const snap = await getDoc(chatRef);
-        const trimmed = text.trim();
+        const trimmed = text ? text.trim() : "";
+        const lastMessage = audioUrl ? "🎵 Áudio" : imageUrl ? "📷 Foto" : trimmed;
 
         if (!snap.exists()) {
             await setDoc(chatRef, {
@@ -46,7 +53,7 @@ export const sendChatMessage = async ({
                 sellerName,
                 buyerName,
                 publicationTitle,
-                lastMessage: trimmed,
+                lastMessage,
                 lastMessageAt: serverTimestamp(),
                 lastSeenAt: {},
                 createdAt: serverTimestamp(),
@@ -54,17 +61,33 @@ export const sendChatMessage = async ({
             });
         } else {
             await updateDoc(chatRef, {
-                lastMessage: trimmed,
+                lastMessage,
                 lastMessageAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
             });
         }
 
-        await addDoc(messagesRef(id), {
-            senderId,
-            text: trimmed,
-            createdAt: serverTimestamp(),
-        });
+        const msgData = { senderId, createdAt: serverTimestamp() };
+        if (audioUrl) {
+            msgData.audioUrl = audioUrl;
+            if (audioDuration != null) msgData.audioDuration = audioDuration;
+        } else if (imageUrl) {
+            msgData.imageUrl = imageUrl;
+        } else {
+            msgData.text = trimmed;
+        }
+        await addDoc(messagesRef(id), msgData);
+
+        const recipientId = senderId === sellerId ? buyerId : sellerId;
+        const senderName = senderId === sellerId ? sellerName : buyerName;
+        const tokenResult = await getUserNotificationToken(recipientId);
+        if (!tokenResult.error && tokenResult.data) {
+            await sendNotification(
+                tokenResult.data,
+                senderName || "Nova mensagem",
+                lastMessage.length > 80 ? lastMessage.slice(0, 77) + "..." : lastMessage,
+            );
+        }
 
         return true;
     } catch (error) {
@@ -73,11 +96,17 @@ export const sendChatMessage = async ({
     }
 };
 
-export const subscribeToChat = ({ publicationId, buyerId, onMessages }) => {
+export const subscribeToChat = ({ publicationId, buyerId, onMessages, onError }) => {
     const id = chatDocId(publicationId, buyerId);
+    console.log("[Chat] subscribeToChat id=", id, "publicationId=", publicationId, "buyerId=", buyerId);
     const q = query(messagesRef(id), orderBy("createdAt", "asc"));
     return onSnapshot(q, (snap) => {
+        console.log("[Chat] snapshot docs=", snap.docs.length);
         onMessages(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+    }, (error) => {
+        console.error("[Chat] subscribeToChat error:", error.code, error.message);
+        Sentry.captureException(error);
+        onError?.(error);
     });
 };
 

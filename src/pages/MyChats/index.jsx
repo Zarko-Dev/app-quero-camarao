@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList } from "react-native";
-import { useSelector } from "react-redux";
 import { Feather } from "@expo/vector-icons";
 
+import { GetUserStorage } from "../../services/Storage/UserStorage";
 import { subscribeMyChats } from "../../controllers/Chat";
 import { dataRoutes } from "../../routes/dataRoutes";
 import {
@@ -51,18 +51,21 @@ const isUnread = (chat, safeId) => {
 };
 
 export const MyChats = ({ navigation }) => {
-    const { dataUser } = useSelector((state) => state.login);
     const [chats, setChats] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [myId, setMyId] = useState(null);
 
-    const myId = dataUser?.email ?? dataUser?.uid;
     const safeId = myId?.replace(/[@.]/g, "_") ?? "";
 
     useEffect(() => {
-        if (!myId) {
-            setLoading(false);
-            return;
-        }
+        GetUserStorage().then((user) => {
+            if (user) setMyId(user.email ?? user.uid);
+            else setLoading(false);
+        });
+    }, []);
+
+    useEffect(() => {
+        if (!myId) return;
         const unsub = subscribeMyChats(myId, (data) => {
             setChats(data);
             setLoading(false);
@@ -85,6 +88,7 @@ export const MyChats = ({ navigation }) => {
             sellerId: chat.sellerId,
             buyerId: chat.buyerId,
             sellerName: chat.sellerName || "Vendedor",
+            buyerName: chat.buyerName || "Comprador",
             chatId: chat.id,
         });
     };

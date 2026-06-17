@@ -38,7 +38,7 @@ export const ModalShrimpImages = ({
 
     const ItemImage = ({ item }) => (
         <ContentImages itemWidth={itemWidth}>
-            <ShrimpImage uri={item.imageShrimpUri} />
+            <ShrimpImage uri={item.imageShrimpUri} resizeMode="contain" />
         </ContentImages>
     );
 

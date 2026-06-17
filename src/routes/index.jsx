@@ -43,6 +43,7 @@ import { DrawPrizeNewWinnerResult } from "../pages/Admin/DrawPrizeNewWinnerResul
 import { DrawPrizeWinnersResult } from "../pages/Admin/DrawPrizeWinnersResult";
 import { PublicationChat } from "../pages/PublicationChat";
 import { MyChats } from "../pages/MyChats";
+import { CreateNewPassword } from "../pages/CreateNewPassword";
 
 const { Navigator, Screen } = createNativeStackNavigator();
 
@@ -139,6 +140,15 @@ export const Routes = () => (
                 component={RestPassowrd}
                 options={{
                     title: "Recuperar Senha",
+                    headerStyle: { backgroundColor: theme.colors.primary },
+                    headerTitleStyle: { color: theme.colors.white },
+                }}
+            />
+            <Screen
+                name={dataRoutes.createNewPassword}
+                component={CreateNewPassword}
+                options={{
+                    title: "Criar Nova Senha",
                     headerStyle: { backgroundColor: theme.colors.primary },
                     headerTitleStyle: { color: theme.colors.white },
                 }}

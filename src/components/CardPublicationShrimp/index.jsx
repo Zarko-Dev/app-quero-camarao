@@ -195,6 +195,18 @@ export const CardPublicationShrimp = memo(
             }, 2000);
         };
 
+        const openChat = () => {
+            const producerName = item.sellerName ?? "Produtor";
+            const reference = location ?? "seu anuncio";
+            navigation.navigate(dataRoutes.publicationChat, {
+                publication: item,
+                sellerId: item.userId,
+                sellerName: producerName,
+                initialMessage: `Olá ${producerName}, vi seu anuncio ${reference} ainda está disponível? Tenho interesse!!`,
+                autoSend: true,
+            });
+        };
+
         const ItemImage = ({ index, item: itemValue }) => (
             <ShrimpImage key={index} uri={itemValue.imageShrimpUri} />
         );
@@ -311,7 +323,7 @@ export const CardPublicationShrimp = memo(
                             </GrammageContainer>
                         </ContentDataShrimp>
                     </ContainerInfo>
-                    {dataUser?.email !== item.userId && (
+                    {isAuthenticated && dataUser?.email !== item.userId && (
                         <View style={{ flexDirection: "row", alignItems: "center" }}>
                             <ButtonBuy
                                 onPress={handleRedirectPage}
@@ -324,13 +336,7 @@ export const CardPublicationShrimp = memo(
                                 )}
                             </ButtonBuy>
                             <TouchableOpacity
-                                onPress={() =>
-                                    navigation.navigate(dataRoutes.publicationChat, {
-                                        publication: item,
-                                        sellerId: item.userId,
-                                        sellerName: item.sellerName ?? "Produtor",
-                                    })
-                                }
+                                onPress={openChat}
                                 activeOpacity={0.8}
                                 style={{
                                     flex: 1,
@@ -360,11 +366,7 @@ export const CardPublicationShrimp = memo(
                     actionBuy={handleRedirectPage}
                     actionChat={() => {
                         setShowModalImagesShrimp(false);
-                        navigation.navigate(dataRoutes.publicationChat, {
-                            publication: item,
-                            sellerId: item.userId,
-                            sellerName: item.sellerName ?? "Produtor",
-                        });
+                        openChat();
                     }}
                     showChatButton={isAuthenticated && dataUser?.email !== item.userId}
                     dataShrimp={shrimpImageData.data}

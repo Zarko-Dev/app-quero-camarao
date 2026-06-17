@@ -4,7 +4,7 @@
     "slug": "mobile-quero-camarao",
     "owner": "querocamarao",
     "scheme": "querocamarao",
-    "version": "1.2.0",
+    "version": "2.0.4",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -83,6 +83,13 @@
         "expo-camera",
         {
           "cameraPermission": "Permitir que a Quero Camarão acesse sua camera? Esta ação permite que seja tirado fotos que serão utilizadas no aplicativo, como fotos dos produtos."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Permitir que a Quero Camarão acesse sua biblioteca de fotos para enviar imagens no chat.",
+          "cameraPermission": "Permitir que a Quero Camarão acesse sua câmera para tirar fotos no chat."
         }
       ],
       [

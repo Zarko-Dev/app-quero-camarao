@@ -532,8 +532,9 @@ const handleInitDrawPrizeLive = async () => {
     })
 
     const indicatedIds = responseActiveDrawPrizeLive.data.indicatedParticipants ?? [];
+    // Search in fixResponse (full list) so previously-won indicated users are not excluded
     const indicatedWinners = indicatedIds
-        .map((uid) => dataUsersPrize.find((p) => p.uid === uid || p.email === uid || p.cpf === uid))
+        .map((uid) => fixResponse.find((p) => p.uid === uid || p.email === uid || p.cpf === uid))
         .filter(Boolean)
         .map((p) => ({ ...p, indicated: true }));
     const indicatedUidSet = new Set(indicatedWinners.map((p) => p.uid || p.email || p.cpf));
@@ -692,12 +693,7 @@ const handleInitDrawPrizeLive = async () => {
                                       </View>
                                       {winners.length > 0 ? (
                                           <View style={{ width: "100%", marginTop: 4 }}>
-                                              <TitleCode>Ganhadores:</TitleCode>
-                                              {winners.map((winner, index) => (
-                                                  <TitleCode key={index} style={{ marginTop: 2 }}>
-                                                      • {winner.name ?? winner.email ?? "—"}
-                                                  </TitleCode>
-                                              ))}
+                                              <TitleCode>{winners.length} ganhador{winners.length !== 1 ? "es" : ""} sorteado{winners.length !== 1 ? "s" : ""}</TitleCode>
                                           </View>
                                       ) : null}
                                 </>
