@@ -3,11 +3,24 @@ const admin = require("firebase-admin");
 
 admin.initializeApp();
 
-/**
- * Recebe CPF ou telefone, acha o usuário no Firestore,
- * gera um custom token do Firebase Auth e retorna pro app.
- * O app usa o token pra assinar e trocar a senha direto.
- */
+// Formata 11 dígitos como CPF: "00245567348" → "002.455.673-48"
+function formatCpf(d) {
+    if (d.length !== 11) return null;
+    return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9, 11)}`;
+}
+
+// Formata 11 dígitos como celular: "85987654321" → "(85) 98765-4321"
+function formatPhone11(d) {
+    if (d.length !== 11) return null;
+    return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7, 11)}`;
+}
+
+// Formata 10 dígitos como fixo: "8534567890" → "(85) 3456-7890"
+function formatPhone10(d) {
+    if (d.length !== 10) return null;
+    return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6, 10)}`;
+}
+
 exports.getPasswordResetToken = onCall(
     { region: "us-central1", cors: true },
     async (request) => {
@@ -24,19 +37,29 @@ exports.getPasswordResetToken = onCall(
 
         const db = admin.firestore();
 
-        const [byCpf, byPhone] = await Promise.all([
-            db.collection("users").where("cpf", "==", cleaned).limit(1).get(),
-            db.collection("users").where("phone", "==", cleaned).limit(1).get(),
-        ]);
+        // Gera todas as variantes de formato possíveis
+        const cpfFormatted = formatCpf(cleaned);
+        const phone11Formatted = formatPhone11(cleaned);
+        const phone10Formatted = formatPhone10(cleaned);
 
-        const merged = [...byCpf.docs, ...byPhone.docs];
+        const cpfValues = [cleaned, cpfFormatted].filter(Boolean);
+        const phoneValues = [cleaned, phone11Formatted, phone10Formatted].filter(Boolean);
+
+        const queries = [
+            ...cpfValues.map((v) => db.collection("users").where("cpf", "==", v).limit(1).get()),
+            ...phoneValues.map((v) => db.collection("users").where("phone", "==", v).limit(1).get()),
+        ];
+
+        const snapshots = await Promise.all(queries);
+
         const seenIds = new Set();
-        const unique = merged.filter((d) => {
-            if (seenIds.has(d.id)) return false;
-            seenIds.add(d.id);
-            return true;
-        });
-        const found = unique[0];
+        const found = snapshots
+            .flatMap((s) => s.docs)
+            .find((d) => {
+                if (seenIds.has(d.id)) return false;
+                seenIds.add(d.id);
+                return true;
+            });
 
         if (!found) {
             throw new HttpsError("not-found", "Nenhuma conta encontrada com esse CPF ou telefone.");
