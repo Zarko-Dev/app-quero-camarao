@@ -76,7 +76,7 @@ export const MethodTabs = styled.View`
 
 export const MethodTab = styled.TouchableOpacity`
     flex: 1;
-    padding: ${({ theme }) => theme.size.componentSize(10)}px 0;
+    padding: ${({ theme }) => theme.size.componentSize(10)} 0;
     align-items: center;
     background-color: ${({ active, theme }) =>
         active ? theme.colors.primary : "transparent"};
