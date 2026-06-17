@@ -61,6 +61,7 @@ export const PublicationChat = ({ route, navigation }) => {
     const durationIntervalRef = useRef(null);
     const soundRef = useRef(null);
     const autoSentRef = useRef(false);
+    const messagesReadyRef = useRef(false);
 
     // Self-chat: usuário abre a própria publicação sem paramBuyerId (seria comprador e vendedor ao mesmo tempo)
     const isSelfChat = myId && sellerId && !paramBuyerId && myId === sellerId;
@@ -80,6 +81,8 @@ export const PublicationChat = ({ route, navigation }) => {
 
     useEffect(() => {
         if (!autoSend || !initialMessage || !myId || !buyerId || autoSentRef.current) return;
+        if (!messagesReadyRef.current) return; // aguarda subscription carregar
+        if (messages.length > 0) return; // chat já tem mensagens — não dispara de novo
         const effectiveSellerName = resolvedSellerName || sellerName || "";
         if (sellerId && !effectiveSellerName) return; // aguarda resolvedSellerName
         autoSentRef.current = true;
@@ -93,7 +96,7 @@ export const PublicationChat = ({ route, navigation }) => {
             buyerName,
             publicationTitle: publication?.publicationTitle || publication?.location || "",
         });
-    }, [myId, resolvedSellerName]);
+    }, [myId, resolvedSellerName, messages]);
 
     useEffect(() => {
         if (!sellerId) return;
@@ -123,6 +126,7 @@ export const PublicationChat = ({ route, navigation }) => {
             publicationId: publication.id,
             buyerId,
             onMessages: (msgs) => {
+                messagesReadyRef.current = true;
                 setMessages([...msgs].reverse());
                 if (myId && resolvedChatId) {
                     markChatAsSeen(resolvedChatId, myId);

@@ -196,13 +196,18 @@ export const CardPublicationShrimp = memo(
         };
 
         const openChat = () => {
-            const producerName = item.sellerName ?? "Produtor";
-            const reference = location ?? "seu anuncio";
+            const producerName = item.sellerName ?? item.publicationTitle ?? "Produtor";
+            const shrimpDetails = item.shrimps?.length
+                ? item.shrimps.map((s) => `${s.grammage}g/${s.kilo}kg`).join(" - ")
+                : null;
+            const initialMessage = shrimpDetails
+                ? `Olá ${producerName}, vi seu anuncio de camarão de ${shrimpDetails} aqui no Quero Camarão. Ainda está disponível? Tenho interesse!!`
+                : `Olá ${producerName}, vi seu anuncio aqui no Quero Camarão. Ainda está disponível? Tenho interesse!!`;
             navigation.navigate(dataRoutes.publicationChat, {
                 publication: item,
                 sellerId: item.userId,
                 sellerName: producerName,
-                initialMessage: `Olá ${producerName}, vi seu anuncio ${reference} ainda está disponível? Tenho interesse!!`,
+                initialMessage,
                 autoSend: true,
             });
         };
