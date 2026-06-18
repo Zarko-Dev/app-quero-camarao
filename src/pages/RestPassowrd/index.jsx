@@ -4,7 +4,6 @@ import Toast from "react-native-toast-message";
 
 import { dataRoutes } from "../../routes/dataRoutes";
 import { resetUserPassword } from "../../controllers/User/resetPassword";
-import { getPasswordResetToken } from "../../controllers/User/getPasswordResetToken";
 import { isValidEmail } from "../../utils/ValidationEmail";
 
 import { Input } from "../../components/Input";
@@ -68,28 +67,13 @@ export const RestPassowrd = ({ navigation, route }) => {
         setIsLoading(false);
     };
 
-    const handleResetByCpf = async () => {
+    const handleResetByCpf = () => {
         const cleaned = identifier.replace(/\D/g, "");
         if (cleaned.length < 8) {
             Toast.show({ type: "error", text1: "Informe um CPF ou telefone válido" });
             return;
         }
-
-        setIsLoading(true);
-
-        const result = await getPasswordResetToken(cleaned);
-
-        if (result.error) {
-            Toast.show({
-                type: "error",
-                text1: "Conta não encontrada",
-                text2: "Verifique o CPF ou telefone informado.",
-            });
-        } else {
-            navigation.navigate(dataRoutes.createNewPassword, { token: result.token });
-        }
-
-        setIsLoading(false);
+        navigation.navigate(dataRoutes.createNewPassword, { identifier: cleaned });
     };
 
     return (

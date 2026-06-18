@@ -81,6 +81,7 @@ export const Input = ({
                         onChangeText={(text) => onChange(text)}
                         onBlur={onBlur}
                         onFocus={onFocus}
+                        keyboardType={keyboardType}
                     />
                 )}
                 outlineColor={theme.colors.quaternary}

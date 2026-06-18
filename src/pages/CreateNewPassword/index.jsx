@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { ActivityIndicator } from "react-native-paper";
 import Toast from "react-native-toast-message";
-import { getAuth, signInWithCustomToken, updatePassword, signOut } from "firebase/auth";
 
 import { dataRoutes } from "../../routes/dataRoutes";
-import { firebaseApp } from "../../services/Firebase";
+import { resetPasswordByIdentifier } from "../../controllers/User/resetPasswordByIdentifier";
 import { Input } from "../../components/Input";
 import { BoxShadowIos } from "../../styles/IosShadow";
 
@@ -21,7 +20,7 @@ import {
 } from "./styles";
 
 export const CreateNewPassword = ({ route, navigation }) => {
-    const { token } = route.params;
+    const { identifier } = route.params;
 
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -38,20 +37,15 @@ export const CreateNewPassword = ({ route, navigation }) => {
         }
 
         setIsLoading(true);
+        const result = await resetPasswordByIdentifier(identifier, password);
+        setIsLoading(false);
 
-        const auth = getAuth(firebaseApp);
-        try {
-            const credential = await signInWithCustomToken(auth, token);
-            await updatePassword(credential.user, password);
+        if (result.error) {
+            Toast.show({ type: "error", text1: "Erro ao salvar senha", text2: result.message });
+        } else {
             Toast.show({ type: "success", text1: "Senha criada com sucesso!", text2: "Faça login com a nova senha." });
             navigation.navigate(dataRoutes.login);
-        } catch (error) {
-            Toast.show({ type: "error", text1: "Erro ao salvar senha", text2: "Tente novamente." });
-        } finally {
-            await signOut(auth).catch(() => {});
         }
-
-        setIsLoading(false);
     };
 
     return (
