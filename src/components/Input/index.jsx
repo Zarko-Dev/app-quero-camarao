@@ -31,6 +31,23 @@ export const Input = ({
 }) => {
     const inputRef = useRef();
     const [isVisible, setIsVisible] = useState(security);
+    const useMask = !!mask && typeof mask === "string" && !/^\*+$/.test(mask);
+    const renderMaskInput = (props) => (
+        <TextInputMask
+            {...props}
+            value={value}
+            type="custom"
+            options={{
+                mask,
+            }}
+            ref={inputRef}
+            onChangeText={(text) => onChange(text)}
+            onBlur={onBlur}
+            onFocus={onFocus}
+            keyboardType={keyboardType}
+        />
+    );
+    const maskProps = useMask ? { render: renderMaskInput } : {};
 
     return (
         <Container style={style}>
@@ -69,21 +86,7 @@ export const Input = ({
                         />
                     )
                 }
-                render={(props) => (
-                    <TextInputMask
-                        {...props}
-                        value={value}
-                        type="custom"
-                        options={{
-                            mask,
-                        }}
-                        ref={inputRef}
-                        onChangeText={(text) => onChange(text)}
-                        onBlur={onBlur}
-                        onFocus={onFocus}
-                        keyboardType={keyboardType}
-                    />
-                )}
+                {...maskProps}
                 outlineColor={theme.colors.quaternary}
                 activeOutlineColor={theme.colors.text}
                 textColor={theme.colors.text}

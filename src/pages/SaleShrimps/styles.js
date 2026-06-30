@@ -70,6 +70,14 @@ export const TitleInput = styled.Text`
     color: ${({ theme }) => theme.colors.black};
 `;
 
+export const SalePreviewText = styled.Text`
+    font-size: ${({ theme }) => theme.size.fontSize(13)};
+    font-weight: bold;
+    margin-top: ${({ theme }) => theme.size.dimentionsSize(0.5)};
+    margin-bottom: ${({ theme }) => theme.size.dimentionsSize(1)};
+    color: ${({ theme }) => theme.colors.primary};
+`;
+
 export const InputStyle = styled(Input)`
     margin-bottom: ${({ theme }) => theme.size.dimentionsSize(1)};
 `;

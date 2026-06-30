@@ -4,8 +4,10 @@
 import { useEffect, useState } from "react";
 import { Feather } from "@expo/vector-icons";
 import { TouchableOpacity, View, Modal } from "react-native";
+import Toast from "react-native-toast-message";
 
 import { ShrimpCamera } from "../Camera/ShrimpCamera";
+import { sanitizeGrammageInput } from "../../utils/sanitizeGrammageInput";
 
 import {
     ButtonDeleteCardPond,
@@ -85,10 +87,24 @@ export const CardRegisterShrimp = ({
                         <TitleInput>Gramatura do camarao</TitleInput>
                         <InputStyle
                             label="Ex.: 50g"
-                            keyboardType="numeric"
-                            value={grammage.replace(/[ \-.]/g, "")}
+                            keyboardType="decimal-pad"
+                            value={grammage}
                             onChange={(value) => {
-                                setGrammage(value.replace(/[ \-.]/g, ""));
+                                const nextValue = sanitizeGrammageInput(
+                                    value,
+                                    2,
+                                    70,
+                                );
+
+                                if (nextValue.exceeded) {
+                                    Toast.show({
+                                        type: "error",
+                                        text1: "A gramatura máxima é 70g",
+                                        text2: "Informe um valor menor ou igual a 70g.",
+                                    });
+                                }
+
+                                setGrammage(nextValue.value);
                             }}
                             onPressIn={onPressIn}
                         />
@@ -97,10 +113,10 @@ export const CardRegisterShrimp = ({
                         <TitleInput>Quilo do camarao</TitleInput>
                         <InputStyle
                             label="Ex.: 1000kg"
-                            keyboardType="numeric"
-                            value={kilo.replace(/[ \-,]/g, "")}
+                            keyboardType="decimal-pad"
+                            value={kilo}
                             onChange={(value) => {
-                                setKilo(value.replace(/[ \-,]/g, ""));
+                                setKilo(sanitizeDecimalInput(value, 1));
                             }}
                             onPressIn={onPressIn}
                         />

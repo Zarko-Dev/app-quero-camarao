@@ -16,6 +16,7 @@ import {
     ContentInput,
     ContentTitleCardShrimp,
     InputStyle,
+    SalePreviewText,
     TitleButtonSale,
     TitleCardShrimp,
     TitleInfoForm,
@@ -30,6 +31,13 @@ import {
 import { updatePublicationWithShirimpSalle } from "../../controllers/Publication/updatePublication";
 import { DialogComponent } from "../../components/Dialog";
 import { saveShrimpPrice10g } from "../../controllers/ShrimpPonds/saveShrimpPrice10g";
+import { sanitizeDecimalInput } from "../../utils/sanitizeDecimalInput";
+import { sanitizeGrammageInput } from "../../utils/sanitizeGrammageInput";
+import {
+    calculateShrimpSalePrice,
+    formatPriceValue,
+    parseDecimalValue,
+} from "../../utils/shrimpSalePricing";
 
 export const SaleShrimps = ({ route, navigation }) => {
     const [dataShirimpSale] = useState(route.params.shrimpList);
@@ -38,6 +46,15 @@ export const SaleShrimps = ({ route, navigation }) => {
     const [dataSale, setDataSale] = useState([]);
     const [loadingSale, setLoadingSale] = useState(false);
     const [showAlertVisible, setShowAlertVisible] = useState(false);
+
+    const getCurrentSaleDate = () => {
+        const now = new Date();
+        const day = String(now.getDate()).padStart(2, "0");
+        const month = String(now.getMonth() + 1).padStart(2, "0");
+        const year = now.getFullYear();
+
+        return `${day}/${month}/${year}`;
+    };
 
     useEffect(() => {
         const newDataSale = dataShirimpSale.map((item) => ({
@@ -56,9 +73,7 @@ export const SaleShrimps = ({ route, navigation }) => {
         const isValidate = dataSale.every(
             (sale) =>
                 sale.grammage &&
-                sale.kilo &&
-                sale.grammageValue &&
-                sale.saleDate,
+                sale.grammageValue,
         );
 
         const isGrammageValid = dataSale.every((sale) => {
@@ -66,26 +81,9 @@ export const SaleShrimps = ({ route, navigation }) => {
 
             return (
                 parseFloat(sale.grammage.replace(",", ".")) >=
-                parseFloat(shrimp.grammage.replace(",", "."))
+                    parseFloat(shrimp.grammage.replace(",", ".")) &&
+                parseFloat(sale.grammage.replace(",", ".")) <= 70
             );
-        });
-
-        const isDateValid = dataSale.every((sale) => {
-            if (sale.saleDate === "") {
-                return false;
-            }
-
-            const convertDate = sale.saleDate.split("/");
-
-            const date = new Date(
-                convertDate[2],
-                convertDate[1] - 1,
-                convertDate[0],
-            );
-
-            const currentDate = new Date();
-
-            return date <= currentDate;
         });
 
         if (!isValidate) {
@@ -99,17 +97,9 @@ export const SaleShrimps = ({ route, navigation }) => {
         if (!isGrammageValid) {
             Toast.show({
                 type: "error",
-                text1: "Gramatura de venda inválida",
-                text2: "A gramatura de venda não pode ser menor que a original",
-            });
-
-            return false;
-        }
-        if (!isDateValid) {
-            Toast.show({
-                type: "error",
-                text1: "Data da venda inválida",
-                text2: "A data não pode ser maior que a data atual",
+                text1: "Gramatura vendida inválida",
+                text2:
+                    "A gramatura vendida não pode ser menor que a original nem maior que 70g.",
             });
 
             return false;
@@ -122,39 +112,42 @@ export const SaleShrimps = ({ route, navigation }) => {
         const resultDataShrimp = await getShirimpSaleByCreatedAtLastSevenDays();
 
         if (resultDataShrimp.length > 0) {
-            const salesList = [];
-            const salesListShrimp10g = [];
-            let shrimpTotalValue10g = 0;
+            const priceTable10gList = [];
 
             resultDataShrimp.forEach((item) => {
                 item.sales.forEach((sale) => {
-                    salesList.push({
-                        id: sale.id,
-                        grammage: parseFloat(sale.grammage.replace(",", ".")),
-                        grammageValue: parseFloat(
-                            sale.grammageValue.replace(",", "."),
-                        ),
-                    });
+                    const grammage = parseDecimalValue(sale.grammage);
+                    const tablePrice = parseDecimalValue(sale.grammageValue);
+                    const hasCalculatedSaleValue =
+                        sale.totalSaleValue !== undefined &&
+                        sale.totalSaleValue !== null &&
+                        sale.totalSaleValue !== "";
+
+                    let price10g = 0;
+
+                    if (hasCalculatedSaleValue) {
+                        price10g = tablePrice;
+                    } else if (grammage > 0) {
+                        price10g = (10 * tablePrice) / grammage;
+                    }
+
+                    priceTable10gList.push(price10g);
                 });
             });
 
-            salesList.forEach((sale) => {
-                const resultValueSale10g =
-                    (10 * sale.grammageValue) / sale.grammage;
+            const shrimpTotalValue10g = priceTable10gList.reduce(
+                (accumulator, currentValue) => accumulator + currentValue,
+                0,
+            );
 
-                salesListShrimp10g.push({
-                    id: sale.id,
-                    grammage: 10,
-                    grammageValue: Math.ceil(resultValueSale10g),
-                });
-            });
-
-            salesListShrimp10g.forEach((sale) => {
-                shrimpTotalValue10g += sale.grammageValue;
-            });
+            if (priceTable10gList.length === 0) {
+                return;
+            }
 
             await saveShrimpPrice10g(
-                shrimpTotalValue10g / salesListShrimp10g.length,
+                Number(
+                    (shrimpTotalValue10g / priceTable10gList.length).toFixed(2),
+                ),
             );
         }
     };
@@ -162,7 +155,10 @@ export const SaleShrimps = ({ route, navigation }) => {
     const getCleanedSalesData = () =>
         dataSale.map((sale) => ({
             ...sale,
-            grammageValue: (sale.grammageValue ?? "").split(",")[0],
+            totalSaleValue: formatPriceValue(
+                calculateShrimpSalePrice(sale.grammageValue, sale.grammage),
+            ),
+            saleDate: getCurrentSaleDate(),
         }));
 
     const handleSaveShirimpSale = async () => {
@@ -305,183 +301,177 @@ export const SaleShrimps = ({ route, navigation }) => {
             <FlatList
                 data={dataShirimpSale}
                 keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                    <ContentCards>
-                        <CardShrimp>
-                            <ContentTitleCardShrimp>
-                                <TitleCardShrimp>
-                                    {item.grammage}g / {item.kilo}kg
-                                </TitleCardShrimp>
-                            </ContentTitleCardShrimp>
-                            <TitleInfoForm>
-                                Informe os dados da venda
-                            </TitleInfoForm>
-                            <ContentForm>
-                                <ContentInput>
-                                    <TitleInput>
-                                        *Gramatura de venda do camarão:
-                                    </TitleInput>
-                                    <InputStyle
-                                        label="Ex.: 50g"
-                                        keyboardType="numeric"
-                                        value={
-                                            dataSale.find(
-                                                (sale) => sale.id === item.id,
-                                            )?.grammage ?? ""
-                                        }
-                                        onChange={(value) => {
-                                            const sanitizedValue =
-                                                value.replace(/[^0-9,]/g, "");
+                renderItem={({ item }) => {
+                    const currentSale = dataSale.find(
+                        (sale) => sale.id === item.id,
+                    );
+                    const previewSalePrice = currentSale?.grammageValue
+                        ? formatPriceValue(
+                              calculateShrimpSalePrice(
+                                  currentSale.grammageValue,
+                                  currentSale.grammage,
+                              ),
+                          )
+                        : null;
 
-                                            setDataSale((prevState) =>
-                                                prevState.map((sale) =>
-                                                    sale.id === item.id
-                                                        ? {
-                                                              ...sale,
-                                                              grammage:
-                                                                  sanitizedValue,
-                                                          }
-                                                        : sale,
-                                                ),
-                                            );
-                                        }}
-                                    />
-                                </ContentInput>
-                                <ContentInput>
-                                    <TitleInput>
-                                        *Kilo da venda do camarão:
-                                    </TitleInput>
-                                    <InputStyle
-                                        label="Ex.: 100kg"
-                                        keyboardType="numeric"
-                                        value={
-                                            dataSale.find(
-                                                (sale) => sale.id === item.id,
-                                            )?.kilo ?? ""
-                                        }
-                                        onChange={(value) => {
-                                            const sanitizedValue =
-                                                value.replace(/[^0-9,]/g, "");
+                    return (
+                        <ContentCards>
+                            <CardShrimp>
+                                <ContentTitleCardShrimp>
+                                    <TitleCardShrimp>
+                                        {item.grammage}g / {item.kilo}kg
+                                    </TitleCardShrimp>
+                                </ContentTitleCardShrimp>
+                                <TitleInfoForm>
+                                    Informe os dados da venda
+                                </TitleInfoForm>
+                                <ContentForm>
+                                    <ContentInput>
+                                        <TitleInput>
+                                            *Qual gramatura foi vendida no seu camarão?
+                                        </TitleInput>
+                                        <InputStyle
+                                            label="Ex.: 50g"
+                                            keyboardType="decimal-pad"
+                                            value={currentSale?.grammage ?? ""}
+                                            onChange={(value) => {
+                                                const sanitizedValue =
+                                                    sanitizeGrammageInput(
+                                                        value,
+                                                        2,
+                                                        70,
+                                                    );
 
-                                            setDataSale((prevState) =>
-                                                prevState.map((sale) =>
-                                                    sale.id === item.id
-                                                        ? {
-                                                              ...sale,
-                                                              kilo: sanitizedValue,
-                                                          }
-                                                        : sale,
-                                                ),
-                                            );
-                                        }}
-                                    />
-                                </ContentInput>
-                                <ContentInput>
-                                    <TitleInput>
-                                        *Preço por kilo do camarão:
-                                    </TitleInput>
-                                    <InputStyle
-                                        label="Ex.: 28,00"
-                                        keyboardType="numeric"
-                                        value={
-                                            dataSale.find(
-                                                (sale) => sale.id === item.id,
-                                            )?.grammageValue ?? ""
-                                        }
-                                        onChange={(value) => {
-                                            const sanitizedValue =
-                                                value.replace(/[^0-9]/g, "");
+                                                if (sanitizedValue.exceeded) {
+                                                    Toast.show({
+                                                        type: "error",
+                                                        text1: "A gramatura máxima é 70g",
+                                                        text2: "Informe um valor menor ou igual a 70g.",
+                                                    });
+                                                }
 
-                                            setDataSale((prevState) =>
-                                                prevState.map((sale) =>
-                                                    sale.id === item.id
-                                                        ? {
-                                                              ...sale,
-                                                              grammageValue:
-                                                                  sanitizedValue,
-                                                          }
-                                                        : sale,
-                                                ),
-                                            );
-                                        }}
-                                        onFocus={() => {
-                                            setDataSale((prevState) =>
-                                                prevState.map((sale) => {
-                                                    if (
-                                                        sale.id === item.id &&
-                                                        sale.grammageValue &&
-                                                        sale.grammageValue.includes(
-                                                            ",",
-                                                        )
-                                                    ) {
-                                                        return {
-                                                            ...sale,
-                                                            grammageValue:
-                                                                sale.grammageValue.split(
-                                                                    ",",
-                                                                )[0],
-                                                        };
-                                                    }
-                                                    return sale;
-                                                }),
-                                            );
-                                        }}
-                                        onBlur={() => {
-                                            setDataSale((prevState) =>
-                                                prevState.map((sale) => {
-                                                    if (
-                                                        sale.id === item.id &&
-                                                        sale.grammageValue &&
-                                                        !sale.grammageValue.includes(
-                                                            ",",
-                                                        )
-                                                    ) {
-                                                        return {
-                                                            ...sale,
-                                                            grammageValue: `${sale.grammageValue},00`,
-                                                        };
-                                                    }
-                                                    return sale;
-                                                }),
-                                            );
-                                        }}
-                                    />
-                                </ContentInput>
-                                <ContentInput>
-                                    <TitleInput>
-                                        *Data da venda do camarão:
-                                    </TitleInput>
-                                    <InputStyle
-                                        label="Ex.: 01/01/2021"
-                                        keyboardType="numeric"
-                                        value={
-                                            dataSale.find(
-                                                (sale) => sale.id === item.id,
-                                            )?.saleDate ?? ""
-                                        }
-                                        onChange={(value) => {
-                                            const sanitizedValue =
-                                                value.replace(/[^0-9/]/g, "");
+                                                setDataSale((prevState) =>
+                                                    prevState.map((sale) =>
+                                                        sale.id === item.id
+                                                            ? {
+                                                                  ...sale,
+                                                                  grammage:
+                                                                      sanitizedValue.value,
+                                                              }
+                                                            : sale,
+                                                    ),
+                                                );
+                                            }}
+                                        />
+                                    </ContentInput>
+                                    {/*
+                                    <ContentInput>
+                                        <TitleInput>
+                                            *Kilo da venda do camarão:
+                                        </TitleInput>
+                                        <InputStyle
+                                            label="Ex.: 100kg"
+                                            keyboardType="decimal-pad"
+                                            value={
+                                                dataSale.find(
+                                                    (sale) => sale.id === item.id,
+                                                )?.kilo ?? ""
+                                            }
+                                            onChange={(value) => {
+                                                const sanitizedValue =
+                                                    sanitizeDecimalInput(
+                                                        value,
+                                                        1,
+                                                    );
 
-                                            setDataSale((prevState) =>
-                                                prevState.map((sale) =>
-                                                    sale.id === item.id
-                                                        ? {
-                                                              ...sale,
-                                                              saleDate:
-                                                                  sanitizedValue,
-                                                          }
-                                                        : sale,
-                                                ),
-                                            );
-                                        }}
-                                        mask="99/99/9999"
-                                    />
-                                </ContentInput>
-                            </ContentForm>
-                        </CardShrimp>
-                    </ContentCards>
-                )}
+                                                setDataSale((prevState) =>
+                                                    prevState.map((sale) =>
+                                                        sale.id === item.id
+                                                            ? {
+                                                                  ...sale,
+                                                                  kilo: sanitizedValue,
+                                                              }
+                                                            : sale,
+                                                    ),
+                                                );
+                                            }}
+                                        />
+                                    </ContentInput>
+                                    */}
+                                    <ContentInput>
+                                        <TitleInput>
+                                            *Informe o preço da tabela (10g):
+                                        </TitleInput>
+                                        <InputStyle
+                                            label="Ex.: 20,00"
+                                            keyboardType="decimal-pad"
+                                            value={currentSale?.grammageValue ?? ""}
+                                            onChange={(value) => {
+                                                const sanitizedValue =
+                                                    sanitizeDecimalInput(
+                                                        value,
+                                                        2,
+                                                        40,
+                                                    );
+
+                                                setDataSale((prevState) =>
+                                                    prevState.map((sale) =>
+                                                        sale.id === item.id
+                                                            ? {
+                                                                  ...sale,
+                                                                  grammageValue:
+                                                                      sanitizedValue,
+                                                              }
+                                                            : sale,
+                                                    ),
+                                                );
+                                            }}
+                                        />
+                                        <SalePreviewText>
+                                            Preço do seu camarão:{" "}
+                                            {previewSalePrice
+                                                ? `R$ ${previewSalePrice}`
+                                                : "-"}
+                                        </SalePreviewText>
+                                    </ContentInput>
+                                    {/*
+                                    <ContentInput>
+                                        <TitleInput>
+                                            *Data da venda do camarão:
+                                        </TitleInput>
+                                        <InputStyle
+                                            label="Ex.: 01/01/2021"
+                                            keyboardType="numeric"
+                                            value={
+                                                dataSale.find(
+                                                    (sale) => sale.id === item.id,
+                                                )?.saleDate ?? ""
+                                            }
+                                            onChange={(value) => {
+                                                const sanitizedValue =
+                                                    value.replace(/[^0-9/]/g, "");
+
+                                                setDataSale((prevState) =>
+                                                    prevState.map((sale) =>
+                                                        sale.id === item.id
+                                                            ? {
+                                                                  ...sale,
+                                                                  saleDate:
+                                                                      sanitizedValue,
+                                                              }
+                                                            : sale,
+                                                    ),
+                                                );
+                                            }}
+                                            mask="99/99/9999"
+                                        />
+                                    </ContentInput>
+                                    */}
+                                </ContentForm>
+                            </CardShrimp>
+                        </ContentCards>
+                    );
+                }}
             />
             <ButtonSale onPress={handleSaleShrimp}>
                 {loadingSale ? (

@@ -24,6 +24,10 @@ import ShririmpBanner from "../../assets/images/camaraoBanner.png";
 import { getShirimpSaleLastTen } from "../../controllers/ShirimpSale/sale";
 import { BannerShirimpSaleSkeleton } from "../Skeleton/BannerShirimpSaleSkeleton";
 import { dataRoutes } from "../../routes/dataRoutes";
+import {
+    calculateShrimpSalePrice,
+    formatPriceValue,
+} from "../../utils/shrimpSalePricing";
 
 let cachedSalesBanner = [];
 
@@ -63,12 +67,14 @@ export const BannerShrimpSalePrice = () => {
                             ? item.sales.map((data) => ({
                                 grammage: data?.grammage ?? "-",
                                 grammageValue: data?.grammageValue ?? "-",
+                                totalSaleValue: data?.totalSaleValue ?? "",
                                 saleDate: data?.saleDate ?? "-",
                             }))
                             : [
                                 {
                                     grammage: "-",
                                     grammageValue: "-",
+                                    totalSaleValue: "",
                                     saleDate: "-",
                                 },
                             ],
@@ -122,6 +128,7 @@ export const BannerShrimpSalePrice = () => {
     const currentItem = dataSales[currentIndex]?.data?.[0] || {
         grammage: "-",
         grammageValue: "-",
+        totalSaleValue: "",
         saleDate: "-",
     };
     const currentLocation = dataSales[currentIndex]?.location || "-";
@@ -236,10 +243,19 @@ export const BannerShrimpSalePrice = () => {
                                 <MaterialCommunityIcons name="tag-outline" size={20} color="#e85d22" />
                             </IconContainer>
                             <LabelText $compact={isCompact}>
-                                {"Pre\u00e7o Kg:"}
+                                {"Pre\u00e7o do camar\u00e3o:"}
                             </LabelText>
                             <ValueText $compact={isCompact}>
-                                R$ {currentItem.grammageValue ? `${currentItem.grammageValue},00` : "-"}
+                                {currentItem.totalSaleValue
+                                    ? `R$ ${formatPriceValue(currentItem.totalSaleValue)}`
+                                    : currentItem.grammageValue
+                                        ? `R$ ${formatPriceValue(
+                                              calculateShrimpSalePrice(
+                                                  currentItem.grammageValue,
+                                                  currentItem.grammage,
+                                              ),
+                                          )}`
+                                        : "-"}
                             </ValueText>
                         </DataRow>
 

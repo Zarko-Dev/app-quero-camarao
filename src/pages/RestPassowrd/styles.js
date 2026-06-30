@@ -18,6 +18,7 @@ export const ContentFormLogin = styled.View`
 
     justify-content: center;
     align-items: center;
+    gap: ${({ theme }) => theme.size.componentSize(12)};
 `;
 
 export const Footer = styled.View`
@@ -42,7 +43,7 @@ export const ButtonLogin = styled.TouchableOpacity`
 `;
 
 export const TextButton = styled(Text)`
-    font-size: ${({ theme }) => theme.size.fontSize(18)};
+    font-size: ${({ theme }) => theme.size.fontSize(14)};
     font-weight: bold;
 
     color: ${({ theme }) => theme.colors.white};

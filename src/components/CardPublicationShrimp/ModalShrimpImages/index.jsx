@@ -76,13 +76,14 @@ export const ModalShrimpImages = ({
                         <View style={{ flexDirection: "row", width: "100%", paddingHorizontal: 16, marginBottom: 8 }}>
                             <ButtonBuyShrimp
                                 onPress={actionBuy}
-                                style={{ width: 52, flex: undefined, paddingHorizontal: 0, justifyContent: "center", alignItems: "center", marginBottom: 0 }}
+                                style={{ flex: 1, paddingHorizontal: 16, justifyContent: "center", alignItems: "center", gap: 8, marginBottom: 0 }}
                             >
                                 {!isLoading ? (
                                     <FontAwesome name="whatsapp" size={26} color="white" />
                                 ) : (
                                     <ActivityIndicator animating size={20} color="white" />
                                 )}
+                                <TextButton>Falar com o produtor</TextButton>
                             </ButtonBuyShrimp>
                             {showChatButton && (
                                 <TouchableOpacity

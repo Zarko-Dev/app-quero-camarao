@@ -1,8 +1,6 @@
 import * as Sentry from "@sentry/react-native";
 
 export const getOrderDetails = async (orderId) => {
-    console.log(process.env.STATUS_PROJECT);
-
     try {
         const resultDetails = await (
             await fetch(`https://api.mercadopago.com/v1/payments/${orderId}`, {

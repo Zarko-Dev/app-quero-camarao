@@ -2,7 +2,7 @@ import { FontAwesome, Feather, MaterialCommunityIcons } from "@expo/vector-icons
 import { useNavigation } from "@react-navigation/native";
 import { useDispatch, useSelector } from "react-redux";
 import { memo, useMemo, useState } from "react";
-import { ActivityIndicator, Dimensions, Platform, Share, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Dimensions, Platform, Share, View } from "react-native";
 import { v4 } from "uuid";
 
 import { dataRoutes } from "../../routes/dataRoutes";
@@ -195,22 +195,22 @@ export const CardPublicationShrimp = memo(
             }, 2000);
         };
 
-        const openChat = () => {
-            const producerName = item.sellerName ?? item.publicationTitle ?? "Produtor";
-            const shrimpDetails = item.shrimps?.length
-                ? item.shrimps.map((s) => `${s.grammage}g/${s.kilo}kg`).join(" - ")
-                : null;
-            const initialMessage = shrimpDetails
-                ? `Olá ${producerName}, vi seu anuncio de camarão de ${shrimpDetails} aqui no Quero Camarão. Ainda está disponível? Tenho interesse!!`
-                : `Olá ${producerName}, vi seu anuncio aqui no Quero Camarão. Ainda está disponível? Tenho interesse!!`;
-            navigation.navigate(dataRoutes.publicationChat, {
-                publication: item,
-                sellerId: item.userId,
-                sellerName: producerName,
-                initialMessage,
-                autoSend: true,
-            });
-        };
+        // const openChat = () => {
+        //     const producerName = item.sellerName ?? item.publicationTitle ?? "Produtor";
+        //     const shrimpDetails = item.shrimps?.length
+        //         ? item.shrimps.map((s) => `${s.grammage}g/${s.kilo}kg`).join(" - ")
+        //         : null;
+        //     const initialMessage = shrimpDetails
+        //         ? `Olá ${producerName}, vi seu anuncio de camarão de ${shrimpDetails} aqui no Quero Camarão. Ainda está disponível? Tenho interesse!!`
+        //         : `Olá ${producerName}, vi seu anuncio aqui no Quero Camarão. Ainda está disponível? Tenho interesse!!`;
+        //     navigation.navigate(dataRoutes.publicationChat, {
+        //         publication: item,
+        //         sellerId: item.userId,
+        //         sellerName: producerName,
+        //         initialMessage,
+        //         autoSend: true,
+        //     });
+        // };
 
         const ItemImage = ({ index, item: itemValue }) => (
             <ShrimpImage key={index} uri={itemValue.imageShrimpUri} />
@@ -332,35 +332,15 @@ export const CardPublicationShrimp = memo(
                         <View style={{ flexDirection: "row", alignItems: "center" }}>
                             <ButtonBuy
                                 onPress={handleRedirectPage}
-                                style={{ width: 52, flex: undefined, paddingHorizontal: 0, justifyContent: "center", alignItems: "center" }}
+                                style={{ flex: 1, paddingHorizontal: 16, justifyContent: "center", alignItems: "center", gap: 8 }}
                             >
                                 {!isLoadingTalkProductor ? (
                                     <FontAwesome name="whatsapp" size={26} color="white" />
                                 ) : (
                                     <ActivityIndicator animating size={20} color="white" />
                                 )}
+                                <ButtonBuyText>Falar com o produtor</ButtonBuyText>
                             </ButtonBuy>
-                            <TouchableOpacity
-                                onPress={openChat}
-                                activeOpacity={0.8}
-                                style={{
-                                    flex: 1,
-                                    height: 44,
-                                    backgroundColor: "#36536e",
-                                    borderRadius: 8,
-                                    paddingHorizontal: 10,
-                                    marginLeft: 8,
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    gap: 6,
-                                }}
-                            >
-                                <Feather name="message-circle" size={16} color="#fff" />
-                                <Text style={{ color: "#fff", fontSize: 13, fontWeight: "700" }}>
-                                    CHAT
-                                </Text>
-                            </TouchableOpacity>
                         </View>
                     )}
                 </Container>
@@ -369,11 +349,6 @@ export const CardPublicationShrimp = memo(
                     visible={showModalImagesShrimp}
                     onClose={() => setShowModalImagesShrimp(false)}
                     actionBuy={handleRedirectPage}
-                    actionChat={() => {
-                        setShowModalImagesShrimp(false);
-                        openChat();
-                    }}
-                    showChatButton={isAuthenticated && dataUser?.email !== item.userId}
                     dataShrimp={shrimpImageData.data}
                     isLoading={isLoadingTalkProductor}
                 />

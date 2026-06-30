@@ -64,6 +64,8 @@ const paperTheme = {
     },
 };
 
+const shouldRequestStartupPermissions = !__DEV__;
+
 const App = () => {
     registerTranslation("pt", pt);
     const isConnected = useInternetConnection();
@@ -77,6 +79,10 @@ const App = () => {
             }
 
             await Notifications.setBadgeCountAsync(0);
+
+            if (!shouldRequestStartupPermissions) {
+                return;
+            }
 
             if (Platform.OS === "ios") {
                 const { status } = await requestTrackingPermissionsAsync();

@@ -20,7 +20,7 @@ import {
 } from "./styles";
 
 export const CreateNewPassword = ({ route, navigation }) => {
-    const { identifier } = route.params;
+    const { identifier, dateBirth } = route.params || {};
 
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -37,7 +37,7 @@ export const CreateNewPassword = ({ route, navigation }) => {
         }
 
         setIsLoading(true);
-        const result = await resetPasswordByIdentifier(identifier, password);
+        const result = await resetPasswordByIdentifier(identifier, dateBirth, password);
         setIsLoading(false);
 
         if (result.error) {

@@ -28,6 +28,8 @@ import {
 } from "./styles";
 import { BoxShadowIos } from "../../styles/IosShadow";
 
+const dateBirthRegex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
+
 export const RestPassowrd = ({ navigation, route }) => {
     const [method, setMethod] = useState("email"); // "email" | "cpf"
     const [showAlertVisible, setShowAlertVisible] = useState(false);
@@ -35,6 +37,7 @@ export const RestPassowrd = ({ navigation, route }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [email, setEmail] = useState(route.params?.email || "");
     const [identifier, setIdentifier] = useState("");
+    const [dateBirth, setDateBirth] = useState("");
 
     const handleRedirectRegister = () => {
         navigation.navigate(dataRoutes.register);
@@ -69,11 +72,25 @@ export const RestPassowrd = ({ navigation, route }) => {
 
     const handleResetByCpf = () => {
         const cleaned = identifier.replace(/\D/g, "");
+        const normalizedDateBirth = dateBirth.trim();
+
         if (cleaned.length < 8) {
             Toast.show({ type: "error", text1: "Informe um CPF ou telefone válido" });
             return;
         }
-        navigation.navigate(dataRoutes.createNewPassword, { identifier: cleaned });
+
+        if (!dateBirthRegex.test(normalizedDateBirth)) {
+            Toast.show({
+                type: "error",
+                text1: "Informe a data de nascimento no formato DD/MM/AAAA",
+            });
+            return;
+        }
+
+        navigation.navigate(dataRoutes.createNewPassword, {
+            identifier: cleaned,
+            dateBirth: normalizedDateBirth,
+        });
     };
 
     return (
@@ -99,13 +116,23 @@ export const RestPassowrd = ({ navigation, route }) => {
                         onChange={setEmail}
                     />
                 ) : (
-                    <Input
-                        label="Informe seu CPF ou Telefone"
-                        icon="user"
-                        keyboardType="numeric"
-                        value={identifier}
-                        onChange={setIdentifier}
-                    />
+                    <>
+                        <Input
+                            label="Informe seu CPF ou Telefone"
+                            icon="user"
+                            keyboardType="numeric"
+                            value={identifier}
+                            onChange={setIdentifier}
+                        />
+                        <Input
+                            label="Data de Nascimento"
+                            icon="calendar"
+                            keyboardType="numeric"
+                            mask="99/99/9999"
+                            value={dateBirth}
+                            onChange={setDateBirth}
+                        />
+                    </>
                 )}
             </ContentFormLogin>
 
