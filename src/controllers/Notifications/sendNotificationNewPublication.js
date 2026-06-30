@@ -11,7 +11,7 @@ export const sendNotificationNewPublication = async () => {
 
         SendNotifications(
             notificationTokens,
-            "?? Quero Camarão Informa",
+            "🎉 Quero Camarão Informa",
             "Um novo camarão 🦐 foi publicado, venha conferir!",
         );
     }
@@ -27,7 +27,7 @@ export const sendNotificationEditPublication = async () => {
 
         SendNotifications(
             notificationTokens,
-            "?? Quero Camarão Informa",
+            "🎉 Quero Camarão Informa",
             "Uma publicação foi alterada, venha conferir!",
         );
     }

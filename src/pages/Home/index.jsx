@@ -94,6 +94,10 @@ export const Home = ({ navigation }) => {
 
     const executeValidationNotification = async () => {
         if (isAuthenticated) {
+            if (__DEV__) {
+                return;
+            }
+
             const dataUser = await GetUserStorage();
             const { status } = await Notifications.getPermissionsAsync();
 

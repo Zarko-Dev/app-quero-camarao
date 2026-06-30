@@ -18,10 +18,11 @@ export const Content = styled.View`
     justify-content: center;
     align-items: center;
 
-    border-radius: 10px;
-    background-color: ${({ theme }) => theme.colors.quaternary};
+    border-radius: 16px;
+    background-color: #ffffff;
 
-    elevation: 3;
+    elevation: 6;
+    padding-bottom: 16px;
 `;
 
 export const ContentHeader = styled.View`

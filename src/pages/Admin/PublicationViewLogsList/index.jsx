@@ -15,17 +15,20 @@ import {
     ContentInfo,
     ContentPonds,
     ContentTextInfo,
+    Divider,
     ImageItem,
     InfoSubtitle,
     InfoTitle,
     TagPonds,
     TitleActionButton,
     TitleTagPond,
+    ViewsBadge,
+    ViewsBadgeLabel,
+    ViewsBadgeText,
 } from "./styles";
 import { BoxShadowIos } from "../../../styles/IosShadow";
 
 import ShrimpIcon from "../../../assets/images/shrimpIcon.png";
-import { theme } from "../../../styles/Theme";
 import { dataRoutes } from "../../../routes/dataRoutes";
 
 export const PublicationViewLogsList = ({ route, navigation }) => {
@@ -41,21 +44,20 @@ export const PublicationViewLogsList = ({ route, navigation }) => {
 
     const getShrimpImage = (shrimps) => {
         let uri;
-
-        shrimps.map((shrimp) => {
+        shrimps.forEach((shrimp) => {
             if (!uri && shrimp.imageShrimpUri !== null) {
                 uri = shrimp.imageShrimpUri;
             }
-
-            return null;
         });
-
         return uri ? { uri } : ShrimpIcon;
     };
 
     const handleRedirectListUsers = (dataViewLogs) => {
+        const sorted = [...dataViewLogs].sort(
+            (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+        );
         navigation.navigate(dataRoutes.admin.usersList, {
-            dataListUsers: dataViewLogs.map((item) => ({
+            dataListUsers: sorted.map((item) => ({
                 email: item.userId,
                 name: item.user,
                 userImage: item.userImage,
@@ -70,46 +72,46 @@ export const PublicationViewLogsList = ({ route, navigation }) => {
         <Container>
             <FlatList
                 data={dataViewLogsList}
+                contentContainerStyle={{ paddingBottom: 16 }}
                 renderItem={({ item }) => (
                     <Content style={BoxShadowIos}>
                         <ContentInfo>
                             <ImageItem source={getShrimpImage(item.shrimps)} />
                             <ContentTextInfo>
-                                <InfoTitle>{item.userId}</InfoTitle>
-                                <InfoSubtitle>{item.location}</InfoSubtitle>
-                                <InfoSubtitle>
-                                    {convertDate(item.createdAt)}
-                                </InfoSubtitle>
+                                <InfoTitle>{item.location}</InfoTitle>
+                                <InfoSubtitle>{item.userId}</InfoSubtitle>
+                                <InfoSubtitle>{convertDate(item.createdAt)}</InfoSubtitle>
                             </ContentTextInfo>
+                            <ViewsBadge>
+                                <ViewsBadgeText>{item.logViews?.length ?? 0}</ViewsBadgeText>
+                                <ViewsBadgeLabel>views</ViewsBadgeLabel>
+                            </ViewsBadge>
                         </ContentInfo>
+
+                        <Divider />
+
                         <ContentPonds>
                             {item.shrimps.map((shrimp, index) => (
                                 <TagPonds key={index}>
                                     <TitleTagPond>
-                                        {shrimp.grammage}g /{" "}
-                                        {formatKilo(shrimp.kilo)}kg
+                                        {shrimp.grammage}g / {formatKilo(shrimp.kilo)}kg
                                     </TitleTagPond>
                                 </TagPonds>
                             ))}
                         </ContentPonds>
+
                         <ContentActionButtons>
                             <ActionButton
-                                color={theme.colors.primary}
-                                onPress={() =>
-                                    hadleShowChartModal(item.logViews)
-                                }
+                                color="#f55b1f"
+                                onPress={() => hadleShowChartModal(item.logViews)}
                             >
                                 <TitleActionButton>Gráfico</TitleActionButton>
                             </ActionButton>
                             <ActionButton
-                                color={theme.colors.black}
-                                onPress={() =>
-                                    handleRedirectListUsers(item.logViews)
-                                }
+                                color="#36536e"
+                                onPress={() => handleRedirectListUsers(item.logViews)}
                             >
-                                <TitleActionButton>
-                                    Visualizações
-                                </TitleActionButton>
+                                <TitleActionButton>Visualizações</TitleActionButton>
                             </ActionButton>
                         </ContentActionButtons>
                     </Content>

@@ -7,6 +7,7 @@ import { ActivityIndicator } from "react-native-paper";
 
 import { LoginActions } from "../Login/actions";
 import { updateUser } from "../../controllers/User/update";
+import { SetUserStorage, GetUserStorage } from "../../services/Storage/UserStorage";
 
 import {
     clientValidationForm,
@@ -47,6 +48,11 @@ export const PersonalData = ({ route, navigation }) => {
         });
 
         if (result) {
+            const stored = await GetUserStorage();
+            if (stored) {
+                await SetUserStorage({ ...stored, name, phone, dateBirth, ponds, acre });
+            }
+
             Toast.show({
                 type: "success",
                 text1: "Informações atualizadas!",

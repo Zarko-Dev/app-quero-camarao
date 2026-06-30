@@ -2,10 +2,7 @@ import styled from "styled-components/native";
 
 export const Container = styled.SafeAreaView`
     flex: 1;
-
-    justify-content: flex-start;
-    align-items: center;
-
+    background-color: #f0f4f8;
     padding-top: 14px;
 `;
 
@@ -25,19 +22,21 @@ export const ContentInputSelect = styled.View`
 `;
 
 export const CharButton = styled.TouchableOpacity`
-    margin: 8px;
-    padding: 10px 30px;
-
-    border-radius: 4px;
-
-    background-color: ${({ theme }) => theme.colors.primary};
-
-    elevation: 3;
+    align-self: center;
+    margin-top: 12px;
+    padding: 8px 20px;
+    border-radius: 20px;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    background-color: #fff;
+    border-width: 1.5px;
+    border-color: ${({ theme }) => theme.colors.primary};
+    elevation: 1;
 `;
 
 export const TitleButton = styled.Text`
-    font-size: ${({ theme }) => theme.size.fontSize(15)};
-    font-weight: bold;
-
-    color: ${({ theme }) => theme.colors.white};
+    font-size: ${({ theme }) => theme.size.fontSize(13)};
+    font-weight: 700;
+    color: ${({ theme }) => theme.colors.primary};
 `;

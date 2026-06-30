@@ -7,7 +7,7 @@ export const Container = styled.SafeAreaView`
     justify-content: flex-start;
     align-items: center;
 
-    padding: 12px 12px 0 12px;
+    padding: 12px 16px 0 16px;
 `;
 
 export const UserSubtitle = styled.Text`

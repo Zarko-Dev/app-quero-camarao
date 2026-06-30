@@ -18,6 +18,7 @@ export const ContentFormLogin = styled.View`
 
     justify-content: center;
     align-items: center;
+    gap: ${({ theme }) => theme.size.componentSize(12)};
 `;
 
 export const Footer = styled.View`
@@ -42,7 +43,7 @@ export const ButtonLogin = styled.TouchableOpacity`
 `;
 
 export const TextButton = styled(Text)`
-    font-size: ${({ theme }) => theme.size.fontSize(18)};
+    font-size: ${({ theme }) => theme.size.fontSize(14)};
     font-weight: bold;
 
     color: ${({ theme }) => theme.colors.white};
@@ -62,4 +63,29 @@ export const ButtonRegister = styled.TouchableOpacity``;
 
 export const TextButtonRegister = styled(TextRegister)`
     color: ${({ theme }) => theme.colors.primary};
+`;
+
+export const MethodTabs = styled.View`
+    flex-direction: row;
+    width: 80%;
+    margin-bottom: ${({ theme }) => theme.size.componentSize(16)};
+    border-radius: 8px;
+    overflow: hidden;
+    border-width: 1.5px;
+    border-color: ${({ theme }) => theme.colors.primary};
+`;
+
+export const MethodTab = styled.TouchableOpacity`
+    flex: 1;
+    padding: ${({ theme }) => theme.size.componentSize(10)} 0;
+    align-items: center;
+    background-color: ${({ active, theme }) =>
+        active ? theme.colors.primary : "transparent"};
+`;
+
+export const MethodTabText = styled(Text)`
+    font-size: ${({ theme }) => theme.size.fontSize(13)};
+    font-weight: 600;
+    color: ${({ active, theme }) =>
+        active ? theme.colors.white : theme.colors.primary};
 `;

@@ -2,12 +2,16 @@ import { useEffect } from "react";
 import { Image } from "react-native";
 import SplashImage from "../../assets/images/splash.png";
 import { dataRoutes } from "../../routes/dataRoutes";
+import { GetUserStorage } from "../../services/Storage/UserStorage";
 
 export const SplashScreen = ({ navigation }) => {
     useEffect(() => {
-        setTimeout(() => {
-            navigation.navigate(dataRoutes.navigation);
-        }, 2000);
+        const checkAuth = async () => {
+            const user = await GetUserStorage();
+            navigation.navigate(user ? dataRoutes.navigation : dataRoutes.login);
+        };
+        const timer = setTimeout(checkAuth, 2000);
+        return () => clearTimeout(timer);
     }, []);
 
     return (

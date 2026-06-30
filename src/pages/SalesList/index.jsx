@@ -37,6 +37,10 @@ import { getShirimpSaleByCreatedAtLastThirtyDays } from "../../controllers/Shiri
 import shrimpIcon from "../../assets/images/shrimpIcon.png";
 import ShririmpBanner from "../../assets/images/camaraoBanner.png";
 import { buildEncarteLink } from "../../utils/encarteProdutor";
+import {
+    calculateShrimpSalePrice,
+    formatPriceValue,
+} from "../../utils/shrimpSalePricing";
 
 export const SalesList = ({ navigation }) => {
     const [loading, setLoading] = useState(true);
@@ -102,6 +106,7 @@ export const SalesList = ({ navigation }) => {
                                 }),
                                 grammage: sale.grammage ?? "-",
                                 grammageValue: sale.grammageValue ?? "-",
+                                totalSaleValue: sale.totalSaleValue ?? "",
                                 saleDate: sale.saleDate ?? "-",
                             });
                         });
@@ -174,7 +179,14 @@ export const SalesList = ({ navigation }) => {
             );
         }
 
-        return result;
+        return [...result].sort((a, b) => {
+            const dateA = parseSaleDate(a.saleDate);
+            const dateB = parseSaleDate(b.saleDate);
+            if (!dateA && !dateB) return 0;
+            if (!dateA) return 1;
+            if (!dateB) return -1;
+            return dateB.getTime() - dateA.getTime();
+        });
     }, [dataSales, searchValue, activeFilter]);
 
     return (
@@ -276,9 +288,18 @@ export const SalesList = ({ navigation }) => {
                                                 color="#e85d22"
                                             />
                                         </FlyerIconContainer>
-                                        <FlyerLabelText>Preço Kg:</FlyerLabelText>
+                                        <FlyerLabelText>Preço do camarão:</FlyerLabelText>
                                         <FlyerValueText>
-                                            R$ {item.grammageValue ? `${item.grammageValue},00` : "-"}
+                                            {item.totalSaleValue
+                                                ? `R$ ${formatPriceValue(item.totalSaleValue)}`
+                                                : item.grammageValue
+                                                    ? `R$ ${formatPriceValue(
+                                                          calculateShrimpSalePrice(
+                                                              item.grammageValue,
+                                                              item.grammage,
+                                                          ),
+                                                      )}`
+                                                    : "-"}
                                         </FlyerValueText>
                                     </FlyerDataRow>
 

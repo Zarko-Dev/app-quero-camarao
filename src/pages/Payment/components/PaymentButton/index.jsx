@@ -73,10 +73,11 @@ export const PaymentButton = ({ loading }) => {
     const generateDataPublication = async (dataUser) => {
         const dataUrlImage = [];
 
-        for (let index = 0; index < dataPayment.dataPonds.length; index++) {
-            if (dataPayment.dataPonds[index].imageShrimpUri) {
+        const ponds = dataPayment?.dataPonds ?? [];
+        for (let index = 0; index < ponds.length; index++) {
+            if (ponds[index].imageShrimpUri) {
                 const urlImage = await savePondsImages(
-                    dataPayment.dataPonds[index].imageShrimpUri,
+                    ponds[index].imageShrimpUri,
                 );
                 dataUrlImage.push(urlImage.urlImage);
             } else {
@@ -86,10 +87,10 @@ export const PaymentButton = ({ loading }) => {
 
         const newDataPonds = {
             id: v4(),
-            ponds: dataPayment.dataPonds.length,
+            ponds: dataPayment?.dataPonds?.length ?? 0,
             location: `${dataPayment.city}/${dataPayment.state}`,
             contactNumber: `+55${formatphone(dataUser.phone)}`,
-            shrimps: dataPayment.dataPonds.map((pond, index) => ({
+            shrimps: (dataPayment?.dataPonds ?? []).map((pond, index) => ({
                 imageShrimpUri: dataUrlImage[index],
                 grammage: pond.grammage,
                 kilo: pond.kilo,

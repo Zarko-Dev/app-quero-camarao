@@ -1,6 +1,6 @@
 {
     "name": "mobile-quero-camarao",
-    "version": "1.1.12",
+    "version": "2.0.4",
     "main": "node_modules/expo/AppEntry.js",
     "scripts": {
         "test:unit": "node --test tests/**/*.test.cjs",
@@ -72,6 +72,7 @@
         "react-native-fs": "^2.20.0",
         "react-native-gesture-handler": "~2.24.0",
         "react-native-get-random-values": "~1.11.0",
+        "react-native-gifted-charts": "^1.4.77",
         "react-native-masked-text": "^1.13.0",
         "react-native-pager-view": "6.7.1",
         "react-native-paper": "^5.15.3",
@@ -90,7 +91,6 @@
         "react-redux": "^8.1.2",
         "redux": "^4.2.1",
         "styled-components": "^6.0.7",
-        "victory-native": "36.6.12",
         "xlsx": "^0.18.5",
         "yup": "^1.2.0"
     },

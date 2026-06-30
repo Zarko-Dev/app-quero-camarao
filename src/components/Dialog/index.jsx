@@ -14,50 +14,38 @@ export const DialogComponent = ({
     dismissable = true,
     showCancelButton = true,
     inverterActionsButtons = false,
-}) => (
-    <Portal>
-        <Dialog
-            visible={visible}
-            onDismiss={hideDialog}
-            dismissable={dismissable}
-        >
-            <Dialog.Title>{title}</Dialog.Title>
-            <Dialog.Content>
-                <Text variant="bodyMedium">{text}</Text>
-            </Dialog.Content>
-            <Dialog.Actions>
-                {inverterActionsButtons ? (
-                    <>
-                        {textSecondaryActionButton ? (
-                            <Button onPress={secondaryActionButton}>
-                                {textSecondaryActionButton}
-                            </Button>
-                        ) : (
-                            showCancelButton && (
-                                <Button onPress={hideDialog}>Cancelar</Button>
-                            )
-                        )}
-                        <Button onPress={actionButton}>
-                            {textActionButton}
-                        </Button>
-                    </>
-                ) : (
-                    <>
-                        <Button onPress={actionButton}>
-                            {textActionButton}
-                        </Button>
-                        {textSecondaryActionButton ? (
-                            <Button onPress={secondaryActionButton}>
-                                {textSecondaryActionButton}
-                            </Button>
-                        ) : (
-                            showCancelButton && (
-                                <Button onPress={hideDialog}>Cancelar</Button>
-                            )
-                        )}
-                    </>
-                )}
-            </Dialog.Actions>
-        </Dialog>
-    </Portal>
-);
+}) => {
+    const primaryButton = (
+        <Button key="primary" onPress={actionButton}>
+            {textActionButton}
+        </Button>
+    );
+
+    const secondaryButton = textSecondaryActionButton ? (
+        <Button key="secondary" onPress={secondaryActionButton}>
+            {textSecondaryActionButton}
+        </Button>
+    ) : showCancelButton ? (
+        <Button key="cancel" onPress={hideDialog}>Cancelar</Button>
+    ) : null;
+
+    return (
+        <Portal>
+            <Dialog
+                visible={visible}
+                onDismiss={hideDialog}
+                dismissable={dismissable}
+            >
+                <Dialog.Title>{title}</Dialog.Title>
+                <Dialog.Content>
+                    <Text variant="bodyMedium">{text}</Text>
+                </Dialog.Content>
+                <Dialog.Actions>
+                    {inverterActionsButtons
+                        ? [secondaryButton, primaryButton]
+                        : [primaryButton, secondaryButton]}
+                </Dialog.Actions>
+            </Dialog>
+        </Portal>
+    );
+};

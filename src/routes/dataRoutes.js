@@ -15,6 +15,7 @@ export const dataRoutes = {
     discountCupons: "Discount Cupons",
     registerDiscountCupon: "Register Discount Cupom",
     resetPassword: "Reset Password",
+    createNewPassword: "Create New Password",
     profile: "Profile",
     personalData: "Personal Data",
     myPublications: "My Publications",
@@ -32,6 +33,8 @@ export const dataRoutes = {
     drawerPrizeLiveClient: "Drawer Prize Live Client",
     salesShrimps: "Sales Shrimps",
     salesList: "Sales List",
+    publicationChat: "Publication Chat",
+    myChats: "My Chats",
     admin: {
         navigation: "Admin:Navigation",
         navigationTab: "Admin:Tab",
@@ -58,6 +61,7 @@ export const dataRoutes = {
         drawPrizeRulesNew: "Draw Prize Rules New",
         drawPrizeSelect: "Draw Prize Select",
         drawPrizeLive: "Draw Prize Live",
+        parabens: "Parabéns",
     },
 };
 

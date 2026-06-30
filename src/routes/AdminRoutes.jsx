@@ -17,6 +17,7 @@ import { DrawPrizeRulesNew } from "../pages/Admin/DrawPrizeRules/DrawPrizeRulesN
 import { DrawPrizeSelect } from "../pages/Admin/DrawPrizeSelect";
 import { DrawPrizeHistory } from "../pages/Admin/DrawPrizeHistory";
 import { DrawerPrizeLiveClient } from "../pages/DrawerPrizeLiveClient";
+import { Parabens } from "../pages/Admin/Parabens";
 
 const { Navigator, Screen } = createDrawerNavigator();
 
@@ -26,7 +27,7 @@ export const NavigationAdminMenu = () => (
         screenOptions={{
             drawerStyle: { width: "86%", backgroundColor: "#ffffff" },
             drawerLabelStyle: {
-                marginLeft: -18,
+                marginLeft: 4,
                 fontSize: 15,
                 fontWeight: "600",
             },
@@ -46,7 +47,7 @@ export const NavigationAdminMenu = () => (
             component={AdminTabNavigation}
             options={{
                 title: "Início Administrador",
-                header: (props) => <Header {...props} />,
+                headerShown: false,
                 drawerIcon: ({ color }) => (
                     <MaterialCommunityIcons name="view-dashboard-outline" size={21} color={color} />
                 ),
@@ -159,6 +160,17 @@ export const NavigationAdminMenu = () => (
                 header: (props) => <Header {...props} />,
                 drawerIcon: ({ color }) => (
                     <MaterialCommunityIcons name="file-document-edit-outline" size={21} color={color} />
+                ),
+            }}
+        />
+        <Screen
+            name={dataRoutes.admin.parabens}
+            component={Parabens}
+            options={{
+                title: "Parabéns",
+                header: (props) => <Header {...props} />,
+                drawerIcon: ({ color }) => (
+                    <MaterialCommunityIcons name="trophy-outline" size={21} color={color} />
                 ),
             }}
         />

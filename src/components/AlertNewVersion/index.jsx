@@ -107,7 +107,7 @@ export const AlertNewVersion = () => {
                 }
             } catch (error) {
                 console.error(
-                    "Erro ao buscar configurações de inicialização:",
+                    "Erro ao buscar configuraÃ§Ãµes de inicializaÃ§Ã£o:",
                     error,
                 );
             }
@@ -137,7 +137,7 @@ export const AlertNewVersion = () => {
             default:
                 Toast.show({
                     type: "error",
-                    text1: "Plataforma inválida para atualização!",
+                    text1: "Plataforma invÃ¡lida para atualizaÃ§Ã£o!",
                 });
                 break;
         }
@@ -147,8 +147,8 @@ export const AlertNewVersion = () => {
         <Container>
             <DialogComponent
                 visible={dialogVersionVisible && !dialogNotificationVisible}
-                title="Nova versão disponível!"
-                text="Atualize a Quero Camarão e não perca nenhuma novidade!"
+                title="Nova versÃ£o disponÃ­vel!"
+                text="Atualize a Quero CamarÃ£o e nÃ£o perca nenhuma novidade!"
                 textActionButton="Atualizar"
                 actionButton={() => handleRedirectUpdateApp()}
                 textSecondaryActionButton="Continuar"
@@ -158,7 +158,7 @@ export const AlertNewVersion = () => {
             />
             <DialogComponent
                 visible={dialogNotificationVisible}
-                title="Atenção!"
+                title="AtenÃ§Ã£o!"
                 text={dialogNotificationMessage}
                 textActionButton="OK"
                 actionButton={() => setDialogNotificationVisible(false)}

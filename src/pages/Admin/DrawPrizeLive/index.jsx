@@ -99,14 +99,11 @@ export const DrawPrizeLive = ({ navigation }) => {
     ] = useState(false);
     const [activeDraws, setActiveDraws] = useState([]);
     const [winners, setWinners] = useState([]);
-    const [indicatedWinnerEmail, setIndicatedWinnerEmail] = useState("");
     const [showEditNameDialog, setShowEditNameDialog] = useState(false);
     const [editNameValue, setEditNameValue] = useState("");
     const [editTargetId, setEditTargetId] = useState(null);
     const [showEditInfoDialog, setShowEditInfoDialog] = useState(false);
-    const [showEditCodeDialog, setShowEditCodeDialog] = useState(false);
     const [editCodeValue, setEditCodeValue] = useState("");
-    const [showEditThemeDialog, setShowEditThemeDialog] = useState(false);
     const [editThemeValue, setEditThemeValue] = useState("");
     const [editThemeTargetId, setEditThemeTargetId] = useState(null);
 
@@ -321,11 +318,6 @@ const handleConfirmEditInfo = async () => {
     Toast.show({ type: "success", text1: "Sorteio atualizado!" });
 };
 
-const openEditCodeDialog = () => {
-    setEditCodeValue(drawerCodeFixed ?? "");
-    setShowEditCodeDialog(true);
-};
-
 const handleConfirmEditCode = async () => {
     const validation = validateDrawCode(editCodeValue);
     if (!validation.valid) {
@@ -358,12 +350,6 @@ const openEditNameDialog = (draw) => {
     setEditTargetId(draw.id);
     setEditNameValue(draw.name ?? "");
     setShowEditNameDialog(true);
-};
-
-const openEditThemeDialog = (draw) => {
-    setEditThemeTargetId(draw.id);
-    setEditThemeValue(draw.theme ?? "");
-    setShowEditThemeDialog(true);
 };
 
 const handleConfirmEditTheme = async () => {
@@ -545,45 +531,19 @@ const handleInitDrawPrizeLive = async () => {
         logger: (message) => console.log(message),
     })
 
-    // --- Ganhador indicado pelo admin ---
-    // IMPORTANTE: indicated: true identifica que esta pessoa foi escolhida pelo admin.
-    // DrawPrizeLive NUNCA escreve blocked: true no Firebase — esse campo só existe em
-    // newDrawPrizeRules (DrawPrizeNew). O indicado aqui é salvo apenas em drawPrizesLive.winners.
-    let indicatedWinner = null;
-    let poolForRandom = dataUsersPrize;
-    let randomCount = countPrizes;
-
-    const emailToIndicate = indicatedWinnerEmail.trim().toLowerCase();
-    if (emailToIndicate) {
-        const found = dataUsersPrize.find(
-            (p) =>
-                p.email?.toLowerCase() === emailToIndicate ||
-                p.cpf === emailToIndicate,
-        );
-
-        if (!found) {
-            Toast.show({
-                type: "error",
-                text1: "Ganhador indicado não encontrado ou não elegível",
-                text2: "Verifique o email e tente novamente",
-            });
-            setLoadingInitDrawPrize(false);
-            return;
-        }
-
-        indicatedWinner = { ...found, indicated: true };
-        poolForRandom = dataUsersPrize.filter(
-            (p) =>
-                (p.uid || p.email || p.cpf) !==
-                (found.uid || found.email || found.cpf),
-        );
-        randomCount = Math.max(0, countPrizes - 1);
-    }
-    // ------------------------------------
+    const indicatedIds = responseActiveDrawPrizeLive.data.indicatedParticipants ?? [];
+    // Search in fixResponse (full list) so previously-won indicated users are not excluded
+    const indicatedWinners = indicatedIds
+        .map((uid) => fixResponse.find((p) => p.uid === uid || p.email === uid || p.cpf === uid))
+        .filter(Boolean)
+        .map((p) => ({ ...p, indicated: true }));
+    const indicatedUidSet = new Set(indicatedWinners.map((p) => p.uid || p.email || p.cpf));
+    const poolForRandom = dataUsersPrize.filter((p) => !indicatedUidSet.has(p.uid || p.email || p.cpf));
+    const randomCount = Math.max(0, countPrizes - indicatedWinners.length);
 
     const selectedWinners = pickRandomUniqueWinners(poolForRandom, randomCount)
 
-    if (indicatedWinner) usersWinner.push(indicatedWinner);
+    usersWinner.push(...indicatedWinners);
     usersWinner.push(...selectedWinners)
 
     if (usersWinner.length === 0) {
@@ -614,7 +574,6 @@ const handleInitDrawPrizeLive = async () => {
     
     setDrawPrizeNames((prev) => [...prev, prizeName])
     setCurrentDrawPrizeName("")
-    setIndicatedWinnerEmail("")
 
     setLoadingInitDrawPrize(false)
 
@@ -734,12 +693,7 @@ const handleInitDrawPrizeLive = async () => {
                                       </View>
                                       {winners.length > 0 ? (
                                           <View style={{ width: "100%", marginTop: 4 }}>
-                                              <TitleCode>Ganhadores:</TitleCode>
-                                              {winners.map((winner, index) => (
-                                                  <TitleCode key={index} style={{ marginTop: 2 }}>
-                                                      • {winner.name ?? winner.email ?? "—"}
-                                                  </TitleCode>
-                                              ))}
+                                              <TitleCode>{winners.length} ganhador{winners.length !== 1 ? "es" : ""} sorteado{winners.length !== 1 ? "s" : ""}</TitleCode>
                                           </View>
                                       ) : null}
                                 </>
@@ -844,19 +798,6 @@ const handleInitDrawPrizeLive = async () => {
                                 )}
                             </ButtonViewParticipants>
                         </ContentParticipants>
-
-                        <CardSelection>
-                            <TitleQuantityParticipants>
-                                Ganhador indicado (opcional)
-                            </TitleQuantityParticipants>
-                            <Input
-                                label="Email ou CPF do ganhador garantido"
-                                onChange={setIndicatedWinnerEmail}
-                                value={indicatedWinnerEmail}
-                                autoCapitalize="none"
-                                keyboardType="email-address"
-                            />
-                        </CardSelection>
 
                         <CardSelection>
                             <TitleQuantityParticipants>

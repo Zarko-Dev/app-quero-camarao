@@ -1,5 +1,5 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { FontAwesome } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 import { dataRoutes } from "./dataRoutes";
 
@@ -17,28 +17,28 @@ export const AdminTabNavigation = () => (
         screenOptions={({ route }) => ({
             lazy: true,
             tabBarIcon: ({ color, size }) => {
-                let iconName = "user-secret";
+                let iconName = "home-variant-outline";
 
                 switch (route.name) {
                     case dataRoutes.admin.home:
-                        iconName = "user-secret";
+                        iconName = "home-variant-outline";
                         break;
 
                     case dataRoutes.admin.charts:
-                        iconName = "area-chart";
+                        iconName = "chart-line";
                         break;
 
                     case dataRoutes.admin.users:
-                        iconName = "users";
+                        iconName = "account-group-outline";
                         break;
 
                     default:
-                        iconName = "user-secret";
+                        iconName = "home-variant-outline";
                         break;
                 }
 
                 return (
-                    <FontAwesome
+                    <MaterialCommunityIcons
                         name={iconName}
                         size={size - 2}
                         color={color}

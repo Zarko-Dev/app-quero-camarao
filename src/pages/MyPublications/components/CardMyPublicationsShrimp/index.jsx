@@ -11,7 +11,7 @@ import { FontAwesome } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
 import { Divider, Menu } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
-import { Modal, TouchableOpacity } from "react-native";
+import { Modal, FlatList, TouchableOpacity, Linking, ActivityIndicator, View, Text } from "react-native";
 import { v4 } from "uuid";
 
 import {
@@ -59,6 +59,7 @@ import { theme } from "../../../../styles/Theme";
 import { dataRoutes } from "../../../../routes/dataRoutes";
 import { SelectShrimpForSale } from "../ShirimpSale/SelectShrimpForSale";
 import { getShirimpSale } from "../../../../controllers/ShirimpSale/sale";
+import { getPublicationViewLogs } from "../../../../controllers/Publication/getPublicationViewsLogs";
 
 export const CardMyPublicationsShrimp = memo(({ item, action }) => {
     const navigation = useNavigation();
@@ -75,6 +76,9 @@ export const CardMyPublicationsShrimp = memo(({ item, action }) => {
     const [saleShrimpsList, setSaleShrimpsList] = useState([]);
     const [originalShrimps, setOriginalShrimps] = useState([]);
     const [isEditShrimpSale, setIsEditShrimpSale] = useState(false);
+    const [viewerModalVisible, setViewerModalVisible] = useState(false);
+    const [viewerGroups, setViewerGroups] = useState([]);
+    const [viewerLoading, setViewerLoading] = useState(false);
 
     const {
         id,
@@ -291,6 +295,33 @@ export const CardMyPublicationsShrimp = memo(({ item, action }) => {
 
     const buttonVisibility = getButtonVisibility();
 
+    const openViewers = async () => {
+        setViewerModalVisible(true);
+        setViewerLoading(true);
+        const result = await getPublicationViewLogs(item?.publicationViewsId);
+        const raw = result?.views ?? [];
+        const sorted = [...raw].sort((a, b) => {
+            const da = a.createdAt?.toDate?.() ?? new Date(a.createdAt);
+            const db = b.createdAt?.toDate?.() ?? new Date(b.createdAt);
+            return db - da;
+        });
+        const grouped = sorted.reduce((acc, view) => {
+            const d = view.createdAt?.toDate?.() ?? new Date(view.createdAt);
+            const key = d.toLocaleDateString("pt-BR");
+            if (!acc[key]) acc[key] = [];
+            acc[key].push(view);
+            return acc;
+        }, {});
+        setViewerGroups(Object.entries(grouped));
+        setViewerLoading(false);
+    };
+
+    const contactViewer = (phone) => {
+        const clean = String(phone ?? "").replace(/\D/g, "");
+        if (!clean) return;
+        Linking.openURL(`whatsapp://send?phone=55${clean}`);
+    };
+
     return (
         <>
             <Container style={BoxShadowIos}>
@@ -444,6 +475,9 @@ export const CardMyPublicationsShrimp = memo(({ item, action }) => {
                         Quantidade de visualizações: {views || 0}
                     </TextVisualizations>
                 </TouchableOpacity>
+                <TouchableOpacity onPress={openViewers} activeOpacity={0.7} style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}>
+                    <Text style={{ fontSize: 11, color: "#5f7b94", textDecorationLine: "underline" }}>Ver quem visualizou</Text>
+                </TouchableOpacity>
             </ContentVisualizations>
             <ContentActionButtons>
                 {buttonVisibility.info && (
@@ -489,6 +523,101 @@ export const CardMyPublicationsShrimp = memo(({ item, action }) => {
                 actionButton={() => handleExtendsPublicationDate()}
                 dismissable={false}
             />
+            <Modal
+                visible={viewerModalVisible}
+                animationType="slide"
+                transparent
+                onRequestClose={() => setViewerModalVisible(false)}
+            >
+                <TouchableOpacity
+                    style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)" }}
+                    activeOpacity={1}
+                    onPress={() => setViewerModalVisible(false)}
+                >
+                    <TouchableOpacity
+                        activeOpacity={1}
+                        style={{
+                            position: "absolute",
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            backgroundColor: "#fff",
+                            borderTopLeftRadius: 16,
+                            borderTopRightRadius: 16,
+                            maxHeight: "75%",
+                            padding: 16,
+                        }}
+                    >
+                        <Text style={{ fontWeight: "800", fontSize: 16, color: "#36536e", marginBottom: 12 }}>
+                            Visualizações
+                        </Text>
+                        {viewerLoading ? (
+                            <ActivityIndicator color="#f55b1f" style={{ marginVertical: 20 }} />
+                        ) : viewerGroups.length === 0 ? (
+                            <Text style={{ color: "#8fa3b2", textAlign: "center", marginVertical: 20 }}>
+                                Nenhuma visualização registrada
+                            </Text>
+                        ) : (
+                            <FlatList
+                                data={viewerGroups}
+                                keyExtractor={([day]) => day}
+                                renderItem={({ item: [day, views] }) => (
+                                    <View style={{ marginBottom: 14 }}>
+                                        <Text style={{ fontWeight: "700", color: "#f55b1f", marginBottom: 6, fontSize: 13 }}>
+                                            {day}
+                                        </Text>
+                                        {views.map((v, i) => (
+                                            <View
+                                                key={i}
+                                                style={{
+                                                    flexDirection: "row",
+                                                    alignItems: "center",
+                                                    paddingVertical: 8,
+                                                    borderBottomWidth: 1,
+                                                    borderBottomColor: "#f0f5fb",
+                                                }}
+                                            >
+                                                <View style={{ flex: 1 }}>
+                                                    <Text style={{ fontWeight: "600", color: "#36536e", fontSize: 13 }}>
+                                                        {v.userName || "—"}
+                                                    </Text>
+                                                    <Text style={{ fontSize: 11, color: "#8fa3b2" }}>
+                                                        {v.userType}
+                                                    </Text>
+                                                </View>
+                                                {v.userPhone ? (
+                                                    <TouchableOpacity
+                                                        onPress={() => contactViewer(v.userPhone)}
+                                                        activeOpacity={0.7}
+                                                        style={{
+                                                            backgroundColor: "#25d366",
+                                                            borderRadius: 6,
+                                                            paddingHorizontal: 10,
+                                                            paddingVertical: 5,
+                                                            flexDirection: "row",
+                                                            alignItems: "center",
+                                                        }}
+                                                    >
+                                                        <Text style={{ color: "#fff", fontSize: 11, fontWeight: "700" }}>
+                                                            Contato
+                                                        </Text>
+                                                    </TouchableOpacity>
+                                                ) : null}
+                                            </View>
+                                        ))}
+                                    </View>
+                                )}
+                            />
+                        )}
+                        <TouchableOpacity
+                            onPress={() => setViewerModalVisible(false)}
+                            style={{ marginTop: 12, alignItems: "center", paddingVertical: 8 }}
+                        >
+                            <Text style={{ color: "#5f7b94", fontWeight: "600" }}>Fechar</Text>
+                        </TouchableOpacity>
+                    </TouchableOpacity>
+                </TouchableOpacity>
+            </Modal>
             <Modal
                 animationType="slide"
                 visible={showSalePondsDialog}

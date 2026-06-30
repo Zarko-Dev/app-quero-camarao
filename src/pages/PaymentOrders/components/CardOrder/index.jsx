@@ -87,6 +87,7 @@ export const CardOrder = ({ data, reload, reloadAction }) => {
         status: null,
         icon: null,
         color: null,
+        textColor: "#fff",
         textSuccessButton: null,
     });
     const [paymentTypeOrder, setPaymentTypeOrder] = useState({
@@ -207,8 +208,9 @@ export const CardOrder = ({ data, reload, reloadAction }) => {
                 case "waiting":
                     setStatusOrder({
                         status: "Aguardando Pagamento",
-                        icon: "clock-o",
-                        color: theme.colors.yellow,
+                        icon: "hourglass-half",
+                        color: "#f59e0b",
+                        textColor: "#1c1917",
                         textSuccessButton: "Finalizar Pagamento",
                     });
                     setShowActionButtonLoad(true);
@@ -477,11 +479,11 @@ export const CardOrder = ({ data, reload, reloadAction }) => {
                         ) : (
                             <FontAwesome
                                 name={statusOrder.icon || "close"}
-                                size={20}
-                                color="white"
+                                size={16}
+                                color={statusOrder.textColor || "#fff"}
                             />
                         )}
-                        <TextAlert>{statusOrder.status}</TextAlert>
+                        <TextAlert textColor={statusOrder.textColor}>{statusOrder.status}</TextAlert>
                     </ContentAlertIndicator>
                 </Header>
                 <Body>

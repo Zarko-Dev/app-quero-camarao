@@ -110,7 +110,7 @@ export const Users = ({ navigation }) => {
                     setListUsers(data);
                     setDataUsers(groupUsersWithStateCity(data));
                 } else {
-                    Toast.show({ type: "Não foram encontrados usuários!" });
+                    Toast.show({ type: "info", text1: "Nenhum usuário encontrado" });
                 }
             })
             .catch((error) => {

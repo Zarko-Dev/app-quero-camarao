@@ -58,7 +58,7 @@ export const CardPublicationShrimp = memo(
         const dispatch = useDispatch();
 
         const navigation = useNavigation();
-        const { isAuthenticated } = useSelector((state) => state.login);
+        const { isAuthenticated, dataUser } = useSelector((state) => state.login);
         const { configData } = useSelector((state) => state.configSystem);
 
         const [isLoadingTalkProductor, setIsLoadingTalkProductor] =
@@ -136,7 +136,7 @@ export const CardPublicationShrimp = memo(
 
                     SendNotifications(
                         [notificationToken],
-                        "?? Sua publicação teve uma visualização!",
+                        "👀 Sua publicação teve uma visualização!",
                         `${userNameView} Visualizou sua publicação!`,
                     );
                 }
@@ -194,6 +194,23 @@ export const CardPublicationShrimp = memo(
                 setIsSharingLoading(false);
             }, 2000);
         };
+
+        // const openChat = () => {
+        //     const producerName = item.sellerName ?? item.publicationTitle ?? "Produtor";
+        //     const shrimpDetails = item.shrimps?.length
+        //         ? item.shrimps.map((s) => `${s.grammage}g/${s.kilo}kg`).join(" - ")
+        //         : null;
+        //     const initialMessage = shrimpDetails
+        //         ? `Olá ${producerName}, vi seu anuncio de camarão de ${shrimpDetails} aqui no Quero Camarão. Ainda está disponível? Tenho interesse!!`
+        //         : `Olá ${producerName}, vi seu anuncio aqui no Quero Camarão. Ainda está disponível? Tenho interesse!!`;
+        //     navigation.navigate(dataRoutes.publicationChat, {
+        //         publication: item,
+        //         sellerId: item.userId,
+        //         sellerName: producerName,
+        //         initialMessage,
+        //         autoSend: true,
+        //     });
+        // };
 
         const ItemImage = ({ index, item: itemValue }) => (
             <ShrimpImage key={index} uri={itemValue.imageShrimpUri} />
@@ -311,16 +328,21 @@ export const CardPublicationShrimp = memo(
                             </GrammageContainer>
                         </ContentDataShrimp>
                     </ContainerInfo>
-                    <ButtonBuy onPress={handleRedirectPage}>
-                        {!isLoadingTalkProductor ? (
-                            <>
-                                <FontAwesome name="whatsapp" size={24} color="white" />
-                                <ButtonBuyText>Falar com o Produtor</ButtonBuyText>
-                            </>
-                        ) : (
-                            <ActivityIndicator animating size={20} color="white" />
-                        )}
-                    </ButtonBuy>
+                    {isAuthenticated && dataUser?.email !== item.userId && (
+                        <View style={{ flexDirection: "row", alignItems: "center" }}>
+                            <ButtonBuy
+                                onPress={handleRedirectPage}
+                                style={{ flex: 1, paddingHorizontal: 16, justifyContent: "center", alignItems: "center", gap: 8 }}
+                            >
+                                {!isLoadingTalkProductor ? (
+                                    <FontAwesome name="whatsapp" size={26} color="white" />
+                                ) : (
+                                    <ActivityIndicator animating size={20} color="white" />
+                                )}
+                                <ButtonBuyText>Falar com o produtor</ButtonBuyText>
+                            </ButtonBuy>
+                        </View>
+                    )}
                 </Container>
                 <RenderImage />
                 <ModalShrimpImages

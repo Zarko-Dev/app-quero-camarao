@@ -39,16 +39,17 @@ export const HeaderTitle = styled(Text)`
 `;
 
 export const ContentImages = styled.View`
-    width: ${({ theme }) => theme.itemWidth};
-
+    width: ${({ itemWidth }) => itemWidth}px;
+    aspect-ratio: 0.75;
     margin-top: ${({ theme }) => theme.size.dimentionsSize(8)};
+    border-radius: 12px;
+    overflow: hidden;
 `;
 
 export const ShrimpImage = styled(ImageComponent)`
     width: 100%;
-    height: ${({ theme }) => theme.size.componentSize(470)};
-
-    border-radius: 4px;
+    height: 100%;
+    border-radius: 12px;
 `;
 
 export const ButtonBuyShrimp = styled.TouchableOpacity`

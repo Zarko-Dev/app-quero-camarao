@@ -81,7 +81,9 @@ export const PublicationViewLogs = ({ route, navigation }) => {
 
                 setDataLogs({
                     ...result,
-                    views: result.views.map((item) => ({ ...item, id: v4() })),
+                    views: result.views
+                        .sort((a, b) => b.createdAt.seconds - a.createdAt.seconds)
+                        .map((item) => ({ ...item, id: v4() })),
                 });
 
                 setIsLoading(false);

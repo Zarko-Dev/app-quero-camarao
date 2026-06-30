@@ -1,0 +1,256 @@
+import { useCallback, useMemo, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import { ActivityIndicator, Linking, View } from "react-native";
+import { Feather } from "@expo/vector-icons";
+import Toast from "react-native-toast-message";
+
+import {
+    getAllActiveDrawPrizesLive,
+    saveIndicatedParticipants,
+} from "../../../controllers/DrawPrizes/live";
+import { getDataUserByIds } from "../../../controllers/User/authentication";
+import { SearchBar } from "../../../components/SearchBar";
+
+const { buildCongratulatoryMessage } = require("../../../utils/winnerShareMessage");
+
+import {
+    CheckBox,
+    Container,
+    Content,
+    DrawBadge,
+    DrawBadgeText,
+    DrawCard,
+    DrawHeader,
+    DrawTitle,
+    EmptyText,
+    HeaderSubtitle,
+    HeaderTitle,
+    LoadingWrap,
+    ParticipantEmail,
+    ParticipantItem,
+    ParticipantName,
+    SaveButton,
+    SaveButtonText,
+    SearchWrap,
+    ShareWinnerButton,
+    ShareWinnerButtonText,
+    WinnerBadge,
+    WinnerBadgeText,
+} from "./styles";
+
+const filterParticipantsByName = (participants, query) => {
+    const trimmed = query.trim();
+    if (!trimmed) return participants;
+    const lower = trimmed.toLowerCase();
+    return participants.filter((p) => {
+        const label = (p.name || p.displayName || "").toLowerCase();
+        return label.includes(lower);
+    });
+};
+
+const DrawSection = ({ draw, onSaved }) => {
+    const [expanded, setExpanded] = useState(true);
+    const [participants, setParticipants] = useState([]);
+    const [selected, setSelected] = useState(new Set(draw.indicatedParticipants ?? []));
+    const [loadingParticipants, setLoadingParticipants] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
+
+    const visibleParticipants = useMemo(
+        () => filterParticipantsByName(participants, searchQuery),
+        [participants, searchQuery],
+    );
+
+    useFocusEffect(
+        useCallback(() => {
+            const load = async () => {
+                if (!draw.participants?.length) return;
+                setLoadingParticipants(true);
+                const users = await getDataUserByIds(draw.participants);
+                setParticipants(
+                    users.map((u) => ({
+                        ...u,
+                        createdAt: u.createdAt?.toDate?.() ?? u.createdAt,
+                        updatedAt: u.updatedAt?.toDate?.() ?? u.updatedAt,
+                    })),
+                );
+                setLoadingParticipants(false);
+            };
+            load();
+        }, [draw.id]),
+    );
+
+    const toggleParticipant = (uid) => {
+        setSelected((prev) => {
+            const next = new Set(prev);
+            if (next.has(uid)) next.delete(uid);
+            else next.add(uid);
+            return next;
+        });
+    };
+
+    const shareWinner = (winner, currentDraw) => {
+        const phone = String(winner?.phone ?? "").replace(/\D/g, "");
+        if (!phone) {
+            Toast.show({ type: "error", text1: "Vencedor sem telefone cadastrado" });
+            return;
+        }
+        const msg = buildCongratulatoryMessage(winner, currentDraw);
+        Linking.openURL(`whatsapp://send?phone=55${phone}&text=${msg}`).catch(() =>
+            Toast.show({ type: "error", text1: "Não foi possível abrir o WhatsApp" })
+        );
+    };
+
+    const handleSave = async () => {
+        setSaving(true);
+        const ids = Array.from(selected);
+        const ok = await saveIndicatedParticipants(draw.id, ids);
+        setSaving(false);
+        if (ok) {
+            Toast.show({ type: "success", text1: "Indicados salvos com sucesso!" });
+            onSaved?.();
+        } else {
+            Toast.show({ type: "error", text1: "Erro ao salvar indicados" });
+        }
+    };
+
+    return (
+        <DrawCard>
+            <DrawHeader
+                onPress={() => {
+                    setExpanded((v) => {
+                        if (v) setSearchQuery("");
+                        return !v;
+                    });
+                }}
+                activeOpacity={0.7}
+            >
+                <DrawTitle numberOfLines={1}>{draw.name || draw.code}</DrawTitle>
+                <DrawBadge>
+                    <DrawBadgeText>{draw.participants?.length ?? 0} part.</DrawBadgeText>
+                </DrawBadge>
+                <Feather
+                    name={expanded ? "chevron-up" : "chevron-down"}
+                    size={18}
+                    color="#8fa3b2"
+                    style={{ marginLeft: 8 }}
+                />
+            </DrawHeader>
+
+            {expanded && (
+                <>
+                    {loadingParticipants ? (
+                        <View style={{ padding: 16, alignItems: "center" }}>
+                            <ActivityIndicator color="#f55b1f" />
+                        </View>
+                    ) : participants.length === 0 ? (
+                        <EmptyText>Nenhum participante neste sorteio</EmptyText>
+                    ) : (
+                        <>
+                            <SearchWrap>
+                                <SearchBar
+                                    searchText={searchQuery}
+                                    onChange={setSearchQuery}
+                                    placeholder="Buscar participante..."
+                                />
+                            </SearchWrap>
+                            {visibleParticipants.length === 0 && searchQuery.trim() ? (
+                                <EmptyText>Nenhum resultado para "{searchQuery}"</EmptyText>
+                            ) : (
+                                visibleParticipants.map((p) => {
+                                    const uid = p.uid || p.email || p.cpf;
+                                    const isSelected = selected.has(uid);
+                                    const isWinner = (draw.winners ?? []).includes(uid);
+                                    return (
+                                        <ParticipantItem
+                                            key={uid}
+                                            selected={isSelected}
+                                            isWinner={isWinner}
+                                            onPress={() => !isWinner && toggleParticipant(uid)}
+                                            activeOpacity={isWinner ? 1 : 0.7}
+                                        >
+                                            <CheckBox selected={isSelected && !isWinner}>
+                                                {isSelected && !isWinner && (
+                                                    <Feather name="check" size={13} color="#fff" />
+                                                )}
+                                            </CheckBox>
+                                            <View style={{ flex: 1 }}>
+                                                <ParticipantName numberOfLines={1}>
+                                                    {p.name || p.displayName || "—"}
+                                                </ParticipantName>
+                                                <ParticipantEmail numberOfLines={1}>
+                                                    {p.email}
+                                                </ParticipantEmail>
+                                            </View>
+                                            {isWinner && (
+                                                <WinnerBadge>
+                                                    <WinnerBadgeText>Vencedor</WinnerBadgeText>
+                                                </WinnerBadge>
+                                            )}
+                                            {isWinner && (
+                                                <ShareWinnerButton onPress={() => shareWinner(p, draw)} activeOpacity={0.8}>
+                                                    <Feather name="send" size={11} color="#fff" />
+                                                    <ShareWinnerButtonText>WA</ShareWinnerButtonText>
+                                                </ShareWinnerButton>
+                                            )}
+                                        </ParticipantItem>
+                                    );
+                                })
+                            )}
+                        </>
+                    )}
+
+                    <SaveButton onPress={handleSave} disabled={saving} activeOpacity={0.8}>
+                        {saving ? (
+                            <ActivityIndicator color="#fff" />
+                        ) : (
+                            <SaveButtonText>
+                                Salvar indicados ({selected.size})
+                            </SaveButtonText>
+                        )}
+                    </SaveButton>
+                </>
+            )}
+        </DrawCard>
+    );
+};
+
+export const Parabens = () => {
+    const [draws, setDraws] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    const loadDraws = useCallback(() => {
+        const fetch = async () => {
+            setLoading(true);
+            const response = await getAllActiveDrawPrizesLive();
+            setDraws(response.error ? [] : response.data);
+            setLoading(false);
+        };
+        fetch();
+    }, []);
+
+    useFocusEffect(loadDraws);
+
+    return (
+        <Container>
+            <Content>
+                <HeaderTitle>Parabéns</HeaderTitle>
+                <HeaderSubtitle>
+                    Selecione participantes indicados por sorteio
+                </HeaderSubtitle>
+
+                {loading ? (
+                    <LoadingWrap>
+                        <ActivityIndicator color="#f55b1f" size="large" />
+                    </LoadingWrap>
+                ) : draws.length === 0 ? (
+                    <EmptyText>Nenhum sorteio ativo no momento</EmptyText>
+                ) : (
+                    draws.map((draw) => (
+                        <DrawSection key={draw.id} draw={draw} onSaved={loadDraws} />
+                    ))
+                )}
+            </Content>
+        </Container>
+    );
+};
