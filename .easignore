@@ -9,6 +9,12 @@
 .expo
 **generated**
 
+# Local-only directories that do not affect the Android APK build
+ios/
+functions/
+.yarn/cache/
+.yarn/install-state.gz
+
 ### ReactNative.Android Stack
 
 # Built application files
