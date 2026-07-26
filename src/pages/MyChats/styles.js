@@ -28,6 +28,25 @@ export const HeaderSub = styled(Text)`
     margin-top: 2px;
 `;
 
+export const FilterTabsRow = styled.View`
+    flex-direction: row;
+    gap: 8px;
+    padding: 12px 16px 4px;
+    background-color: #fff;
+`;
+
+export const FilterTab = styled.TouchableOpacity`
+    padding: 6px 14px;
+    border-radius: 16px;
+    background-color: ${({ active }) => (active ? "#f55b1f" : "#f0f5fb")};
+`;
+
+export const FilterTabText = styled(Text)`
+    font-size: ${({ theme }) => theme.size.fontSize(12)};
+    font-weight: 700;
+    color: ${({ active }) => (active ? "#fff" : "#5f7b94")};
+`;
+
 export const ConvItem = styled.TouchableOpacity`
     flex-direction: row;
     align-items: center;
@@ -78,6 +97,12 @@ export const ConvLastMsg = styled(Text)`
 
 export const ConvRight = styled.View`
     align-items: flex-end;
+`;
+
+export const ConvTimeRow = styled.View`
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
 `;
 
 export const ConvTime = styled(Text)`
