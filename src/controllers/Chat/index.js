@@ -55,6 +55,7 @@ export const sendChatMessage = async ({
                 publicationTitle,
                 lastMessage,
                 lastMessageAt: serverTimestamp(),
+                lastMessageSenderId: senderId,
                 lastSeenAt: {},
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
@@ -63,6 +64,7 @@ export const sendChatMessage = async ({
             await updateDoc(chatRef, {
                 lastMessage,
                 lastMessageAt: serverTimestamp(),
+                lastMessageSenderId: senderId,
                 updatedAt: serverTimestamp(),
             });
         }
@@ -79,13 +81,22 @@ export const sendChatMessage = async ({
         await addDoc(messagesRef(id), msgData);
 
         const recipientId = senderId === sellerId ? buyerId : sellerId;
-        const senderName = senderId === sellerId ? sellerName : buyerName;
+        const senderNameForNotification = senderId === sellerId ? sellerName : buyerName;
         const tokenResult = await getUserNotificationToken(recipientId);
         if (!tokenResult.error && tokenResult.data) {
             await sendNotification(
                 tokenResult.data,
-                senderName || "Nova mensagem",
+                senderNameForNotification || "Nova mensagem",
                 lastMessage.length > 80 ? lastMessage.slice(0, 77) + "..." : lastMessage,
+                {
+                    type: "chat",
+                    chatId: id,
+                    publicationId,
+                    sellerId,
+                    buyerId,
+                    sellerName,
+                    buyerName,
+                },
             );
         }
 
@@ -96,11 +107,11 @@ export const sendChatMessage = async ({
     }
 };
 
-export const subscribeToChat = ({ publicationId, buyerId, onMessages, onError }) => {
+export const subscribeToChat = ({ publicationId, buyerId, onMessages, onChatMeta, onError }) => {
     const id = chatDocId(publicationId, buyerId);
     console.log("[Chat] subscribeToChat id=", id, "publicationId=", publicationId, "buyerId=", buyerId);
     const q = query(messagesRef(id), orderBy("createdAt", "asc"));
-    return onSnapshot(q, (snap) => {
+    const unsubMessages = onSnapshot(q, (snap) => {
         console.log("[Chat] snapshot docs=", snap.docs.length);
         onMessages(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
     }, (error) => {
@@ -108,6 +119,18 @@ export const subscribeToChat = ({ publicationId, buyerId, onMessages, onError })
         Sentry.captureException(error);
         onError?.(error);
     });
+
+    const chatRef = doc(firestore, models.chats, id);
+    const unsubChat = onSnapshot(chatRef, (snap) => {
+        if (snap.exists()) {
+            onChatMeta?.(snap.data());
+        }
+    });
+
+    return () => {
+        unsubMessages();
+        unsubChat();
+    };
 };
 
 export const markChatAsSeen = async (chatId, userId) => {
