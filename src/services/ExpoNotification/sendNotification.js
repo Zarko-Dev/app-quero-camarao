@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/react-native";
 
-export const sendNotification = async (token, title, body) => {
+export const sendNotification = async (token, title, body, data = {}) => {
     try {
         const resultNotification = await (
             await fetch("https://exp.host/--/api/v2/push/send", {
@@ -14,6 +14,7 @@ export const sendNotification = async (token, title, body) => {
                     sound: "default",
                     body,
                     channelId: "notifications-app",
+                    data,
                 }),
             })
         ).json();
