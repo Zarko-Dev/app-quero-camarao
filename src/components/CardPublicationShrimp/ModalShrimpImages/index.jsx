@@ -1,12 +1,10 @@
 import { useState } from "react";
 import { Modal, Text, TouchableOpacity, View, Dimensions } from "react-native";
-import { Feather, FontAwesome } from "@expo/vector-icons";
-import { ActivityIndicator } from "react-native-paper";
+import { Feather } from "@expo/vector-icons";
 
 import Carousel from "../../SnapCarousel/src";
 
 import {
-    ButtonBuyShrimp,
     Container,
     ContentEmpty,
     ContentImages,
@@ -14,18 +12,15 @@ import {
     HeaderGrammageShrimp,
     HeaderTitle,
     ShrimpImage,
-    TextButton,
 } from "./styles";
 
 export const ModalShrimpImages = ({
     visible,
     onClose,
-    actionBuy,
     actionChat,
     showChatButton = false,
     dataShrimp,
     showActionButton = true,
-    isLoading,
 }) => {
     const [headerTitle, setHeaderTitle] = useState(dataShrimp[0]);
 
@@ -74,7 +69,7 @@ export const ModalShrimpImages = ({
                     />
                     {showActionButton && (
                         <View style={{ flexDirection: "row", width: "100%", paddingHorizontal: 16, marginBottom: 8 }}>
-                            <ButtonBuyShrimp
+                            {/* <ButtonBuyShrimp
                                 onPress={actionBuy}
                                 style={{ flex: 1, paddingHorizontal: 16, justifyContent: "center", alignItems: "center", gap: 8, marginBottom: 0 }}
                             >
@@ -84,7 +79,7 @@ export const ModalShrimpImages = ({
                                     <ActivityIndicator animating size={20} color="white" />
                                 )}
                                 <TextButton>Falar com o produtor</TextButton>
-                            </ButtonBuyShrimp>
+                            </ButtonBuyShrimp> */}
                             {showChatButton && (
                                 <TouchableOpacity
                                     onPress={actionChat}
