@@ -160,6 +160,7 @@ const App = () => {
                 response?.notification?.request?.content?.data,
                 response?.notification?.request?.identifier,
             );
+            Notifications.clearLastNotificationResponseAsync();
         });
 
         const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
