@@ -1,4 +1,4 @@
-import { NavigationContainer } from "@react-navigation/native";
+import { NavigationContainer, createNavigationContainerRef } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import { NavigationMenu } from "./navigationMenu";
@@ -47,8 +47,10 @@ import { CreateNewPassword } from "../pages/CreateNewPassword";
 
 const { Navigator, Screen } = createNativeStackNavigator();
 
+export const navigationRef = createNavigationContainerRef();
+
 export const Routes = () => (
-    <NavigationContainer linking={linking}>
+    <NavigationContainer ref={navigationRef} linking={linking}>
         <Navigator
             initialRouteName={dataRoutes.splash}
             screenOptions={{
