@@ -37,6 +37,22 @@ export const HeaderSubtitle = styled(Text)`
     line-height: 16px;
 `;
 
+export const Avatar = styled.View`
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
+    background-color: #f55b1f;
+    align-items: center;
+    justify-content: center;
+    margin-left: 10px;
+`;
+
+export const AvatarText = styled(Text)`
+    color: #fff;
+    font-weight: 800;
+    font-size: ${({ theme }) => theme.size.fontSize(15)};
+`;
+
 export const BubbleWrap = styled.View`
     margin-bottom: 8px;
     align-items: ${({ isMine }) => (isMine ? "flex-end" : "flex-start")};
@@ -65,6 +81,13 @@ export const BubbleTime = styled(Text)`
     font-size: ${({ theme }) => theme.size.fontSize(9)};
     margin-top: 2px;
     text-align: right;
+`;
+
+export const BubbleFooter = styled.View`
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 3px;
 `;
 
 export const ImageBubble = styled(Image)`
