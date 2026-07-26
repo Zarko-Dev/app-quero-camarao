@@ -25,7 +25,9 @@ import { ignoreLogs } from "./src/utils/ignoreLogs";
 
 import { theme } from "./src/styles/Theme";
 import { store } from "./src/store";
-import { Routes } from "./src/routes";
+import { Routes, navigationRef } from "./src/routes";
+import { dataRoutes } from "./src/routes/dataRoutes";
+import { getActiveChatId } from "./src/utils/activeChatTracker";
 import { AlertNewVersion } from "./src/components/AlertNewVersion";
 import { ContentStatusBar } from "./src/components/ContentStatusBar";
 import { KeyboardSafeContent } from "./src/components/KeyboardSafeContent";
@@ -34,11 +36,17 @@ import { useSystemUI } from "./src/utils/hooks/useSystemUI";
 import { InternetInfo } from "./src/components/InternetInfo";
 
 Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-        shouldShowAlert: true,
-        shouldPlaySound: true,
-        shouldSetBadge: true,
-    }),
+    handleNotification: async (notification) => {
+        const chatId = notification.request?.content?.data?.chatId;
+        const isActiveChat = Boolean(chatId) && chatId === getActiveChatId();
+
+        return {
+            shouldShowBanner: !isActiveChat,
+            shouldShowList: !isActiveChat,
+            shouldPlaySound: !isActiveChat,
+            shouldSetBadge: !isActiveChat,
+        };
+    },
 });
 
 ignoreLogs();
@@ -112,6 +120,40 @@ const App = () => {
                 });
             }
         })();
+    }, []);
+
+    useEffect(() => {
+        const navigateToChatFromNotificationData = (data) => {
+            if (!data || data.type !== "chat" || !data.publicationId) return;
+
+            let attempts = 0;
+            const tryNavigate = () => {
+                if (navigationRef.isReady()) {
+                    navigationRef.navigate(dataRoutes.publicationChat, {
+                        publication: { id: data.publicationId },
+                        sellerId: data.sellerId,
+                        buyerId: data.buyerId,
+                        sellerName: data.sellerName,
+                        buyerName: data.buyerName,
+                        chatId: data.chatId,
+                    });
+                    return;
+                }
+                attempts += 1;
+                if (attempts < 10) setTimeout(tryNavigate, 300);
+            };
+            tryNavigate();
+        };
+
+        Notifications.getLastNotificationResponseAsync().then((response) => {
+            navigateToChatFromNotificationData(response?.notification?.request?.content?.data);
+        });
+
+        const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
+            navigateToChatFromNotificationData(response?.notification?.request?.content?.data);
+        });
+
+        return () => subscription.remove();
     }, []);
 
     const [fontLoad] = useFonts({
