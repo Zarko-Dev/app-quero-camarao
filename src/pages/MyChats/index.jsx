@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList } from "react-native";
+import { ActivityIndicator, FlatList, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 
 import { GetUserStorage } from "../../services/Storage/UserStorage";
 import { subscribeMyChats } from "../../controllers/Chat";
 import { dataRoutes } from "../../routes/dataRoutes";
+import { getMessageReadStatus } from "../../utils/chatReadStatus";
 import {
     Avatar,
     AvatarText,
@@ -15,9 +16,13 @@ import {
     ConvPub,
     ConvRight,
     ConvTime,
+    ConvTimeRow,
     Container,
     EmptyText,
     EmptyWrap,
+    FilterTab,
+    FilterTabsRow,
+    FilterTabText,
     ScreenHeader,
     HeaderSub,
     HeaderTitle,
@@ -50,10 +55,29 @@ const isUnread = (chat, safeId) => {
     return msgMs > seenMs;
 };
 
+const ChatListReadReceipt = ({ status }) => (
+    <View style={{ flexDirection: "row" }}>
+        <Feather
+            name="check"
+            size={12}
+            color={status === "read" ? "#f55b1f" : "#8fa3b2"}
+        />
+        {status === "read" && (
+            <Feather
+                name="check"
+                size={12}
+                color="#f55b1f"
+                style={{ marginLeft: -7 }}
+            />
+        )}
+    </View>
+);
+
 export const MyChats = ({ navigation }) => {
     const [chats, setChats] = useState([]);
     const [loading, setLoading] = useState(true);
     const [myId, setMyId] = useState(null);
+    const [filter, setFilter] = useState("all");
 
     const safeId = myId?.replace(/[@.]/g, "_") ?? "";
 
@@ -75,12 +99,18 @@ export const MyChats = ({ navigation }) => {
 
     const unreadTotal = chats.filter((c) => isUnread(c, safeId)).length;
 
+    const filteredChats = filter === "unread"
+        ? chats.filter((c) => isUnread(c, safeId))
+        : chats;
+
     const getOtherUser = (chat) => {
         if (chat.sellerId === myId) {
             return { name: chat.buyerName || "Comprador" };
         }
         return { name: chat.sellerName || "Vendedor" };
     };
+
+    const getOtherUserId = (chat) => (chat.sellerId === myId ? chat.buyerId : chat.sellerId);
 
     const handleOpen = (chat) => {
         navigation.navigate(dataRoutes.publicationChat, {
@@ -114,18 +144,37 @@ export const MyChats = ({ navigation }) => {
                     <HeaderSub />
                 )}
             </ScreenHeader>
+            {chats.length > 0 && (
+                <FilterTabsRow>
+                    <FilterTab active={filter === "all"} onPress={() => setFilter("all")} activeOpacity={0.7}>
+                        <FilterTabText active={filter === "all"}>Todas</FilterTabText>
+                    </FilterTab>
+                    <FilterTab active={filter === "unread"} onPress={() => setFilter("unread")} activeOpacity={0.7}>
+                        <FilterTabText active={filter === "unread"}>
+                            Não lidas{unreadTotal > 0 ? ` (${unreadTotal})` : ""}
+                        </FilterTabText>
+                    </FilterTab>
+                </FilterTabsRow>
+            )}
+            {/* eslint-disable-next-line no-nested-ternary */}
             {chats.length === 0 ? (
                 <EmptyWrap>
                     <Feather name="message-circle" size={48} color="#c8d8e8" />
                     <EmptyText>Você ainda não tem conversas</EmptyText>
                 </EmptyWrap>
+            ) : filteredChats.length === 0 ? (
+                <EmptyWrap>
+                    <Feather name="check-circle" size={48} color="#c8d8e8" />
+                    <EmptyText>Nenhuma conversa não lida</EmptyText>
+                </EmptyWrap>
             ) : (
                 <FlatList
-                    data={chats}
+                    data={filteredChats}
                     keyExtractor={(item) => item.id}
                     renderItem={({ item }) => {
                         const other = getOtherUser(item);
                         const unread = isUnread(item, safeId);
+                        const lastMessageIsMine = item.lastMessageSenderId === myId;
                         const initial = (other.name?.[0] ?? "?").toUpperCase();
                         return (
                             <ConvItem unread={unread} onPress={() => handleOpen(item)} activeOpacity={0.7}>
@@ -136,11 +185,22 @@ export const MyChats = ({ navigation }) => {
                                     <ConvName numberOfLines={1}>{other.name}</ConvName>
                                     <ConvPub numberOfLines={1}>🦐 {item.publicationTitle || "Publicação"}</ConvPub>
                                     <ConvLastMsg unread={unread} numberOfLines={1}>
-                                        {item.sellerId === myId && !unread ? "Você: " : ""}{item.lastMessage || ""}
+                                        {lastMessageIsMine ? "Você: " : ""}{item.lastMessage || ""}
                                     </ConvLastMsg>
                                 </ConvInfo>
                                 <ConvRight>
-                                    <ConvTime>{formatTime(item.lastMessageAt)}</ConvTime>
+                                    <ConvTimeRow>
+                                        {lastMessageIsMine && item.lastMessage ? (
+                                            <ChatListReadReceipt
+                                                status={getMessageReadStatus(
+                                                    { createdAt: item.lastMessageAt },
+                                                    item.lastSeenAt,
+                                                    getOtherUserId(item),
+                                                )}
+                                            />
+                                        ) : null}
+                                        <ConvTime>{formatTime(item.lastMessageAt)}</ConvTime>
+                                    </ConvTimeRow>
                                     {unread && (
                                         <UnreadBadge>
                                             <UnreadBadgeText>!</UnreadBadgeText>
