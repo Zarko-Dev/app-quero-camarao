@@ -46,3 +46,14 @@ test("getMessageReadStatus retorna sent quando a mensagem não tem createdAt", (
         "sent",
     );
 });
+
+test("getMessageReadStatus sanitizes email-shaped user ids before looking up lastSeenAt (matches markChatAsSeen's key format)", () => {
+    assert.equal(
+        getMessageReadStatus(
+            { createdAt: ts(1000) },
+            { "seller_example_com": ts(2000) },
+            "seller@example.com",
+        ),
+        "read",
+    );
+});

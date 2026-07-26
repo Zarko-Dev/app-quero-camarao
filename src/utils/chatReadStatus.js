@@ -5,8 +5,10 @@ const toMillis = (value) => {
     return null;
 };
 
+const sanitizeUserId = (userId) => String(userId).replace(/[@.]/g, "_");
+
 const getMessageReadStatus = (message, lastSeenAt, otherUserId) => {
-    const seenMs = toMillis(lastSeenAt?.[otherUserId]);
+    const seenMs = toMillis(lastSeenAt?.[sanitizeUserId(otherUserId)]);
     const msgMs = toMillis(message?.createdAt);
 
     if (seenMs === null || msgMs === null) return "sent";

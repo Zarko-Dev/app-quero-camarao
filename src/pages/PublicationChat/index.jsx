@@ -42,6 +42,24 @@ import {
     SendButton,
 } from "./styles";
 
+const ReadReceipt = ({ status }) => (
+    <View style={{ flexDirection: "row" }}>
+        <Feather
+            name="check"
+            size={12}
+            color={status === "read" ? "#ffd9c2" : "rgba(255,255,255,0.7)"}
+        />
+        {status === "read" && (
+            <Feather
+                name="check"
+                size={12}
+                color="#ffd9c2"
+                style={{ marginLeft: -7 }}
+            />
+        )}
+    </View>
+);
+
 export const PublicationChat = ({ route, navigation }) => {
     const { publication, sellerId, sellerName, buyerName: paramBuyerName, chatId, buyerId: paramBuyerId, initialMessage, autoSend } = route.params;
 
@@ -329,24 +347,6 @@ export const PublicationChat = ({ route, navigation }) => {
         const s = (secs || 0) % 60;
         return `${m}:${String(s).padStart(2, "0")}`;
     };
-
-    const ReadReceipt = ({ status }) => (
-        <View style={{ flexDirection: "row" }}>
-            <Feather
-                name="check"
-                size={12}
-                color={status === "read" ? "#ffd9c2" : "rgba(255,255,255,0.7)"}
-            />
-            {status === "read" && (
-                <Feather
-                    name="check"
-                    size={12}
-                    color="#ffd9c2"
-                    style={{ marginLeft: -7 }}
-                />
-            )}
-        </View>
-    );
 
     const renderItem = ({ item }) => {
         const isMine = item.senderId === myId;
