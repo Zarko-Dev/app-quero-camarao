@@ -11,13 +11,18 @@ import { models } from "../../services/Firebase/models";
 import { sendChatMessage, subscribeToChat, markChatAsSeen, chatDocId } from "../../controllers/Chat";
 import { uploadChatAudio } from "../../controllers/Chat/uploadAudio";
 import { uploadChatImage } from "../../controllers/Chat/uploadImage";
+import { getMessageReadStatus } from "../../utils/chatReadStatus";
+import { setActiveChatId } from "../../utils/activeChatTracker";
 import {
     AttachButton,
+    Avatar,
+    AvatarText,
     AudioBubble,
     AudioDuration,
     AudioPlayButton,
     AudioWave,
     Bubble,
+    BubbleFooter,
     BubbleText,
     BubbleTime,
     BubbleWrap,
@@ -47,6 +52,7 @@ export const PublicationChat = ({ route, navigation }) => {
     const [myId, setMyId] = useState(null);
     const [buyerName, setBuyerName] = useState(paramBuyerName || "");
     const [publicationData, setPublicationData] = useState(publication);
+    const [lastSeenAt, setLastSeenAt] = useState({});
 
     const [isRecording, setIsRecording] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
@@ -66,6 +72,7 @@ export const PublicationChat = ({ route, navigation }) => {
     // Self-chat: usuário abre a própria publicação sem paramBuyerId (seria comprador e vendedor ao mesmo tempo)
     const isSelfChat = myId && sellerId && !paramBuyerId && myId === sellerId;
     const buyerId = paramBuyerId ?? myId;
+    const otherUserId = myId === sellerId ? buyerId : sellerId;
     const resolvedChatId = chatId ?? (publication.id && buyerId ? chatDocId(publication.id, buyerId) : null);
 
     useEffect(() => {
@@ -132,9 +139,16 @@ export const PublicationChat = ({ route, navigation }) => {
                     markChatAsSeen(resolvedChatId, myId);
                 }
             },
+            onChatMeta: (meta) => setLastSeenAt(meta?.lastSeenAt || {}),
         });
         return unsub;
     }, [publication.id, buyerId]);
+
+    useEffect(() => {
+        if (!resolvedChatId) return undefined;
+        setActiveChatId(resolvedChatId);
+        return () => setActiveChatId(null);
+    }, [resolvedChatId]);
 
     useEffect(() => {
         return () => { stopSound(); };
@@ -316,6 +330,24 @@ export const PublicationChat = ({ route, navigation }) => {
         return `${m}:${String(s).padStart(2, "0")}`;
     };
 
+    const ReadReceipt = ({ status }) => (
+        <View style={{ flexDirection: "row" }}>
+            <Feather
+                name="check"
+                size={12}
+                color={status === "read" ? "#ffd9c2" : "rgba(255,255,255,0.7)"}
+            />
+            {status === "read" && (
+                <Feather
+                    name="check"
+                    size={12}
+                    color="#ffd9c2"
+                    style={{ marginLeft: -7 }}
+                />
+            )}
+        </View>
+    );
+
     const renderItem = ({ item }) => {
         const isMine = item.senderId === myId;
         const isPlaying = playingId === item.id;
@@ -327,7 +359,14 @@ export const PublicationChat = ({ route, navigation }) => {
                         <TouchableOpacity onPress={() => setFullscreenImage(item.imageUrl)} activeOpacity={0.9}>
                             <ImageBubble source={{ uri: item.imageUrl }} resizeMode="cover" />
                         </TouchableOpacity>
-                        <BubbleTime isMine={isMine} style={{ paddingHorizontal: 6 }}>{formatTime(item.createdAt)}</BubbleTime>
+                        <BubbleFooter style={{ paddingHorizontal: 6 }}>
+                            <BubbleTime isMine={isMine}>{formatTime(item.createdAt)}</BubbleTime>
+                            {isMine && (
+                                <ReadReceipt
+                                    status={getMessageReadStatus(item, lastSeenAt, otherUserId)}
+                                />
+                            )}
+                        </BubbleFooter>
                     </Bubble>
                 </BubbleWrap>
             );
@@ -344,7 +383,14 @@ export const PublicationChat = ({ route, navigation }) => {
                             <AudioWave isMine={isMine} />
                             <AudioDuration isMine={isMine}>{formatDuration(item.audioDuration)}</AudioDuration>
                         </AudioBubble>
-                        <BubbleTime isMine={isMine}>{formatTime(item.createdAt)}</BubbleTime>
+                        <BubbleFooter>
+                            <BubbleTime isMine={isMine}>{formatTime(item.createdAt)}</BubbleTime>
+                            {isMine && (
+                                <ReadReceipt
+                                    status={getMessageReadStatus(item, lastSeenAt, otherUserId)}
+                                />
+                            )}
+                        </BubbleFooter>
                     </Bubble>
                 </BubbleWrap>
             );
@@ -354,21 +400,33 @@ export const PublicationChat = ({ route, navigation }) => {
             <BubbleWrap isMine={isMine}>
                 <Bubble isMine={isMine}>
                     <BubbleText isMine={isMine}>{item.text}</BubbleText>
-                    <BubbleTime isMine={isMine}>{formatTime(item.createdAt)}</BubbleTime>
+                    <BubbleFooter>
+                        <BubbleTime isMine={isMine}>{formatTime(item.createdAt)}</BubbleTime>
+                        {isMine && (
+                            <ReadReceipt
+                                status={getMessageReadStatus(item, lastSeenAt, otherUserId)}
+                            />
+                        )}
+                    </BubbleFooter>
                 </Bubble>
             </BubbleWrap>
         );
     };
 
+    const headerName = myId === sellerId
+        ? (resolvedBuyerName || buyerName || "Comprador")
+        : (resolvedSellerName || "Produtor");
+
     return (
         <Container>
             <Header>
                 <Feather name="arrow-left" size={22} color="#36536e" onPress={() => navigation.goBack()} />
+                <Avatar>
+                    <AvatarText>{(headerName?.[0] ?? "?").toUpperCase()}</AvatarText>
+                </Avatar>
                 <HeaderInfo>
                     <HeaderTitle numberOfLines={1}>
-                        {myId === sellerId
-                            ? (resolvedBuyerName || buyerName || "Comprador")
-                            : (resolvedSellerName || "Produtor")}
+                        {headerName}
                     </HeaderTitle>
                     {(publicationData?.location || publicationData?.shrimps?.length > 0) ? (
                         <HeaderSubtitle numberOfLines={1}>
