@@ -125,6 +125,10 @@ export const subscribeToChat = ({ publicationId, buyerId, onMessages, onChatMeta
         if (snap.exists()) {
             onChatMeta?.(snap.data());
         }
+    }, (error) => {
+        console.error("[Chat] subscribeToChat chat-doc error:", error.code, error.message);
+        Sentry.captureException(error);
+        onError?.(error);
     });
 
     return () => {
