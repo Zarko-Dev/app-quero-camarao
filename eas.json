@@ -8,6 +8,9 @@
             "channel": "development",
             "distribution": "internal",
             "node": "20.19.4",
+            "env": {
+                "SENTRY_DISABLE_AUTO_UPLOAD": "true"
+            },
             "android": {
                 "buildType": "apk"
             },
@@ -19,6 +22,9 @@
             "channel": "production",
             "autoIncrement": true,
             "node": "20.19.4",
+            "env": {
+                "SENTRY_DISABLE_AUTO_UPLOAD": "true"
+            },
             "ios": {
                 "image": "macos-tahoe-26.4-xcode-26.4"
             }
