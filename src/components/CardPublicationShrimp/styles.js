@@ -27,6 +27,8 @@ export const LocationContainer = styled.View`
     flex-direction: row;
     align-items: center;
     flex: 1;
+    flex-shrink: 1;
+    margin-right: 8px;
 `;
 
 export const LocationText = styled(Text)`
@@ -34,11 +36,13 @@ export const LocationText = styled(Text)`
     font-weight: bold;
     color: #e85d22;
     margin-left: 5px;
+    flex-shrink: 1;
 `;
 
 export const RightHeaderContainer = styled.View`
     flex-direction: row;
     align-items: center;
+    flex-shrink: 0;
 `;
 
 export const PondText = styled(Text)`
