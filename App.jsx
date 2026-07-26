@@ -123,8 +123,12 @@ const App = () => {
     }, []);
 
     useEffect(() => {
-        const navigateToChatFromNotificationData = (data) => {
+        let handledNotificationId = null;
+
+        const navigateToChatFromNotificationData = (data, notificationId) => {
             if (!data || data.type !== "chat" || !data.publicationId) return;
+            if (notificationId && notificationId === handledNotificationId) return;
+            if (notificationId) handledNotificationId = notificationId;
 
             let attempts = 0;
             const tryNavigate = () => {
@@ -140,17 +144,29 @@ const App = () => {
                     return;
                 }
                 attempts += 1;
-                if (attempts < 10) setTimeout(tryNavigate, 300);
+                if (attempts < 10) {
+                    setTimeout(tryNavigate, 300);
+                } else {
+                    Sentry.captureMessage("Chat notification navigation timed out waiting for navigationRef", {
+                        extra: { chatId: data.chatId, publicationId: data.publicationId },
+                    });
+                }
             };
             tryNavigate();
         };
 
         Notifications.getLastNotificationResponseAsync().then((response) => {
-            navigateToChatFromNotificationData(response?.notification?.request?.content?.data);
+            navigateToChatFromNotificationData(
+                response?.notification?.request?.content?.data,
+                response?.notification?.request?.identifier,
+            );
         });
 
         const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
-            navigateToChatFromNotificationData(response?.notification?.request?.content?.data);
+            navigateToChatFromNotificationData(
+                response?.notification?.request?.content?.data,
+                response?.notification?.request?.identifier,
+            );
         });
 
         return () => subscription.remove();
