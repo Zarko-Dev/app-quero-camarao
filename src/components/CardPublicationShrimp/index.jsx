@@ -193,14 +193,16 @@ export const CardPublicationShrimp = memo(
             }, 2000);
         };
 
-        const openChat = () => {
+        const openChat = async () => {
             const producerName = item.sellerName ?? item.publicationTitle ?? "Produtor";
-            const shrimpDetails = item.shrimps?.length
-                ? item.shrimps.map((s) => `${s.grammage}g/${s.kilo}kg`).join(" - ")
-                : null;
-            const initialMessage = shrimpDetails
-                ? `Olá ${producerName}, vi seu anuncio de camarão de ${shrimpDetails} aqui no Quero Camarão. Ainda está disponível? Tenho interesse!!`
-                : `Olá ${producerName}, vi seu anuncio aqui no Quero Camarão. Ainda está disponível? Tenho interesse!!`;
+            const greetingName = producerName.split(" ")[0];
+            const dataUser = await GetUserStorage();
+            const buyerFirstName = dataUser?.name?.split(" ")[0] || "Comprador";
+            const shrimpLines = (item.shrimps ?? [])
+                .map((shrimp) => `🦐 Tamanho: ${shrimp.grammage}g / 📦 Quantidade: ${formatKilo(shrimp.kilo)}kg`)
+                .join("\n");
+            const pondsLine = `🌊 Viveiro: ${item.ponds} ${item.ponds > 1 ? "viveiros" : "viveiro"}`;
+            const initialMessage = `Olá, ${greetingName}! Tudo bem?\n\nMeu nome é ${buyerFirstName}. Vi seu anúncio no aplicativo Quero Camarão e tenho interesse na compra:\n\n${shrimpLines}\n${pondsLine}\n\nO camarão ainda está disponível?\n\nQual é o preço da tabela?`;
             navigation.navigate(dataRoutes.publicationChat, {
                 publication: item,
                 sellerId: item.userId,
