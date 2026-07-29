@@ -3,6 +3,7 @@ import {
     collection,
     doc,
     getDoc,
+    getDocs,
     onSnapshot,
     orderBy,
     query,
@@ -22,6 +23,40 @@ export const chatDocId = (publicationId, buyerId) =>
 
 const messagesRef = (chatId) =>
     collection(firestore, models.chats, chatId, "messages");
+
+export const countUnreadChats = async (userId) => {
+    try {
+        const safeId = String(userId).replace(/[@.]/g, "_");
+        const ref = collection(firestore, models.chats);
+        const [buyerSnap, sellerSnap] = await Promise.all([
+            getDocs(query(ref, where("buyerId", "==", userId))),
+            getDocs(query(ref, where("sellerId", "==", userId))),
+        ]);
+
+        const seen = new Set();
+        let count = 0;
+
+        [...buyerSnap.docs, ...sellerSnap.docs].forEach((d) => {
+            if (seen.has(d.id)) return;
+            seen.add(d.id);
+            const chat = d.data();
+            if (!chat.lastMessageAt || !chat.lastMessage) return;
+            const lastSeen = chat.lastSeenAt?.[safeId];
+            if (!lastSeen) {
+                count += 1;
+                return;
+            }
+            const seenMs = lastSeen?.toMillis?.() ?? 0;
+            const msgMs = chat.lastMessageAt?.toMillis?.() ?? 0;
+            if (msgMs > seenMs) count += 1;
+        });
+
+        return count;
+    } catch (error) {
+        Sentry.captureException(error);
+        return null;
+    }
+};
 
 export const sendChatMessage = async ({
     publicationId,
@@ -84,6 +119,7 @@ export const sendChatMessage = async ({
         const senderNameForNotification = senderId === sellerId ? sellerName : buyerName;
         const tokenResult = await getUserNotificationToken(recipientId);
         if (!tokenResult.error && tokenResult.data) {
+            const unreadBadge = await countUnreadChats(recipientId);
             await sendNotification(
                 tokenResult.data,
                 senderNameForNotification || "Nova mensagem",
@@ -97,6 +133,7 @@ export const sendChatMessage = async ({
                     sellerName,
                     buyerName,
                 },
+                unreadBadge,
             );
         }
 
