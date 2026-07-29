@@ -29,6 +29,7 @@ import { Routes, navigationRef } from "./src/routes";
 import { dataRoutes } from "./src/routes/dataRoutes";
 import { getActiveChatId } from "./src/utils/activeChatTracker";
 import { AlertNewVersion } from "./src/components/AlertNewVersion";
+import { BadgeSync } from "./src/components/BadgeSync";
 import { ContentStatusBar } from "./src/components/ContentStatusBar";
 import { KeyboardSafeContent } from "./src/components/KeyboardSafeContent";
 import { useInternetConnection } from "./src/utils/hooks/useInternetConnection";
@@ -85,8 +86,6 @@ const App = () => {
             if (Platform.OS === "android") {
                 await SystemUI.setBackgroundColorAsync("#F05829");
             }
-
-            await Notifications.setBadgeCountAsync(0);
 
             if (!shouldRequestStartupPermissions) {
                 return;
@@ -190,6 +189,7 @@ const App = () => {
                 <PaperProvider theme={paperTheme}>
                     <ProviderRedux store={store}>
                         <ContentStatusBar />
+                        <BadgeSync />
                         <KeyboardSafeContent>
                             {isConnected ? <Routes /> : <InternetInfo />}
                         </KeyboardSafeContent>
