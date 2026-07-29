@@ -2,9 +2,9 @@ import { Feather } from "@expo/vector-icons";
 import { useSelector } from "react-redux";
 import { useUnreadChatsCount } from "../../hooks/useUnreadChatsCount";
 import { dataRoutes } from "../../routes/dataRoutes";
+import { UnreadBadge } from "../UnreadBadge";
 import logo from "../../assets/images/logo.png";
 import {
-    ChatBadge,
     ChatButton,
     Container,
     LogoImage,
@@ -30,15 +30,11 @@ export const Header = (props) => {
             <LogoImage source={logo} />
             {isAuthenticated ? (
                 <ChatButton onPress={handleOpenChats}>
-                    <Feather
-                        name="message-circle"
-                        size={24}
-                        color="white"
-                        style={{ position: "absolute" }}
+                    <Feather name="message-circle" size={22} color="white" />
+                    <UnreadBadge
+                        count={unreadCount}
+                        style={{ position: "absolute", top: -4, right: -4 }}
                     />
-                    <ChatBadge visible={unreadCount > 0} size={21}>
-                        {unreadCount}
-                    </ChatBadge>
                 </ChatButton>
             ) : (
                 <RightSpacer />

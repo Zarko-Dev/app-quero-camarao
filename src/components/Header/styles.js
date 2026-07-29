@@ -44,14 +44,10 @@ export const NotificationBadge = styled(Badge)`
 `;
 
 export const ChatButton = styled.TouchableOpacity`
-    width: 13%;
-    height: 100%;
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
+    background-color: ${({ theme }) => theme.colors.green};
     justify-content: center;
     align-items: center;
-    margin-right: ${({ theme }) => theme.size.dimentionsSize(-1)};
-`;
-
-export const ChatBadge = styled(Badge)`
-    margin-bottom: ${({ theme }) => theme.size.dimentionsSize(3.5)};
-    background-color: ${({ theme }) => theme.colors.green};
 `;
