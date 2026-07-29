@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { FlatList } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useDispatch, useSelector } from "react-redux";
-import * as Notifications from "expo-notifications";
 import { ActivityIndicator } from "react-native-paper";
 import Toast from "react-native-toast-message";
 
@@ -134,8 +133,6 @@ export const ReceivedNotifications = ({ route }) => {
         );
 
         if (resultUpdate) {
-            await Notifications.setBadgeCountAsync(notificationCount - 1);
-
             dispatch({
                 type: notificationExecuteActions.NOTIFICATION_UPDATE_ACTION,
                 notificationCount: notificationCount - 1,

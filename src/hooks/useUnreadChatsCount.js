@@ -8,7 +8,10 @@ export const useUnreadChatsCount = () => {
 
     useEffect(() => {
         const userId = dataUser?.email ?? dataUser?.uid;
-        if (!userId) return;
+        if (!userId) {
+            setCount(0);
+            return undefined;
+        }
         const unsub = subscribeUnreadChatsCount(userId, setCount);
         return unsub;
     }, [dataUser?.email, dataUser?.uid]);

@@ -176,7 +176,7 @@ export const PublicationChat = ({ route, navigation }) => {
             onChatMeta: (meta) => setChatMeta(meta || null),
         });
         return unsub;
-    }, [publication.id, buyerId]);
+    }, [publication.id, buyerId, myId]);
 
     useEffect(() => {
         if (!resolvedChatId) return undefined;
