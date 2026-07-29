@@ -164,7 +164,7 @@ export const SendButton = styled.TouchableOpacity`
 `;
 
 export const RecordButton = styled.TouchableOpacity`
-    background-color: ${({ isRecording }) => (isRecording ? "#e53935" : "#f55b1f")};
+    background-color: ${({ isRecording, isLocked }) => (isLocked ? "#1f6feb" : isRecording ? "#e53935" : "#f55b1f")};
     border-radius: 20px;
     width: 42px;
     height: 42px;
