@@ -3,14 +3,22 @@ import {
     DrawerItemList,
     DrawerItem,
 } from "@react-navigation/drawer";
+import { Text, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { useSelector } from "react-redux";
 import { BackAdminButton } from "./components/BackAdminButton";
 import { ExitUserButton } from "./components/ExitUserButton";
 import { Profile } from "./components/Profile";
 import { dataRoutes } from "../../routes/dataRoutes";
+import { useUnreadChatsCount } from "../../hooks/useUnreadChatsCount";
+import { UnreadBadge } from "../UnreadBadge";
 
 export const DrawerContent = (props) => {
     const { navigation, backAdmin, state, descriptors } = props;
+    const loginState = useSelector((s) => s.login);
+    const unreadCount = useUnreadChatsCount();
+
+    const isAuthenticated = loginState?.isAuthenticated ?? false;
 
     // Separate admin route from the rest
     const adminRouteName = dataRoutes.admin.navigation; // "Admin:Navigation"
@@ -36,6 +44,20 @@ export const DrawerContent = (props) => {
                 contentContainerStyle={{ paddingTop: 8, paddingBottom: 12 }}
             >
                 <DrawerItemList {...props} state={filteredState} />
+                {isAuthenticated && (
+                    <DrawerItem
+                        label={({ color }) => (
+                            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                                <Text style={{ color }}>Conversas</Text>
+                                <UnreadBadge count={unreadCount} />
+                            </View>
+                        )}
+                        icon={({ size, color }) => (
+                            <Feather name="message-circle" size={size} color={color} />
+                        )}
+                        onPress={() => navigation.navigate(dataRoutes.myChats)}
+                    />
+                )}
             </DrawerContentScrollView>
             {adminRoute && (
                 <DrawerItem
