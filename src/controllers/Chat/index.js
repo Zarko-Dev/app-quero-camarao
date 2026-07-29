@@ -58,6 +58,15 @@ export const countUnreadChats = async (userId) => {
     }
 };
 
+export const markAutoMessageSent = async (chatId) => {
+    try {
+        const chatRef = doc(firestore, models.chats, chatId);
+        await updateDoc(chatRef, { autoMessageSentAt: serverTimestamp() });
+    } catch (error) {
+        Sentry.captureException(error);
+    }
+};
+
 export const sendChatMessage = async ({
     publicationId,
     sellerId,

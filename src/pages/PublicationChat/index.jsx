@@ -8,7 +8,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { GetUserStorage } from "../../services/Storage/UserStorage";
 import { firestore } from "../../services/Firebase";
 import { models } from "../../services/Firebase/models";
-import { sendChatMessage, subscribeToChat, markChatAsSeen, chatDocId } from "../../controllers/Chat";
+import { sendChatMessage, subscribeToChat, markChatAsSeen, markAutoMessageSent, chatDocId } from "../../controllers/Chat";
 import { uploadChatAudio } from "../../controllers/Chat/uploadAudio";
 import { uploadChatImage } from "../../controllers/Chat/uploadImage";
 import { getMessageReadStatus } from "../../utils/chatReadStatus";
@@ -42,6 +42,12 @@ import {
     SendButton,
 } from "./styles";
 
+const {
+    LOCK_DISTANCE,
+    shouldLockRecording,
+    shouldKeepRecordingOnRelease,
+} = require("./recordingGesture.cjs");
+
 const ReadReceipt = ({ status }) => (
     <View style={{ flexDirection: "row" }}>
         <Feather
@@ -70,9 +76,12 @@ export const PublicationChat = ({ route, navigation }) => {
     const [myId, setMyId] = useState(null);
     const [buyerName, setBuyerName] = useState(paramBuyerName || "");
     const [publicationData, setPublicationData] = useState(publication);
-    const [lastSeenAt, setLastSeenAt] = useState({});
+    const [chatMeta, setChatMeta] = useState(null);
+
+    const lastSeenAt = chatMeta?.lastSeenAt || {};
 
     const [isRecording, setIsRecording] = useState(false);
+    const [isRecordingLocked, setIsRecordingLocked] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [uploadingLabel, setUploadingLabel] = useState("");
     const [recordingDuration, setRecordingDuration] = useState(0);
@@ -86,6 +95,9 @@ export const PublicationChat = ({ route, navigation }) => {
     const soundRef = useRef(null);
     const autoSentRef = useRef(false);
     const messagesReadyRef = useRef(false);
+    const recordingTouchStartYRef = useRef(null);
+    const recordingTouchCurrentYRef = useRef(null);
+    const recordingLockedRef = useRef(false);
 
     // Self-chat: usuário abre a própria publicação sem paramBuyerId (seria comprador e vendedor ao mesmo tempo)
     const isSelfChat = myId && sellerId && !paramBuyerId && myId === sellerId;
@@ -108,6 +120,8 @@ export const PublicationChat = ({ route, navigation }) => {
         if (!autoSend || !initialMessage || !myId || !buyerId || autoSentRef.current) return;
         if (!messagesReadyRef.current) return; // aguarda subscription carregar
         if (messages.length > 0) return; // chat já tem mensagens — não dispara de novo
+        // trava persistente: já enviada 1x p/ este cliente+anúncio
+        if (chatMeta?.autoMessageSentAt) return;
         const effectiveSellerName = resolvedSellerName || sellerName || "";
         if (sellerId && !effectiveSellerName) return; // aguarda resolvedSellerName
         autoSentRef.current = true;
@@ -120,8 +134,10 @@ export const PublicationChat = ({ route, navigation }) => {
             sellerName: effectiveSellerName,
             buyerName,
             publicationTitle: publication?.publicationTitle || publication?.location || "",
+        }).then((ok) => {
+            if (ok && resolvedChatId) markAutoMessageSent(resolvedChatId);
         });
-    }, [myId, resolvedSellerName, messages]);
+    }, [myId, resolvedSellerName, messages, chatMeta]);
 
     useEffect(() => {
         if (!sellerId) return;
@@ -157,7 +173,7 @@ export const PublicationChat = ({ route, navigation }) => {
                     markChatAsSeen(resolvedChatId, myId);
                 }
             },
-            onChatMeta: (meta) => setLastSeenAt(meta?.lastSeenAt || {}),
+            onChatMeta: (meta) => setChatMeta(meta || null),
         });
         return unsub;
     }, [publication.id, buyerId]);
@@ -171,6 +187,24 @@ export const PublicationChat = ({ route, navigation }) => {
     useEffect(() => {
         return () => { stopSound(); };
     }, []);
+
+    const resetRecordingGesture = () => {
+        recordingTouchStartYRef.current = null;
+        recordingTouchCurrentYRef.current = null;
+        recordingLockedRef.current = false;
+        setIsRecordingLocked(false);
+    };
+
+    const maybeLockRecording = () => {
+        if (recordingLockedRef.current) return;
+        const startY = recordingTouchStartYRef.current;
+        const currentY = recordingTouchCurrentYRef.current;
+        if (startY == null || currentY == null) return;
+        if (shouldLockRecording(currentY - startY, LOCK_DISTANCE)) {
+            recordingLockedRef.current = true;
+            setIsRecordingLocked(true);
+        }
+    };
 
     const handleSend = async () => {
         const trimmed = text.trim();
@@ -263,7 +297,10 @@ export const PublicationChat = ({ route, navigation }) => {
             const { recording } = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
             recordingRef.current = recording;
             setIsRecording(true);
+            setIsRecordingLocked(false);
+            recordingLockedRef.current = false;
             setRecordingDuration(0);
+            maybeLockRecording();
             durationIntervalRef.current = setInterval(() => {
                 setRecordingDuration((d) => d + 1);
             }, 1000);
@@ -276,6 +313,10 @@ export const PublicationChat = ({ route, navigation }) => {
         if (!recordingRef.current) return;
         clearInterval(durationIntervalRef.current);
         setIsRecording(false);
+        setIsRecordingLocked(false);
+        recordingLockedRef.current = false;
+        recordingTouchStartYRef.current = null;
+        recordingTouchCurrentYRef.current = null;
         const duration = recordingDuration;
         setRecordingDuration(0);
         try {
@@ -306,6 +347,36 @@ export const PublicationChat = ({ route, navigation }) => {
             console.error("[Audio] stopRecording error", e);
             setIsUploading(false);
             setUploadingLabel("");
+        }
+    };
+
+    const handleRecordTouchStart = (event) => {
+        const startY = event?.nativeEvent?.pageY;
+        recordingTouchStartYRef.current = Number.isFinite(startY) ? startY : null;
+        recordingTouchCurrentYRef.current = recordingTouchStartYRef.current;
+        if (!isRecording) {
+            setIsRecordingLocked(false);
+            recordingLockedRef.current = false;
+        }
+    };
+
+    const handleRecordTouchMove = (event) => {
+        const currentY = event?.nativeEvent?.pageY;
+        recordingTouchCurrentYRef.current = Number.isFinite(currentY) ? currentY : recordingTouchCurrentYRef.current;
+        if (isRecording) {
+            maybeLockRecording();
+        }
+    };
+
+    const handleRecordPressOut = async () => {
+        if (!isRecording) return;
+        if (shouldKeepRecordingOnRelease(recordingLockedRef.current)) return;
+        await stopRecording();
+    };
+
+    const handleRecordPress = async () => {
+        if (isRecording && recordingLockedRef.current) {
+            await stopRecording();
         }
     };
 
@@ -461,7 +532,9 @@ export const PublicationChat = ({ route, navigation }) => {
                             <ActivityIndicator size="small" color="#f55b1f" style={{ marginRight: 8 }} />
                         )}
                         <RecordingText>
-                            {isRecording ? `Gravando... ${formatDuration(recordingDuration)}` : uploadingLabel}
+                            {isRecording
+                                ? `${isRecordingLocked ? "Gravando travado" : "Gravando"}... ${formatDuration(recordingDuration)}`
+                                : uploadingLabel}
                         </RecordingText>
                     </RecordingIndicator>
                 )}
@@ -492,10 +565,15 @@ export const PublicationChat = ({ route, navigation }) => {
                             </SendButton>
                         ) : (
                             <RecordButton
+                                onTouchStart={handleRecordTouchStart}
+                                onTouchMove={handleRecordTouchMove}
                                 onLongPress={startRecording}
-                                onPressOut={isRecording ? stopRecording : undefined}
+                                onPress={handleRecordPress}
+                                onPressOut={handleRecordPressOut}
+                                onTouchCancel={handleRecordPressOut}
                                 activeOpacity={0.8}
                                 isRecording={isRecording}
+                                isLocked={isRecordingLocked}
                             >
                                 <Feather name="mic" size={18} color="#fff" />
                             </RecordButton>
