@@ -8,6 +8,7 @@ export const Dark = {
         ...DefaultTheme.colors,
         primary: "#F05829",
         secondary: "#FFE2CC",
+        green: "#4BB543",
 
         white: "#fff",
         black: "#1E1E1E",
