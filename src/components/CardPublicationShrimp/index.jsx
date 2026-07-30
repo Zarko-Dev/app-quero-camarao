@@ -1,4 +1,4 @@
-import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import { FontAwesome, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useDispatch, useSelector } from "react-redux";
 import { memo, useMemo, useState } from "react";
@@ -21,6 +21,8 @@ import { ModalShrimpImages } from "./ModalShrimpImages";
 import shrimpIcon from "../../assets/images/shrimpIcon.png";
 
 import {
+    ButtonBuy,
+    ButtonBuyText,
     ButtonShare,
     Container,
     ContainerInfo,
@@ -332,7 +334,7 @@ export const CardPublicationShrimp = memo(
                     </ContainerInfo>
                     {isAuthenticated && dataUser?.email !== item.userId && (
                         <View style={{ flexDirection: "row", alignItems: "center" }}>
-                            {/* <ButtonBuy
+                            <ButtonBuy
                                 onPress={handleRedirectPage}
                                 style={{ flex: 1, paddingHorizontal: 16, justifyContent: "center", alignItems: "center", gap: 8 }}
                             >
@@ -342,7 +344,7 @@ export const CardPublicationShrimp = memo(
                                     <ActivityIndicator animating size={20} color="white" />
                                 )}
                                 <ButtonBuyText>Falar com o produtor</ButtonBuyText>
-                            </ButtonBuy> */}
+                            </ButtonBuy>
                             <TouchableOpacity
                                 onPress={openChat}
                                 activeOpacity={0.8}
