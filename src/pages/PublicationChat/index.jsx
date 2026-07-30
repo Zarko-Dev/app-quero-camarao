@@ -41,6 +41,7 @@ import {
     RecordingText,
     SendButton,
 } from "./styles";
+import { ChatWallpaper } from "./ChatWallpaper";
 
 const {
     LOCK_DISTANCE,
@@ -516,6 +517,7 @@ export const PublicationChat = ({ route, navigation }) => {
                 behavior={Platform.OS === "ios" ? "padding" : undefined}
                 keyboardVerticalOffset={80}
             >
+                <ChatWallpaper />
                 <FlatList
                     ref={listRef}
                     data={messages}
