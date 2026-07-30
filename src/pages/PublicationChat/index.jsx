@@ -53,13 +53,13 @@ const ReadReceipt = ({ status }) => (
         <Feather
             name="check"
             size={12}
-            color={status === "read" ? "#ffd9c2" : "rgba(255,255,255,0.7)"}
+            color={status === "read" ? "#4BB543" : "#8fa3b2"}
         />
         {status === "read" && (
             <Feather
                 name="check"
                 size={12}
-                color="#ffd9c2"
+                color="#4BB543"
                 style={{ marginLeft: -7 }}
             />
         )}
@@ -449,7 +449,7 @@ export const PublicationChat = ({ route, navigation }) => {
                     <Bubble isMine={isMine}>
                         <AudioBubble>
                             <AudioPlayButton onPress={() => playAudio(item.id, item.audioUrl)} activeOpacity={0.7}>
-                                <Feather name={isPlaying ? "pause" : "play"} size={20} color={isMine ? "#fff" : "#f55b1f"} />
+                                <Feather name={isPlaying ? "pause" : "play"} size={20} color={isMine ? "#2e5e38" : "#f55b1f"} />
                             </AudioPlayButton>
                             <AudioWave isMine={isMine} />
                             <AudioDuration isMine={isMine}>{formatDuration(item.audioDuration)}</AudioDuration>

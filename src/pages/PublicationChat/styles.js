@@ -3,7 +3,7 @@ import styled from "styled-components/native";
 
 export const Container = styled.SafeAreaView`
     flex: 1;
-    background-color: #f4f8fb;
+    background-color: #F1ECE4;
 `;
 
 export const Header = styled.View`
@@ -59,7 +59,7 @@ export const BubbleWrap = styled.View`
 `;
 
 export const Bubble = styled.View`
-    background-color: ${({ isMine }) => (isMine ? "#f55b1f" : "#fff")};
+    background-color: ${({ isMine }) => (isMine ? "#DCF4D4" : "#fff")};
     border-radius: 14px;
     border-bottom-right-radius: ${({ isMine }) => (isMine ? "2px" : "14px")};
     border-bottom-left-radius: ${({ isMine }) => (isMine ? "14px" : "2px")};
@@ -72,12 +72,12 @@ export const Bubble = styled.View`
 `;
 
 export const BubbleText = styled(Text)`
-    color: ${({ isMine }) => (isMine ? "#fff" : "#36536e")};
+    color: ${({ isMine }) => (isMine ? "#1f3d2b" : "#36536e")};
     font-size: ${({ theme }) => theme.size.fontSize(13)};
 `;
 
 export const BubbleTime = styled(Text)`
-    color: ${({ isMine }) => (isMine ? "rgba(255,255,255,0.7)" : "#8fa3b2")};
+    color: ${({ isMine }) => (isMine ? "#6b8a70" : "#8fa3b2")};
     font-size: ${({ theme }) => theme.size.fontSize(9)};
     margin-top: 2px;
     text-align: right;
@@ -106,7 +106,7 @@ export const AudioPlayButton = styled.TouchableOpacity`
     width: 36px;
     height: 36px;
     border-radius: 18px;
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: rgba(0, 0, 0, 0.06);
     align-items: center;
     justify-content: center;
     margin-right: 8px;
@@ -115,13 +115,13 @@ export const AudioPlayButton = styled.TouchableOpacity`
 export const AudioWave = styled.View`
     flex: 1;
     height: 2px;
-    background-color: ${({ isMine }) => (isMine ? "rgba(255,255,255,0.5)" : "#c8d8e4")};
+    background-color: ${({ isMine }) => (isMine ? "#a8cbae" : "#c8d8e4")};
     border-radius: 1px;
     margin-right: 8px;
 `;
 
 export const AudioDuration = styled(Text)`
-    color: ${({ isMine }) => (isMine ? "rgba(255,255,255,0.85)" : "#64788a")};
+    color: ${({ isMine }) => (isMine ? "#6b8a70" : "#64788a")};
     font-size: ${({ theme }) => theme.size.fontSize(11)};
     min-width: 32px;
     text-align: right;
@@ -155,7 +155,7 @@ export const ChatInput = styled(TextInput)`
 `;
 
 export const SendButton = styled.TouchableOpacity`
-    background-color: #f55b1f;
+    background-color: #4BB543;
     border-radius: 20px;
     width: 42px;
     height: 42px;
@@ -164,7 +164,7 @@ export const SendButton = styled.TouchableOpacity`
 `;
 
 export const RecordButton = styled.TouchableOpacity`
-    background-color: ${({ isRecording, isLocked }) => (isLocked ? "#1f6feb" : isRecording ? "#e53935" : "#f55b1f")};
+    background-color: ${({ isRecording, isLocked }) => (isLocked ? "#1f6feb" : isRecording ? "#e53935" : "#4BB543")};
     border-radius: 20px;
     width: 42px;
     height: 42px;
@@ -205,4 +205,34 @@ export const FullscreenClose = styled.TouchableOpacity`
     background-color: rgba(255, 255, 255, 0.15);
     align-items: center;
     justify-content: center;
+`;
+
+export const CameraButton = styled.TouchableOpacity`
+    width: 36px;
+    height: 42px;
+    align-items: center;
+    justify-content: center;
+`;
+
+export const FileRow = styled.View`
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    min-width: 180px;
+`;
+
+export const FileInfo = styled.View`
+    flex: 1;
+`;
+
+export const FileName = styled(Text)`
+    color: ${({ isMine }) => (isMine ? "#1f3d2b" : "#36536e")};
+    font-size: ${({ theme }) => theme.size.fontSize(13)};
+    font-weight: 700;
+`;
+
+export const FileSize = styled(Text)`
+    color: ${({ isMine }) => (isMine ? "#6b8a70" : "#8fa3b2")};
+    font-size: ${({ theme }) => theme.size.fontSize(11)};
+    margin-top: 2px;
 `;
