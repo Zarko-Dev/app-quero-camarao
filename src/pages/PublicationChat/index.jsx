@@ -354,12 +354,12 @@ export const PublicationChat = ({ route, navigation }) => {
                 },
             );
         } else {
+            // Android limita Alert a 3 botões; cancelamento é por toque fora/voltar
             Alert.alert("Enviar", null, [
                 { text: "Galeria", onPress: () => pickAndSendImage("gallery") },
                 { text: "Câmera", onPress: () => pickAndSendImage("camera") },
                 { text: "Documento", onPress: () => sendDocument() },
-                { text: "Cancelar", style: "cancel" },
-            ]);
+            ], { cancelable: true });
         }
     };
 

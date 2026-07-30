@@ -336,7 +336,13 @@ export const CardPublicationShrimp = memo(
                         <View style={{ flexDirection: "row", alignItems: "center" }}>
                             <ButtonBuy
                                 onPress={handleRedirectPage}
-                                style={{ flex: 1, paddingHorizontal: 16, justifyContent: "center", alignItems: "center", gap: 8 }}
+                                style={{
+                                    flex: 1,
+                                    paddingHorizontal: 16,
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                    gap: 8,
+                                }}
                             >
                                 {!isLoadingTalkProductor ? (
                                     <FontAwesome name="whatsapp" size={26} color="white" />
