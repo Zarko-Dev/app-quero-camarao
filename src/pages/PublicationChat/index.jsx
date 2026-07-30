@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { ActionSheetIOS, ActivityIndicator, FlatList, Image, KeyboardAvoidingView, Modal, Platform, TouchableOpacity, View } from "react-native";
+import { ActionSheetIOS, ActivityIndicator, Alert, FlatList, Image, KeyboardAvoidingView, Linking, Modal, Platform, TouchableOpacity, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Audio } from "expo-av";
 import * as ImagePicker from "expo-image-picker";
+import * as DocumentPicker from "expo-document-picker";
 import { doc, getDoc } from "firebase/firestore";
 
 import { GetUserStorage } from "../../services/Storage/UserStorage";
@@ -11,7 +12,9 @@ import { models } from "../../services/Firebase/models";
 import { sendChatMessage, subscribeToChat, markChatAsSeen, markAutoMessageSent, chatDocId } from "../../controllers/Chat";
 import { uploadChatAudio } from "../../controllers/Chat/uploadAudio";
 import { uploadChatImage } from "../../controllers/Chat/uploadImage";
+import { uploadChatFile } from "../../controllers/Chat/uploadFile";
 import { getMessageReadStatus } from "../../utils/chatReadStatus";
+import { formatFileSize } from "../../utils/formatFileSize";
 import { setActiveChatId } from "../../utils/activeChatTracker";
 import {
     AttachButton,
@@ -26,8 +29,13 @@ import {
     BubbleText,
     BubbleTime,
     BubbleWrap,
+    CameraButton,
     ChatInput,
     Container,
+    FileInfo,
+    FileName,
+    FileRow,
+    FileSize,
     FullscreenClose,
     FullscreenModal,
     Header,
@@ -276,17 +284,82 @@ export const PublicationChat = ({ route, navigation }) => {
         }
     };
 
+    const sendDocument = async () => {
+        try {
+            const result = await DocumentPicker.getDocumentAsync({
+                type: [
+                    "application/pdf",
+                    "application/msword",
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    "application/vnd.ms-excel",
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "text/plain",
+                ],
+                copyToCacheDirectory: true,
+            });
+
+            if (result.canceled || !result.assets?.[0]?.uri) return;
+            const asset = result.assets[0];
+
+            const currentBuyerId = paramBuyerId ?? myId;
+            const currentChatId = chatId ?? (publication.id && currentBuyerId
+                ? chatDocId(publication.id, currentBuyerId)
+                : null);
+
+            if (!myId || !currentBuyerId || !currentChatId) {
+                console.warn("[Chat] sendDocument: ids not ready", { myId, currentBuyerId, currentChatId });
+                return;
+            }
+
+            setIsUploading(true);
+            setUploadingLabel("Enviando documento...");
+            const { error, url } = await uploadChatFile(
+                currentChatId,
+                asset.uri,
+                asset.name,
+                asset.mimeType,
+            );
+            setIsUploading(false);
+            setUploadingLabel("");
+
+            if (!error && url) {
+                await sendChatMessage({
+                    publicationId: publication.id,
+                    sellerId,
+                    buyerId: currentBuyerId,
+                    senderId: myId,
+                    fileUrl: url,
+                    fileName: asset.name || "Documento",
+                    fileSize: asset.size ?? null,
+                    sellerName: resolvedSellerName || "",
+                    buyerName,
+                    publicationTitle: publication?.publicationTitle || publication?.location || "",
+                });
+            }
+        } catch (e) {
+            console.error("[Chat] sendDocument error", e);
+            setIsUploading(false);
+            setUploadingLabel("");
+        }
+    };
+
     const openAttachSheet = () => {
         if (Platform.OS === "ios") {
             ActionSheetIOS.showActionSheetWithOptions(
-                { options: ["Cancelar", "Galeria", "Câmera"], cancelButtonIndex: 0 },
+                { options: ["Cancelar", "Galeria", "Câmera", "Documento"], cancelButtonIndex: 0 },
                 (idx) => {
                     if (idx === 1) pickAndSendImage("gallery");
                     if (idx === 2) pickAndSendImage("camera");
+                    if (idx === 3) sendDocument();
                 },
             );
         } else {
-            pickAndSendImage("gallery");
+            Alert.alert("Enviar", null, [
+                { text: "Galeria", onPress: () => pickAndSendImage("gallery") },
+                { text: "Câmera", onPress: () => pickAndSendImage("camera") },
+                { text: "Documento", onPress: () => sendDocument() },
+                { text: "Cancelar", style: "cancel" },
+            ]);
         }
     };
 
@@ -468,6 +541,41 @@ export const PublicationChat = ({ route, navigation }) => {
             );
         }
 
+        if (item.fileUrl) {
+            return (
+                <BubbleWrap isMine={isMine}>
+                    <Bubble isMine={isMine}>
+                        <TouchableOpacity
+                            onPress={() => Linking.openURL(item.fileUrl).catch(() => {})}
+                            activeOpacity={0.7}
+                        >
+                            <FileRow>
+                                <Feather name="file-text" size={24} color={isMine ? "#2e5e38" : "#f55b1f"} />
+                                <FileInfo>
+                                    <FileName isMine={isMine} numberOfLines={1} ellipsizeMode="middle">
+                                        {item.fileName || "Documento"}
+                                    </FileName>
+                                    {formatFileSize(item.fileSize) ? (
+                                        <FileSize isMine={isMine}>
+                                            {formatFileSize(item.fileSize)}
+                                        </FileSize>
+                                    ) : null}
+                                </FileInfo>
+                            </FileRow>
+                        </TouchableOpacity>
+                        <BubbleFooter>
+                            <BubbleTime isMine={isMine}>{formatTime(item.createdAt)}</BubbleTime>
+                            {isMine && (
+                                <ReadReceipt
+                                    status={getMessageReadStatus(item, lastSeenAt, otherUserId)}
+                                />
+                            )}
+                        </BubbleFooter>
+                    </Bubble>
+                </BubbleWrap>
+            );
+        }
+
         return (
             <BubbleWrap isMine={isMine}>
                 <Bubble isMine={isMine}>
@@ -561,6 +669,9 @@ export const PublicationChat = ({ route, navigation }) => {
                             placeholderTextColor="#8fa3b2"
                             multiline
                         />
+                        <CameraButton onPress={() => pickAndSendImage("camera")} activeOpacity={0.7}>
+                            <Feather name="camera" size={20} color="#64788a" />
+                        </CameraButton>
                         {text.trim().length > 0 ? (
                             <SendButton onPress={handleSend} activeOpacity={0.8}>
                                 <Feather name="send" size={18} color="#fff" />
