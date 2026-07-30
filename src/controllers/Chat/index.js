@@ -76,6 +76,9 @@ export const sendChatMessage = async ({
     audioUrl = null,
     audioDuration = null,
     imageUrl = null,
+    fileUrl = null,
+    fileName = null,
+    fileSize = null,
     sellerName = "",
     buyerName = "",
     publicationTitle = "",
@@ -86,7 +89,7 @@ export const sendChatMessage = async ({
         const chatRef = doc(firestore, models.chats, id);
         const snap = await getDoc(chatRef);
         const trimmed = text ? text.trim() : "";
-        const lastMessage = audioUrl ? "🎵 Áudio" : imageUrl ? "📷 Foto" : trimmed;
+        const lastMessage = audioUrl ? "🎵 Áudio" : imageUrl ? "📷 Foto" : fileUrl ? "📎 Documento" : trimmed;
 
         if (!snap.exists()) {
             await setDoc(chatRef, {
@@ -119,6 +122,10 @@ export const sendChatMessage = async ({
             if (audioDuration != null) msgData.audioDuration = audioDuration;
         } else if (imageUrl) {
             msgData.imageUrl = imageUrl;
+        } else if (fileUrl) {
+            msgData.fileUrl = fileUrl;
+            if (fileName) msgData.fileName = fileName;
+            if (fileSize != null) msgData.fileSize = fileSize;
         } else {
             msgData.text = trimmed;
         }
