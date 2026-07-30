@@ -89,7 +89,10 @@ export const sendChatMessage = async ({
         const chatRef = doc(firestore, models.chats, id);
         const snap = await getDoc(chatRef);
         const trimmed = text ? text.trim() : "";
-        const lastMessage = audioUrl ? "🎵 Áudio" : imageUrl ? "📷 Foto" : fileUrl ? "📎 Documento" : trimmed;
+        let lastMessage = trimmed;
+        if (audioUrl) lastMessage = "🎵 Áudio";
+        else if (imageUrl) lastMessage = "📷 Foto";
+        else if (fileUrl) lastMessage = "📎 Documento";
 
         if (!snap.exists()) {
             await setDoc(chatRef, {
