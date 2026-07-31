@@ -63,7 +63,49 @@ const pickRandomUniqueWinners = (eligibleParticipants, countPrizes, randomFn = M
     return winners;
 };
 
+const partitionIndicatedAndRandom = ({
+    indicatedIds = [],
+    previousWinners = [],
+    participants = [],
+    eligibleParticipants = [],
+    countPrizes = 1,
+    pickRandomFn = pickRandomUniqueWinners,
+}) => {
+    const previousWinnerKeys = new Set(
+        previousWinners.map((w) => w.uid || w.email || w.cpf).filter(Boolean)
+    );
+
+    // Filter out indicated participants who have already won
+    const activeIndicatedIds = indicatedIds.filter((uid) => !previousWinnerKeys.has(uid));
+
+    // We only draw up to countPrizes from the sequence of active indicated participants
+    const drawnIndicatedIds = activeIndicatedIds.slice(0, countPrizes);
+    const remainingIndicatedIds = activeIndicatedIds.slice(countPrizes);
+
+    // Map the drawn indicated IDs to their full user objects
+    const indicatedWinners = drawnIndicatedIds
+        .map((uid) => participants.find((p) => p.uid === uid || p.email === uid || p.cpf === uid))
+        .filter(Boolean)
+        .map((p) => ({ ...p, indicated: true }));
+
+    // Exclude all active indicated participants from the random pool to prevent them from winning randomly
+    const activeIndicatedSet = new Set(activeIndicatedIds);
+    const poolForRandom = eligibleParticipants.filter((p) => !activeIndicatedSet.has(p.uid || p.email || p.cpf));
+
+    const randomCount = Math.max(0, countPrizes - indicatedWinners.length);
+    const selectedWinners = pickRandomFn(poolForRandom, randomCount);
+
+    const winners = [...indicatedWinners, ...selectedWinners];
+
+    return {
+        winners,
+        remainingIndicatedIds,
+    };
+};
+
 module.exports = {
     buildEligibleParticipants,
     pickRandomUniqueWinners,
+    partitionIndicatedAndRandom,
+    buildWinnerKeySet,
 };

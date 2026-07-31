@@ -12,6 +12,7 @@ import { getDataUserByIds } from "../../../controllers/User/authentication";
 import { SearchBar } from "../../../components/SearchBar";
 
 const { buildCongratulatoryMessage } = require("../../../utils/winnerShareMessage");
+const { buildWinnerKeySet } = require("../../../utils/drawEligibility");
 
 import {
     CheckBox,
@@ -59,6 +60,13 @@ const DrawSection = ({ draw, onSaved }) => {
     const visibleParticipants = useMemo(
         () => filterParticipantsByName(participants, searchQuery),
         [participants, searchQuery],
+    );
+
+    // draw.winners guarda objetos completos ({uid, name, email, ...}), não ids —
+    // precisa extrair a chave de cada vencedor antes de comparar.
+    const winnerKeys = useMemo(
+        () => buildWinnerKeySet(draw.winners ?? []),
+        [draw.winners],
     );
 
     useFocusEffect(
@@ -160,7 +168,7 @@ const DrawSection = ({ draw, onSaved }) => {
                                 visibleParticipants.map((p) => {
                                     const uid = p.uid || p.email || p.cpf;
                                     const isSelected = selected.has(uid);
-                                    const isWinner = (draw.winners ?? []).includes(uid);
+                                    const isWinner = winnerKeys.has(uid);
                                     return (
                                         <ParticipantItem
                                             key={uid}
