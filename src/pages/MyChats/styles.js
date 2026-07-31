@@ -88,6 +88,12 @@ export const ConvPub = styled(Text)`
     margin-top: 1px;
 `;
 
+export const ConvRating = styled(Text)`
+    font-size: ${({ theme }) => theme.size.fontSize(10)};
+    color: #b0a898;
+    margin-top: 1px;
+`;
+
 export const ConvLastMsg = styled(Text)`
     font-size: ${({ theme }) => theme.size.fontSize(12)};
     color: ${({ unread }) => (unread ? "#36536e" : "#5f7b94")};

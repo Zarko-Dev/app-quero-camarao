@@ -6,6 +6,7 @@ import { GetUserStorage } from "../../services/Storage/UserStorage";
 import { subscribeMyChats } from "../../controllers/Chat";
 import { dataRoutes } from "../../routes/dataRoutes";
 import { getMessageReadStatus } from "../../utils/chatReadStatus";
+import { isUnread, sortChatsUnreadFirst } from "../../utils/chatListSort";
 import {
     Avatar,
     AvatarText,
@@ -14,6 +15,7 @@ import {
     ConvLastMsg,
     ConvName,
     ConvPub,
+    ConvRating,
     ConvRight,
     ConvTime,
     ConvTimeRow,
@@ -45,16 +47,6 @@ const formatTime = (ts) => {
     }
 };
 
-const isUnread = (chat, safeId) => {
-    const lastSeen = chat.lastSeenAt?.[safeId];
-    const lastMsg = chat.lastMessageAt;
-    if (!lastMsg || !chat.lastMessage) return false;
-    if (!lastSeen) return true;
-    const seenMs = lastSeen?.toMillis?.() ?? 0;
-    const msgMs = lastMsg?.toMillis?.() ?? 0;
-    return msgMs > seenMs;
-};
-
 const ChatListReadReceipt = ({ status }) => (
     <View style={{ flexDirection: "row" }}>
         <Feather
@@ -77,7 +69,7 @@ export const MyChats = ({ navigation }) => {
     const [chats, setChats] = useState([]);
     const [loading, setLoading] = useState(true);
     const [myId, setMyId] = useState(null);
-    const [filter, setFilter] = useState("all");
+    const [filter, setFilter] = useState("active");
 
     const safeId = myId?.replace(/[@.]/g, "_") ?? "";
 
@@ -97,11 +89,15 @@ export const MyChats = ({ navigation }) => {
         return unsub;
     }, [myId]);
 
-    const unreadTotal = chats.filter((c) => isUnread(c, safeId)).length;
+    const activeChats = chats.filter((c) => c.status !== "closed");
+    const closedChats = chats.filter((c) => c.status === "closed");
+    const unreadTotal = activeChats.filter((c) => isUnread(c, safeId)).length;
 
-    const filteredChats = filter === "unread"
-        ? chats.filter((c) => isUnread(c, safeId))
-        : chats;
+    let tabChats = activeChats;
+    if (filter === "unread") tabChats = activeChats.filter((c) => isUnread(c, safeId));
+    if (filter === "closed") tabChats = closedChats;
+
+    const filteredChats = sortChatsUnreadFirst(tabChats, safeId);
 
     const getOtherUser = (chat) => {
         if (chat.sellerId === myId) {
@@ -135,7 +131,7 @@ export const MyChats = ({ navigation }) => {
         <Container>
             <ScreenHeader>
                 <Feather name="arrow-left" size={22} color="#36536e" onPress={() => navigation.goBack()} />
-                <HeaderTitle>Minhas Conversas</HeaderTitle>
+                <HeaderTitle>Conversas</HeaderTitle>
                 {unreadTotal > 0 ? (
                     <HeaderSub>
                         {unreadTotal} mensagem{unreadTotal > 1 ? "s" : ""} não lida{unreadTotal > 1 ? "s" : ""}
@@ -146,13 +142,16 @@ export const MyChats = ({ navigation }) => {
             </ScreenHeader>
             {chats.length > 0 && (
                 <FilterTabsRow>
-                    <FilterTab active={filter === "all"} onPress={() => setFilter("all")} activeOpacity={0.7}>
-                        <FilterTabText active={filter === "all"}>Todas</FilterTabText>
+                    <FilterTab active={filter === "active"} onPress={() => setFilter("active")} activeOpacity={0.7}>
+                        <FilterTabText active={filter === "active"}>Ativas</FilterTabText>
                     </FilterTab>
                     <FilterTab active={filter === "unread"} onPress={() => setFilter("unread")} activeOpacity={0.7}>
                         <FilterTabText active={filter === "unread"}>
                             Não lidas{unreadTotal > 0 ? ` (${unreadTotal})` : ""}
                         </FilterTabText>
+                    </FilterTab>
+                    <FilterTab active={filter === "closed"} onPress={() => setFilter("closed")} activeOpacity={0.7}>
+                        <FilterTabText active={filter === "closed"}>Encerradas</FilterTabText>
                     </FilterTab>
                 </FilterTabsRow>
             )}
@@ -164,8 +163,16 @@ export const MyChats = ({ navigation }) => {
                 </EmptyWrap>
             ) : filteredChats.length === 0 ? (
                 <EmptyWrap>
-                    <Feather name="check-circle" size={48} color="#c8d8e8" />
-                    <EmptyText>Nenhuma conversa não lida</EmptyText>
+                    <Feather
+                        name={filter === "closed" ? "archive" : "check-circle"}
+                        size={48}
+                        color="#c8d8e8"
+                    />
+                    <EmptyText>
+                        {filter === "closed"
+                            ? "Conversas encerradas aparecerão aqui"
+                            : "Nenhuma conversa não lida"}
+                    </EmptyText>
                 </EmptyWrap>
             ) : (
                 <FlatList
@@ -183,7 +190,15 @@ export const MyChats = ({ navigation }) => {
                                 </Avatar>
                                 <ConvInfo>
                                     <ConvName numberOfLines={1}>{other.name}</ConvName>
-                                    <ConvPub numberOfLines={1}>🦐 {item.publicationTitle || "Publicação"}</ConvPub>
+                                    <ConvRating numberOfLines={1}>⭐ Sem avaliações</ConvRating>
+                                    <ConvPub numberOfLines={1}>
+                                        {item.publicationLocation || item.publicationSummary
+                                            ? [
+                                                item.publicationLocation ? `📍 ${item.publicationLocation}` : null,
+                                                item.publicationSummary ? `🦐 ${item.publicationSummary}` : null,
+                                            ].filter(Boolean).join(" · ")
+                                            : `🦐 ${item.publicationTitle || "Publicação"}`}
+                                    </ConvPub>
                                     <ConvLastMsg unread={unread} numberOfLines={1}>
                                         {lastMessageIsMine ? "Você: " : ""}{item.lastMessage || ""}
                                     </ConvLastMsg>
