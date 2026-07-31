@@ -1,5 +1,5 @@
-export const formatKilo = (value) => {
-    const formatValue = value.replace(",", ".");
+const formatKilo = (value) => {
+    const formatValue = String(value ?? "").replace(",", ".");
 
     if (formatValue.indexOf(".") !== -1) {
         return formatValue;
@@ -7,3 +7,5 @@ export const formatKilo = (value) => {
 
     return Number(formatValue).toLocaleString("pt-BR");
 };
+
+module.exports = { formatKilo };
