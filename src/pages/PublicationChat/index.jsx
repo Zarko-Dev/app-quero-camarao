@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ActionSheetIOS, ActivityIndicator, Alert, FlatList, Image, KeyboardAvoidingView, Linking, Modal, Platform, TouchableOpacity, View } from "react-native";
+import { ActionSheetIOS, ActivityIndicator, Alert, FlatList, Image, KeyboardAvoidingView, Linking, Modal, PanResponder, Platform, TouchableOpacity, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Audio } from "expo-av";
 import * as Clipboard from "expo-clipboard";
@@ -61,25 +61,31 @@ import {
     ImageBubble,
     InputRow,
     MenuButton,
+    PreviewBar,
+    PreviewDuration,
     QuoteBlock,
     QuoteName,
     QuoteText,
+    RateButton,
+    RateText,
     RecordButton,
+    RecordingBar,
+    RecordingDot,
     RecordingIndicator,
     RecordingText,
+    RecordingTimer,
     ReplyBar,
     ReplyBarText,
+    RoundIconButton,
     SendButton,
+    SlideHint,
 } from "./styles";
 import { ChatWallpaper } from "./ChatWallpaper";
 import { MessageActionsSheet } from "./MessageActionsSheet";
 import { ForwardModal } from "./ForwardModal";
 
-const {
-    LOCK_DISTANCE,
-    shouldLockRecording,
-    shouldKeepRecordingOnRelease,
-} = require("./recordingGesture.cjs");
+const NEXT_PLAYBACK_RATE = { 1: 1.5, 1.5: 2, 2: 1 };
+const PLAYBACK_RATE_LABEL = { 1: "1x", 1.5: "1,5x", 2: "2x" };
 
 const ReadReceipt = ({ status }) => {
     if (status === "pending") {
@@ -116,13 +122,15 @@ export const PublicationChat = ({ route, navigation }) => {
 
     const lastSeenAt = chatMeta?.lastSeenAt || {};
 
-    const [isRecording, setIsRecording] = useState(false);
-    const [isRecordingLocked, setIsRecordingLocked] = useState(false);
+    const [recordingState, setRecordingState] = useState("idle");
+    const [pendingAudio, setPendingAudio] = useState(null);
+    const [isPreviewPlaying, setIsPreviewPlaying] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [uploadingLabel, setUploadingLabel] = useState("");
     const [recordingDuration, setRecordingDuration] = useState(0);
 
     const [playingId, setPlayingId] = useState(null);
+    const [playbackRate, setPlaybackRate] = useState(1);
     const [fullscreenImage, setFullscreenImage] = useState(null);
 
     const [actionsFor, setActionsFor] = useState(null);
@@ -134,11 +142,9 @@ export const PublicationChat = ({ route, navigation }) => {
     const recordingRef = useRef(null);
     const durationIntervalRef = useRef(null);
     const soundRef = useRef(null);
+    const previewSoundRef = useRef(null);
     const autoSentRef = useRef(false);
     const messagesReadyRef = useRef(false);
-    const recordingTouchStartYRef = useRef(null);
-    const recordingTouchCurrentYRef = useRef(null);
-    const recordingLockedRef = useRef(false);
     const deliveredMarkedRef = useRef(new Set());
     const lastSeenSignatureRef = useRef("");
     const swipeableRefs = useRef({});
@@ -249,28 +255,6 @@ export const PublicationChat = ({ route, navigation }) => {
         setActiveChatId(resolvedChatId);
         return () => setActiveChatId(null);
     }, [resolvedChatId]);
-
-    useEffect(() => {
-        return () => { stopSound(); };
-    }, []);
-
-    const resetRecordingGesture = () => {
-        recordingTouchStartYRef.current = null;
-        recordingTouchCurrentYRef.current = null;
-        recordingLockedRef.current = false;
-        setIsRecordingLocked(false);
-    };
-
-    const maybeLockRecording = () => {
-        if (recordingLockedRef.current) return;
-        const startY = recordingTouchStartYRef.current;
-        const currentY = recordingTouchCurrentYRef.current;
-        if (startY == null || currentY == null) return;
-        if (shouldLockRecording(currentY - startY, LOCK_DISTANCE)) {
-            recordingLockedRef.current = true;
-            setIsRecordingLocked(true);
-        }
-    };
 
     const handleSend = async () => {
         const trimmed = text.trim();
@@ -460,37 +444,92 @@ export const PublicationChat = ({ route, navigation }) => {
             await Audio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
             const { recording } = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
             recordingRef.current = recording;
-            setIsRecording(true);
-            setIsRecordingLocked(false);
-            recordingLockedRef.current = false;
             setRecordingDuration(0);
-            maybeLockRecording();
+            setRecordingState("recording");
             durationIntervalRef.current = setInterval(() => {
                 setRecordingDuration((d) => d + 1);
             }, 1000);
         } catch (e) {
             console.error("[Audio] startRecording error", e);
+            setRecordingState("idle");
         }
     };
 
-    const stopRecording = async () => {
+    const cancelRecording = async () => {
+        clearInterval(durationIntervalRef.current);
+        setRecordingDuration(0);
+        setRecordingState("idle");
+        const recording = recordingRef.current;
+        recordingRef.current = null;
+        if (recording) {
+            try {
+                await recording.stopAndUnloadAsync();
+            } catch (_) { /* já parada/descartada */ }
+        }
+    };
+
+    const stopToPreview = async () => {
         if (!recordingRef.current) return;
         clearInterval(durationIntervalRef.current);
-        setIsRecording(false);
-        setIsRecordingLocked(false);
-        recordingLockedRef.current = false;
-        recordingTouchStartYRef.current = null;
-        recordingTouchCurrentYRef.current = null;
         const duration = recordingDuration;
-        setRecordingDuration(0);
         try {
             await recordingRef.current.stopAndUnloadAsync();
             const uri = recordingRef.current.getURI();
             recordingRef.current = null;
-            if (!uri || !myId || !buyerId || !resolvedChatId) return;
+            if (!uri) {
+                setRecordingDuration(0);
+                setRecordingState("idle");
+                return;
+            }
+            setPendingAudio({ uri, duration });
+            setRecordingState("preview");
+        } catch (e) {
+            console.error("[Audio] stopToPreview error", e);
+            recordingRef.current = null;
+            setRecordingDuration(0);
+            setRecordingState("idle");
+        }
+    };
+
+    const slidePanResponder = useRef(PanResponder.create({
+        onMoveShouldSetPanResponder: (_evt, gestureState) => Math.abs(gestureState.dx) > 10,
+        onPanResponderMove: (_evt, gestureState) => {
+            if (gestureState.dx < -80) cancelRecording();
+        },
+        onPanResponderRelease: (_evt, gestureState) => {
+            if (gestureState.dx < -80) cancelRecording();
+        },
+    }));
+
+    const stopPreviewSound = async () => {
+        if (previewSoundRef.current) {
+            try {
+                await previewSoundRef.current.stopAsync();
+                await previewSoundRef.current.unloadAsync();
+            } catch (_) { /* som já descarregado */ }
+            previewSoundRef.current = null;
+        }
+        setIsPreviewPlaying(false);
+    };
+
+    const discardPreview = async () => {
+        await stopPreviewSound();
+        setPendingAudio(null);
+        setRecordingDuration(0);
+        setRecordingState("idle");
+    };
+
+    const sendPendingAudio = async () => {
+        const audio = pendingAudio;
+        await stopPreviewSound();
+        setPendingAudio(null);
+        setRecordingDuration(0);
+        setRecordingState("idle");
+        if (!audio?.uri || !myId || !buyerId || !resolvedChatId) return;
+        try {
             setIsUploading(true);
             setUploadingLabel("Enviando áudio...");
-            const { error, url } = await uploadChatAudio(resolvedChatId, uri);
+            const { error, url } = await uploadChatAudio(resolvedChatId, audio.uri);
             setIsUploading(false);
             setUploadingLabel("");
             if (!error && url) {
@@ -500,7 +539,7 @@ export const PublicationChat = ({ route, navigation }) => {
                     buyerId,
                     senderId: myId,
                     audioUrl: url,
-                    audioDuration: duration,
+                    audioDuration: audio.duration,
                     sellerName: resolvedSellerName || "",
                     buyerName,
                     publicationTitle: publication?.publicationTitle || publication?.location || "",
@@ -510,39 +549,9 @@ export const PublicationChat = ({ route, navigation }) => {
             }
             await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
         } catch (e) {
-            console.error("[Audio] stopRecording error", e);
+            console.error("[Audio] sendPendingAudio error", e);
             setIsUploading(false);
             setUploadingLabel("");
-        }
-    };
-
-    const handleRecordTouchStart = (event) => {
-        const startY = event?.nativeEvent?.pageY;
-        recordingTouchStartYRef.current = Number.isFinite(startY) ? startY : null;
-        recordingTouchCurrentYRef.current = recordingTouchStartYRef.current;
-        if (!isRecording) {
-            setIsRecordingLocked(false);
-            recordingLockedRef.current = false;
-        }
-    };
-
-    const handleRecordTouchMove = (event) => {
-        const currentY = event?.nativeEvent?.pageY;
-        recordingTouchCurrentYRef.current = Number.isFinite(currentY) ? currentY : recordingTouchCurrentYRef.current;
-        if (isRecording) {
-            maybeLockRecording();
-        }
-    };
-
-    const handleRecordPressOut = async () => {
-        if (!isRecording) return;
-        if (shouldKeepRecordingOnRelease(recordingLockedRef.current)) return;
-        await stopRecording();
-    };
-
-    const handleRecordPress = async () => {
-        if (isRecording && recordingLockedRef.current) {
-            await stopRecording();
         }
     };
 
@@ -554,6 +563,49 @@ export const PublicationChat = ({ route, navigation }) => {
         setPlayingId(null);
     };
 
+    const togglePreviewPlayback = async () => {
+        if (!pendingAudio?.uri) return;
+        if (isPreviewPlaying) {
+            await stopPreviewSound();
+            return;
+        }
+        try {
+            await stopSound();
+            await Audio.setAudioModeAsync({
+                allowsRecordingIOS: false,
+                playsInSilentModeIOS: true,
+            });
+            const { sound } = await Audio.Sound.createAsync({ uri: pendingAudio.uri });
+            previewSoundRef.current = sound;
+            setIsPreviewPlaying(true);
+            await sound.playAsync();
+            sound.setOnPlaybackStatusUpdate((status) => {
+                if (status.didJustFinish) stopPreviewSound();
+            });
+        } catch (e) {
+            console.error("[Audio] togglePreviewPlayback error", e);
+            setIsPreviewPlaying(false);
+        }
+    };
+
+    useEffect(() => () => {
+        stopSound();
+        stopPreviewSound();
+        clearInterval(durationIntervalRef.current);
+        if (recordingRef.current) {
+            recordingRef.current.stopAndUnloadAsync().catch(() => {});
+            recordingRef.current = null;
+        }
+    }, []);
+
+    const cyclePlaybackRate = () => {
+        const next = NEXT_PLAYBACK_RATE[playbackRate] || 1;
+        setPlaybackRate(next);
+        if (soundRef.current) {
+            soundRef.current.setRateAsync(next, true).catch(() => {});
+        }
+    };
+
     const playAudio = async (msgId, audioUrl) => {
         if (playingId === msgId) { await stopSound(); return; }
         await stopSound();
@@ -562,6 +614,9 @@ export const PublicationChat = ({ route, navigation }) => {
             const { sound } = await Audio.Sound.createAsync({ uri: audioUrl });
             soundRef.current = sound;
             setPlayingId(msgId);
+            try {
+                await sound.setRateAsync(playbackRate, true);
+            } catch (_) { /* dispositivo sem suporte a pitch correction: toca em 1x */ }
             await sound.playAsync();
             sound.setOnPlaybackStatusUpdate((status) => {
                 if (status.didJustFinish) stopSound();
@@ -807,6 +862,11 @@ export const PublicationChat = ({ route, navigation }) => {
                             <AudioDuration isMine={isMine}>
                                 {formatDuration(item.audioDuration)}
                             </AudioDuration>
+                            <RateButton onPress={cyclePlaybackRate} activeOpacity={0.7}>
+                                <RateText isMine={isMine}>
+                                    {PLAYBACK_RATE_LABEL[playbackRate]}
+                                </RateText>
+                            </RateButton>
                         </AudioBubble>
                         {renderFooter(item, isMine)}
                     </TouchableOpacity>
@@ -895,6 +955,102 @@ export const PublicationChat = ({ route, navigation }) => {
     const mySafeIdMemo = myId ? String(myId).replace(/[@.]/g, "_") : null;
     const visibleMessages = messages.filter((m) => !m.deletedFor?.[mySafeIdMemo]);
 
+    const renderInputArea = () => {
+        if (isSelfChat) {
+            return (
+                <InputRow>
+                    <ChatInput
+                        editable={false}
+                        placeholder="Você não pode conversar com você mesmo"
+                        placeholderTextColor="#b0bec5"
+                        style={{ opacity: 0.6 }}
+                    />
+                </InputRow>
+            );
+        }
+
+        if (recordingState === "recording") {
+            return (
+                <RecordingBar>
+                    <RoundIconButton
+                        color="#8fa3b2"
+                        onPress={cancelRecording}
+                        activeOpacity={0.7}
+                    >
+                        <Feather name="trash-2" size={18} color="#fff" />
+                    </RoundIconButton>
+                    <RecordingDot />
+                    <RecordingTimer>{formatDuration(recordingDuration)}</RecordingTimer>
+                    <SlideHint {...slidePanResponder.current.panHandlers}>
+                        ‹ Deslize para cancelar
+                    </SlideHint>
+                    <RoundIconButton onPress={stopToPreview} activeOpacity={0.8}>
+                        <Feather name="square" size={18} color="#fff" />
+                    </RoundIconButton>
+                </RecordingBar>
+            );
+        }
+
+        if (recordingState === "preview") {
+            return (
+                <PreviewBar>
+                    <RoundIconButton
+                        color="#8fa3b2"
+                        onPress={discardPreview}
+                        activeOpacity={0.7}
+                    >
+                        <Feather name="trash-2" size={18} color="#fff" />
+                    </RoundIconButton>
+                    <RoundIconButton
+                        color="#36536e"
+                        onPress={togglePreviewPlayback}
+                        activeOpacity={0.8}
+                    >
+                        <Feather
+                            name={isPreviewPlaying ? "pause" : "play"}
+                            size={18}
+                            color="#fff"
+                        />
+                    </RoundIconButton>
+                    <PreviewDuration>
+                        {formatDuration(pendingAudio?.duration)}
+                    </PreviewDuration>
+                    <View style={{ flex: 1 }} />
+                    <RoundIconButton onPress={sendPendingAudio} activeOpacity={0.8}>
+                        <Feather name="send" size={18} color="#fff" />
+                    </RoundIconButton>
+                </PreviewBar>
+            );
+        }
+
+        return (
+            <InputRow>
+                <AttachButton onPress={openAttachSheet} activeOpacity={0.7}>
+                    <Feather name="paperclip" size={20} color="#64788a" />
+                </AttachButton>
+                <ChatInput
+                    value={text}
+                    onChangeText={setText}
+                    placeholder="Mensagem..."
+                    placeholderTextColor="#8fa3b2"
+                    multiline
+                />
+                <CameraButton onPress={() => pickAndSendImage("camera")} activeOpacity={0.7}>
+                    <Feather name="camera" size={20} color="#64788a" />
+                </CameraButton>
+                {text.trim().length > 0 ? (
+                    <SendButton onPress={handleSend} activeOpacity={0.8}>
+                        <Feather name="send" size={18} color="#fff" />
+                    </SendButton>
+                ) : (
+                    <RecordButton onPress={startRecording} activeOpacity={0.8}>
+                        <Feather name="mic" size={18} color="#fff" />
+                    </RecordButton>
+                )}
+            </InputRow>
+        );
+    };
+
     return (
         <Container>
             <GestureHandlerRootView style={{ flex: 1 }}>
@@ -947,18 +1103,10 @@ export const PublicationChat = ({ route, navigation }) => {
                         contentContainerStyle={{ padding: 12 }}
                         renderItem={renderItem}
                     />
-                    {(isRecording || isUploading) && (
+                    {isUploading && (
                         <RecordingIndicator>
-                            {isRecording ? (
-                                <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#e53935", marginRight: 8 }} />
-                            ) : (
-                                <ActivityIndicator size="small" color="#f55b1f" style={{ marginRight: 8 }} />
-                            )}
-                            <RecordingText>
-                                {isRecording
-                                    ? `${isRecordingLocked ? "Gravando travado" : "Gravando"}... ${formatDuration(recordingDuration)}`
-                                    : uploadingLabel}
-                            </RecordingText>
+                            <ActivityIndicator size="small" color="#f55b1f" style={{ marginRight: 8 }} />
+                            <RecordingText>{uploadingLabel}</RecordingText>
                         </RecordingIndicator>
                     )}
                     {replyingTo && (
@@ -974,51 +1122,7 @@ export const PublicationChat = ({ route, navigation }) => {
                             </TouchableOpacity>
                         </ReplyBar>
                     )}
-                    {isSelfChat ? (
-                        <InputRow>
-                            <ChatInput
-                                editable={false}
-                                placeholder="Você não pode conversar com você mesmo"
-                                placeholderTextColor="#b0bec5"
-                                style={{ opacity: 0.6 }}
-                            />
-                        </InputRow>
-                    ) : (
-                        <InputRow>
-                            <AttachButton onPress={openAttachSheet} activeOpacity={0.7}>
-                                <Feather name="paperclip" size={20} color="#64788a" />
-                            </AttachButton>
-                            <ChatInput
-                                value={text}
-                                onChangeText={setText}
-                                placeholder="Mensagem..."
-                                placeholderTextColor="#8fa3b2"
-                                multiline
-                            />
-                            <CameraButton onPress={() => pickAndSendImage("camera")} activeOpacity={0.7}>
-                                <Feather name="camera" size={20} color="#64788a" />
-                            </CameraButton>
-                            {text.trim().length > 0 ? (
-                                <SendButton onPress={handleSend} activeOpacity={0.8}>
-                                    <Feather name="send" size={18} color="#fff" />
-                                </SendButton>
-                            ) : (
-                                <RecordButton
-                                    onTouchStart={handleRecordTouchStart}
-                                    onTouchMove={handleRecordTouchMove}
-                                    onLongPress={startRecording}
-                                    onPress={handleRecordPress}
-                                    onPressOut={handleRecordPressOut}
-                                    onTouchCancel={handleRecordPressOut}
-                                    activeOpacity={0.8}
-                                    isRecording={isRecording}
-                                    isLocked={isRecordingLocked}
-                                >
-                                    <Feather name="mic" size={18} color="#fff" />
-                                </RecordButton>
-                            )}
-                        </InputRow>
-                    )}
+                    {renderInputArea()}
                 </KeyboardAvoidingView>
 
                 <Modal

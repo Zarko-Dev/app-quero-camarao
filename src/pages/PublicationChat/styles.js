@@ -183,12 +183,80 @@ export const SendButton = styled.TouchableOpacity`
 `;
 
 export const RecordButton = styled.TouchableOpacity`
-    background-color: ${({ isRecording, isLocked }) => (isLocked ? "#1f6feb" : isRecording ? "#e53935" : "#4BB543")};
+    background-color: #4BB543;
     border-radius: 20px;
     width: 42px;
     height: 42px;
     align-items: center;
     justify-content: center;
+`;
+
+export const RecordingBar = styled.View`
+    flex-direction: row;
+    align-items: center;
+    padding: 10px 12px;
+    background-color: #fff;
+    border-top-width: 1px;
+    border-top-color: #e8eef4;
+    gap: 10px;
+`;
+
+export const RecordingDot = styled.View`
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    background-color: #e53935;
+`;
+
+export const RecordingTimer = styled(Text)`
+    font-size: ${({ theme }) => theme.size.fontSize(13)};
+    color: #36536e;
+    font-weight: 700;
+`;
+
+export const SlideHint = styled(Text)`
+    flex: 1;
+    font-size: ${({ theme }) => theme.size.fontSize(12)};
+    color: #8fa3b2;
+    text-align: center;
+`;
+
+export const RoundIconButton = styled.TouchableOpacity`
+    width: 42px;
+    height: 42px;
+    border-radius: 21px;
+    align-items: center;
+    justify-content: center;
+    background-color: ${({ color }) => color || "#4BB543"};
+`;
+
+export const PreviewBar = styled.View`
+    flex-direction: row;
+    align-items: center;
+    padding: 10px 12px;
+    background-color: #fff;
+    border-top-width: 1px;
+    border-top-color: #e8eef4;
+    gap: 10px;
+`;
+
+export const PreviewDuration = styled(Text)`
+    font-size: ${({ theme }) => theme.size.fontSize(13)};
+    color: #36536e;
+    font-weight: 700;
+`;
+
+export const RateButton = styled.TouchableOpacity`
+    padding: 2px 6px;
+    border-radius: 8px;
+    background-color: rgba(0, 0, 0, 0.08);
+    margin-left: 6px;
+`;
+
+export const RateText = styled(Text)`
+    font-size: ${({ theme }) => theme.size.fontSize(10)};
+    font-weight: 700;
+    color: ${({ isMine }) => (isMine ? "#2e5e38" : "#5f7b94")};
 `;
 
 export const RecordingIndicator = styled.View`
