@@ -15,7 +15,9 @@ import { uploadChatImage } from "../../controllers/Chat/uploadImage";
 import { uploadChatFile } from "../../controllers/Chat/uploadFile";
 import { getMessageReadStatus } from "../../utils/chatReadStatus";
 import { formatFileSize } from "../../utils/formatFileSize";
+import { buildPublicationSummary } from "../../utils/publicationSummary";
 import { setActiveChatId } from "../../utils/activeChatTracker";
+import { dataRoutes } from "../../routes/dataRoutes";
 import {
     AttachButton,
     Avatar,
@@ -40,10 +42,13 @@ import {
     FullscreenModal,
     Header,
     HeaderInfo,
+    HeaderRating,
     HeaderSubtitle,
     HeaderTitle,
+    HeaderTouchable,
     ImageBubble,
     InputRow,
+    MenuButton,
     RecordButton,
     RecordingIndicator,
     RecordingText,
@@ -113,6 +118,7 @@ export const PublicationChat = ({ route, navigation }) => {
     const buyerId = paramBuyerId ?? myId;
     const otherUserId = myId === sellerId ? buyerId : sellerId;
     const resolvedChatId = chatId ?? (publication.id && buyerId ? chatDocId(publication.id, buyerId) : null);
+    const publicationSummary = buildPublicationSummary(publicationData?.shrimps);
 
     useEffect(() => {
         GetUserStorage().then((user) => {
@@ -143,6 +149,8 @@ export const PublicationChat = ({ route, navigation }) => {
             sellerName: effectiveSellerName,
             buyerName,
             publicationTitle: publication?.publicationTitle || publication?.location || "",
+            publicationLocation: publicationData?.location || "",
+            publicationSummary,
         }).then((ok) => {
             if (ok && resolvedChatId) markAutoMessageSent(resolvedChatId);
         });
@@ -228,6 +236,8 @@ export const PublicationChat = ({ route, navigation }) => {
             sellerName: resolvedSellerName || "",
             buyerName,
             publicationTitle: publication?.publicationTitle || publication?.location || "",
+            publicationLocation: publicationData?.location || "",
+            publicationSummary,
         });
     };
 
@@ -275,6 +285,8 @@ export const PublicationChat = ({ route, navigation }) => {
                     sellerName: resolvedSellerName || "",
                     buyerName,
                     publicationTitle: publication?.publicationTitle || publication?.location || "",
+                    publicationLocation: publicationData?.location || "",
+                    publicationSummary,
                 });
             }
         } catch (e) {
@@ -334,12 +346,32 @@ export const PublicationChat = ({ route, navigation }) => {
                     sellerName: resolvedSellerName || "",
                     buyerName,
                     publicationTitle: publication?.publicationTitle || publication?.location || "",
+                    publicationLocation: publicationData?.location || "",
+                    publicationSummary,
                 });
             }
         } catch (e) {
             console.error("[Chat] sendDocument error", e);
             setIsUploading(false);
             setUploadingLabel("");
+        }
+    };
+
+    const openHeaderMenu = () => {
+        const details = [
+            publicationData?.location ? `📍 ${publicationData.location}` : null,
+            publicationSummary ? `🦐 ${publicationSummary}` : null,
+        ].filter(Boolean).join("\n");
+        const body = details || "Sem dados do anúncio";
+        if (Platform.OS === "ios") {
+            ActionSheetIOS.showActionSheetWithOptions(
+                { options: ["Cancelar", "Ver dados do anúncio"], cancelButtonIndex: 0 },
+                (idx) => {
+                    if (idx === 1) Alert.alert("Anúncio", body);
+                },
+            );
+        } else {
+            Alert.alert("Anúncio", body, [{ text: "OK" }], { cancelable: true });
         }
     };
 
@@ -414,6 +446,8 @@ export const PublicationChat = ({ route, navigation }) => {
                     sellerName: resolvedSellerName || "",
                     buyerName,
                     publicationTitle: publication?.publicationTitle || publication?.location || "",
+                    publicationLocation: publicationData?.location || "",
+                    publicationSummary,
                 });
             }
             await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
@@ -601,23 +635,37 @@ export const PublicationChat = ({ route, navigation }) => {
         <Container>
             <Header>
                 <Feather name="arrow-left" size={22} color="#36536e" onPress={() => navigation.goBack()} />
-                <Avatar>
-                    <AvatarText>{(headerName?.[0] ?? "?").toUpperCase()}</AvatarText>
-                </Avatar>
-                <HeaderInfo>
-                    <HeaderTitle numberOfLines={1}>
-                        {headerName}
-                    </HeaderTitle>
-                    {(publicationData?.location || publicationData?.shrimps?.length > 0) ? (
-                        <HeaderSubtitle numberOfLines={1}>
-                            {publicationData?.location ? `📍 ${publicationData.location}` : ""}
-                            {publicationData?.location && publicationData?.shrimps?.length > 0 ? "  ·  " : ""}
-                            {publicationData?.shrimps?.length > 0
-                                ? `🦐 ${publicationData.shrimps.map((s) => `${s.grammage}g/${s.kilo}kg`).join(" · ")}`
-                                : ""}
-                        </HeaderSubtitle>
-                    ) : null}
-                </HeaderInfo>
+                <HeaderTouchable
+                    activeOpacity={0.7}
+                    onPress={() => {
+                        if (otherUserId) {
+                            navigation.navigate(dataRoutes.userProfile, {
+                                userId: otherUserId,
+                                userName: headerName,
+                            });
+                        }
+                    }}
+                >
+                    <Avatar>
+                        <AvatarText>{(headerName?.[0] ?? "?").toUpperCase()}</AvatarText>
+                    </Avatar>
+                    <HeaderInfo>
+                        <HeaderTitle numberOfLines={1}>
+                            {headerName}
+                        </HeaderTitle>
+                        <HeaderRating>⭐ Sem avaliações</HeaderRating>
+                        {(publicationData?.location || publicationSummary) ? (
+                            <HeaderSubtitle numberOfLines={1}>
+                                {[publicationData?.location, publicationSummary]
+                                    .filter(Boolean)
+                                    .join(" • ")}
+                            </HeaderSubtitle>
+                        ) : null}
+                    </HeaderInfo>
+                </HeaderTouchable>
+                <MenuButton onPress={openHeaderMenu} activeOpacity={0.7}>
+                    <Feather name="more-vertical" size={20} color="#36536e" />
+                </MenuButton>
             </Header>
 
             <KeyboardAvoidingView

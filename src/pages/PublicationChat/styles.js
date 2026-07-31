@@ -37,6 +37,25 @@ export const HeaderSubtitle = styled(Text)`
     line-height: 16px;
 `;
 
+export const HeaderRating = styled(Text)`
+    font-size: ${({ theme }) => theme.size.fontSize(10)};
+    color: #b0a898;
+    margin-top: 1px;
+`;
+
+export const HeaderTouchable = styled.TouchableOpacity`
+    flex: 1;
+    flex-direction: row;
+    align-items: center;
+`;
+
+export const MenuButton = styled.TouchableOpacity`
+    width: 36px;
+    height: 36px;
+    align-items: center;
+    justify-content: center;
+`;
+
 export const Avatar = styled.View`
     width: 40px;
     height: 40px;
