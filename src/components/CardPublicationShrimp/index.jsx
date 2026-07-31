@@ -2,7 +2,7 @@ import { FontAwesome, Feather, MaterialCommunityIcons } from "@expo/vector-icons
 import { useNavigation } from "@react-navigation/native";
 import { useDispatch, useSelector } from "react-redux";
 import { memo, useMemo, useState } from "react";
-import { ActivityIndicator, Dimensions, Platform, Share, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Dimensions, Platform, Text, TouchableOpacity, View } from "react-native";
 import { v4 } from "uuid";
 
 import { dataRoutes } from "../../routes/dataRoutes";
@@ -59,7 +59,6 @@ export const CardPublicationShrimp = memo(
 
         const navigation = useNavigation();
         const { isAuthenticated, dataUser } = useSelector((state) => state.login);
-        const { configData } = useSelector((state) => state.configSystem);
 
         const [isLoadingTalkProductor, setIsLoadingTalkProductor] =
             useState(false);
@@ -173,23 +172,9 @@ export const CardPublicationShrimp = memo(
             setTimeout(async () => {
                 const dataUri = await sharedRef.current.capture();
 
-                if (Platform.OS === "android") {
-                    await ShareNativeAction(
-                        configData.androidUrl,
-                        configData.iosUrl,
-                        ConvertPondsPlural(),
-                        location,
-                        dataUri,
-                    );
-                } else if (Platform.OS === "ios") {
-                    try {
-                        await Share.share({
-                            url: dataUri,
-                        });
-                    } catch (error) {
-                        console.error("Erro ao compartilhar:", error.message);
-                    }
-                }
+                await ShareNativeAction({
+                    id, location, ponds, shrimps,
+                }, dataUri);
 
                 setIsSharingLoading(false);
             }, 2000);

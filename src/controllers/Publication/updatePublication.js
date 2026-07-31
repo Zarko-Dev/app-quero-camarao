@@ -20,7 +20,7 @@ export const updateShrimpsPublication = async (
             { merge: true },
         );
 
-        await sendNotificationEditPublication({ publisherId });
+        await sendNotificationEditPublication({ publisherId, publicationId });
 
         return true;
     } catch (error) {
@@ -48,7 +48,7 @@ export const updatePondsPublication = async (
             { merge: true },
         );
 
-        await sendNotificationEditPublication({ publisherId });
+        await sendNotificationEditPublication({ publisherId, publicationId });
 
         return true;
     } catch (error) {

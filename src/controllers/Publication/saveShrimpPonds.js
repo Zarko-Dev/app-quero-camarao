@@ -25,6 +25,7 @@ export const saveShrimpPonds = async (dataPonds, userId) => {
 
         await sendNotificationNewPublication({
             publisherId: userId,
+            publicationId: dataPonds.id,
             location: dataPonds.location,
             shrimps: dataPonds.shrimps,
         });

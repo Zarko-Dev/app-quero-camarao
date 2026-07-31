@@ -44,6 +44,7 @@ import { DrawPrizeWinnersResult } from "../pages/Admin/DrawPrizeWinnersResult";
 import { PublicationChat } from "../pages/PublicationChat";
 import { MyChats } from "../pages/MyChats";
 import { UserProfile } from "../pages/UserProfile";
+import { PublicationDetail } from "../pages/PublicationDetail";
 import { CreateNewPassword } from "../pages/CreateNewPassword";
 
 const { Navigator, Screen } = createNativeStackNavigator();
@@ -364,6 +365,11 @@ export const Routes = () => (
             <Screen
                 name={dataRoutes.userProfile}
                 component={UserProfile}
+                options={{ headerShown: false }}
+            />
+            <Screen
+                name={dataRoutes.publicationDetail}
+                component={PublicationDetail}
                 options={{ headerShown: false }}
             />
         </Navigator>

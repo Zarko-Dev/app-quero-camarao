@@ -10,7 +10,9 @@ const getClientTokensExcluding = async (excludeUserId) => {
         .map((item) => item.notification.token);
 };
 
-export const sendNotificationNewPublication = async ({ publisherId, location, shrimps } = {}) => {
+export const sendNotificationNewPublication = async ({
+    publisherId, publicationId, location, shrimps,
+} = {}) => {
     const notificationTokens = await getClientTokensExcluding(publisherId);
     if (notificationTokens.length === 0) return;
 
@@ -25,11 +27,11 @@ export const sendNotificationNewPublication = async ({ publisherId, location, sh
         "🎉 Novo camarão publicado!",
         body,
         () => {},
-        { type: "publication" },
+        { type: "publication", publicationId },
     );
 };
 
-export const sendNotificationEditPublication = async ({ publisherId } = {}) => {
+export const sendNotificationEditPublication = async ({ publisherId, publicationId } = {}) => {
     const notificationTokens = await getClientTokensExcluding(publisherId);
     if (notificationTokens.length === 0) return;
 
@@ -38,6 +40,6 @@ export const sendNotificationEditPublication = async ({ publisherId } = {}) => {
         "🎉 Quero Camarão Informa",
         "Uma publicação foi alterada, venha conferir!",
         () => {},
-        { type: "publication" },
+        { type: "publication", publicationId },
     );
 };

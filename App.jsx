@@ -145,7 +145,13 @@ const App = () => {
                             chatId: data.chatId,
                         });
                     } else if (data.type === "publication") {
-                        navigationRef.navigate(dataRoutes.home);
+                        if (data.publicationId) {
+                            navigationRef.navigate(dataRoutes.publicationDetail, {
+                                publicationId: data.publicationId,
+                            });
+                        } else {
+                            navigationRef.navigate(dataRoutes.home);
+                        }
                     } else if (data.type === "registerMyAds") {
                         navigationRef.navigate(dataRoutes.registerMyAds);
                     }

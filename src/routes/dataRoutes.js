@@ -36,6 +36,7 @@ export const dataRoutes = {
     publicationChat: "Publication Chat",
     myChats: "My Chats",
     userProfile: "User Profile",
+    publicationDetail: "Publication Detail",
     admin: {
         navigation: "Admin:Navigation",
         navigationTab: "Admin:Tab",
@@ -75,6 +76,9 @@ export const linking = {
             },
             "Validate Invitation": {
                 path: "convite",
+            },
+            "Publication Detail": {
+                path: "publicacao/:publicationId",
             },
         },
     },
