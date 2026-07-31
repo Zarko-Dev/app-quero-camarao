@@ -126,29 +126,41 @@ const App = () => {
 
         const navigateToChatFromNotificationData = (data, notificationId) => {
             const isChatType = data?.type === "chat" || data?.type === "attention";
-            if (!data || !isChatType || !data.publicationId) return;
+            const isKnownType = isChatType || data?.type === "publication" || data?.type === "registerMyAds";
+            if (!data || !isKnownType) return;
+            if (isChatType && !data.publicationId) return;
             if (notificationId && notificationId === handledNotificationId) return;
             if (notificationId) handledNotificationId = notificationId;
 
             let attempts = 0;
             const tryNavigate = () => {
                 if (navigationRef.isReady()) {
-                    navigationRef.navigate(dataRoutes.publicationChat, {
-                        publication: { id: data.publicationId },
-                        sellerId: data.sellerId,
-                        buyerId: data.buyerId,
-                        sellerName: data.sellerName,
-                        buyerName: data.buyerName,
-                        chatId: data.chatId,
-                    });
+                    if (isChatType) {
+                        navigationRef.navigate(dataRoutes.publicationChat, {
+                            publication: { id: data.publicationId },
+                            sellerId: data.sellerId,
+                            buyerId: data.buyerId,
+                            sellerName: data.sellerName,
+                            buyerName: data.buyerName,
+                            chatId: data.chatId,
+                        });
+                    } else if (data.type === "publication") {
+                        navigationRef.navigate(dataRoutes.home);
+                    } else if (data.type === "registerMyAds") {
+                        navigationRef.navigate(dataRoutes.registerMyAds);
+                    }
                     return;
                 }
                 attempts += 1;
                 if (attempts < 10) {
                     setTimeout(tryNavigate, 300);
                 } else {
-                    Sentry.captureMessage("Chat notification navigation timed out waiting for navigationRef", {
-                        extra: { chatId: data.chatId, publicationId: data.publicationId },
+                    Sentry.captureMessage("Notification navigation timed out waiting for navigationRef", {
+                        extra: {
+                            type: data.type,
+                            chatId: data.chatId,
+                            publicationId: data.publicationId,
+                        },
                     });
                 }
             };

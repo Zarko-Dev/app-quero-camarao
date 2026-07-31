@@ -1,8 +1,8 @@
 /* eslint-disable operator-linebreak */
 /* eslint-disable indent */
 import { useEffect, useState } from "react";
-import { FlatList } from "react-native";
-import { FontAwesome } from "@expo/vector-icons";
+import { FlatList, TouchableOpacity } from "react-native";
+import { FontAwesome, Feather } from "@expo/vector-icons";
 import { useDispatch, useSelector } from "react-redux";
 import { ActivityIndicator } from "react-native-paper";
 import Toast from "react-native-toast-message";
@@ -10,6 +10,10 @@ import Toast from "react-native-toast-message";
 import { convertDate } from "../../utils/convertDate";
 import { notificationExecuteActions } from "../../components/Header/actions";
 import { updateNotification } from "../../controllers/Notifications/updateNotification";
+import { getMyChats } from "../../controllers/Chat";
+import { getMyRating } from "../../controllers/Chat/ratings";
+import { useUnreadChatsCount } from "../../hooks/useUnreadChatsCount";
+import { dataRoutes } from "../../routes/dataRoutes";
 
 import {
     ActionButton,
@@ -22,6 +26,22 @@ import {
     MessageInfo,
     TitleInfo,
 } from "./styles";
+
+const VirtualCard = ({
+    icon, title, message, onPress,
+}) => (
+    <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+        <ContainerCard>
+            <ContentIcon read={false}>
+                <Feather name={icon} size={22} color="black" />
+            </ContentIcon>
+            <ContentInfo read>
+                <TitleInfo>{title}</TitleInfo>
+                <MessageInfo>{message}</MessageInfo>
+            </ContentInfo>
+        </ContainerCard>
+    </TouchableOpacity>
+);
 
 const MessageCard = ({ data, onRead, isLoading }) => (
     <ContainerCard>
@@ -68,11 +88,13 @@ const MessageCard = ({ data, onRead, isLoading }) => (
     </ContainerCard>
 );
 
-export const ReceivedNotifications = ({ route }) => {
+export const ReceivedNotifications = ({ route, navigation }) => {
     const dispatch = useDispatch();
     const { originalDataNotifications, notificationCount } = useSelector(
         (state) => state.notificationExecute,
     );
+    const { dataUser } = useSelector((state) => state.login);
+    const unreadChatsCount = useUnreadChatsCount();
 
     const [isLoading, setIsLoading] = useState({
         status: false,
@@ -81,6 +103,7 @@ export const ReceivedNotifications = ({ route }) => {
     const [notifications, setNotifications] = useState(
         route.params.notifications,
     );
+    const [pendingRatings, setPendingRatings] = useState([]);
 
     useEffect(() => {
         if (notificationCount === 0) {
@@ -90,6 +113,20 @@ export const ReceivedNotifications = ({ route }) => {
             });
         }
     }, []);
+
+    useEffect(() => {
+        const myId = dataUser?.email ?? dataUser?.uid;
+        if (!myId) return;
+
+        getMyChats(myId).then(async (chats) => {
+            const closedChats = chats.filter((chat) => chat.status === "closed");
+            const results = await Promise.all(
+                closedChats.map((chat) => getMyRating(chat.id, myId)),
+            );
+            const withoutRating = closedChats.filter((_, index) => !results[index]);
+            setPendingRatings(withoutRating);
+        }).catch(() => {});
+    }, [dataUser?.email, dataUser?.uid]);
 
     const handleMarkAsRead = async (notificationId, token) => {
         setIsLoading({ status: true, notificationId });
@@ -145,10 +182,51 @@ export const ReceivedNotifications = ({ route }) => {
         setIsLoading({ status: false, notificationId: null });
     };
 
+    const openChat = (chat) => {
+        navigation.navigate(dataRoutes.publicationChat, {
+            publication: { id: chat.publicationId },
+            sellerId: chat.sellerId,
+            buyerId: chat.buyerId,
+            sellerName: chat.sellerName || "Vendedor",
+            buyerName: chat.buyerName || "Comprador",
+            chatId: chat.id,
+        });
+    };
+
+    const myId = dataUser?.email ?? dataUser?.uid;
+
     return (
         <Container>
             <FlatList
                 data={notifications}
+                ListHeaderComponent={
+                    unreadChatsCount > 0 || pendingRatings.length > 0 ? (
+                        <>
+                            {unreadChatsCount > 0 && (
+                                <VirtualCard
+                                    icon="message-circle"
+                                    title="Mensagens não lidas"
+                                    message={`Você tem ${unreadChatsCount} mensagem${unreadChatsCount > 1 ? "ns" : ""} não lida${unreadChatsCount > 1 ? "s" : ""}`}
+                                    onPress={() => navigation.navigate(dataRoutes.myChats)}
+                                />
+                            )}
+                            {pendingRatings.map((chat) => {
+                                const otherName = chat.sellerId === myId
+                                    ? (chat.buyerName || "comprador")
+                                    : (chat.sellerName || "produtor");
+                                return (
+                                    <VirtualCard
+                                        key={chat.id}
+                                        icon="star"
+                                        title="Avaliação pendente"
+                                        message={`Avalie ${otherName}`}
+                                        onPress={() => openChat(chat)}
+                                    />
+                                );
+                            })}
+                        </>
+                    ) : null
+                }
                 renderItem={({ item }) => (
                     <MessageCard
                         data={item}
