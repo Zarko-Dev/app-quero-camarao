@@ -79,6 +79,8 @@ export const sendChatMessage = async ({
     fileUrl = null,
     fileName = null,
     fileSize = null,
+    publicationLocation = "",
+    publicationSummary = "",
     sellerName = "",
     buyerName = "",
     publicationTitle = "",
@@ -103,6 +105,9 @@ export const sendChatMessage = async ({
                 sellerName,
                 buyerName,
                 publicationTitle,
+                publicationLocation,
+                publicationSummary,
+                status: "active",
                 lastMessage,
                 lastMessageAt: serverTimestamp(),
                 lastMessageSenderId: senderId,
@@ -115,6 +120,8 @@ export const sendChatMessage = async ({
                 lastMessage,
                 lastMessageAt: serverTimestamp(),
                 lastMessageSenderId: senderId,
+                ...(publicationLocation ? { publicationLocation } : {}),
+                ...(publicationSummary ? { publicationSummary } : {}),
                 updatedAt: serverTimestamp(),
             });
         }
