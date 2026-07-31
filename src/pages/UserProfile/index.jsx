@@ -6,6 +6,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { firestore } from "../../services/Firebase";
 import { models } from "../../services/Firebase/models";
 import { getUserPublications } from "../../controllers/Publication/getUserPublications";
+import { formatRatingLabel } from "../../utils/ratingLabel";
 import {
     BigAvatar,
     BigAvatarText,
@@ -83,7 +84,9 @@ export const UserProfile = ({ route, navigation }) => {
                     <BigAvatarText>{initial}</BigAvatarText>
                 </BigAvatar>
                 <ProfileName>{displayName}</ProfileName>
-                <RatingText>⭐ Sem avaliações</RatingText>
+                <RatingText>
+                    {formatRatingLabel(profile?.ratingAverage, profile?.ratingCount)}
+                </RatingText>
                 {city ? (
                     <InfoRow>{`📍 ${city}${state ? `/${state}` : ""}`}</InfoRow>
                 ) : null}

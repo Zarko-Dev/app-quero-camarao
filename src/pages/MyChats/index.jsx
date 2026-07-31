@@ -1,12 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { doc, getDoc } from "firebase/firestore";
 
 import { GetUserStorage } from "../../services/Storage/UserStorage";
+import { firestore } from "../../services/Firebase";
+import { models } from "../../services/Firebase/models";
 import { subscribeMyChats } from "../../controllers/Chat";
 import { dataRoutes } from "../../routes/dataRoutes";
 import { getMessageReadStatus } from "../../utils/chatReadStatus";
 import { isUnread, sortChatsUnreadFirst } from "../../utils/chatListSort";
+import { formatRatingLabel } from "../../utils/ratingLabel";
 import {
     Avatar,
     AvatarText,
@@ -70,6 +74,8 @@ export const MyChats = ({ navigation }) => {
     const [loading, setLoading] = useState(true);
     const [myId, setMyId] = useState(null);
     const [filter, setFilter] = useState("active");
+    const [ratingsByUser, setRatingsByUser] = useState({});
+    const ratingsFetchedRef = useRef(new Set());
 
     const safeId = myId?.replace(/[@.]/g, "_") ?? "";
 
@@ -88,6 +94,29 @@ export const MyChats = ({ navigation }) => {
         });
         return unsub;
     }, [myId]);
+
+    // Avaliação real dos outros participantes: 1 fetch por usuário único (cache em ref)
+    useEffect(() => {
+        if (!myId) return;
+        chats.forEach((c) => {
+            const otherId = c.sellerId === myId ? c.buyerId : c.sellerId;
+            if (!otherId || ratingsFetchedRef.current.has(otherId)) return;
+            ratingsFetchedRef.current.add(otherId);
+            getDoc(doc(firestore, models.users, otherId))
+                .then((snap) => {
+                    if (!snap.exists()) return;
+                    const data = snap.data() || {};
+                    setRatingsByUser((prev) => ({
+                        ...prev,
+                        [otherId]: {
+                            average: data.ratingAverage,
+                            count: data.ratingCount,
+                        },
+                    }));
+                })
+                .catch(() => {});
+        });
+    }, [chats, myId]);
 
     const activeChats = chats.filter((c) => c.status !== "closed");
     const closedChats = chats.filter((c) => c.status === "closed");
@@ -180,6 +209,7 @@ export const MyChats = ({ navigation }) => {
                     keyExtractor={(item) => item.id}
                     renderItem={({ item }) => {
                         const other = getOtherUser(item);
+                        const otherId = getOtherUserId(item);
                         const unread = isUnread(item, safeId);
                         const lastMessageIsMine = item.lastMessageSenderId === myId;
                         const initial = (other.name?.[0] ?? "?").toUpperCase();
@@ -190,7 +220,12 @@ export const MyChats = ({ navigation }) => {
                                 </Avatar>
                                 <ConvInfo>
                                     <ConvName numberOfLines={1}>{other.name}</ConvName>
-                                    <ConvRating numberOfLines={1}>⭐ Sem avaliações</ConvRating>
+                                    <ConvRating numberOfLines={1}>
+                                        {formatRatingLabel(
+                                            ratingsByUser[otherId]?.average,
+                                            ratingsByUser[otherId]?.count,
+                                        )}
+                                    </ConvRating>
                                     <ConvPub numberOfLines={1}>
                                         {item.publicationLocation || item.publicationSummary
                                             ? [

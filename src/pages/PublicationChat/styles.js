@@ -370,3 +370,32 @@ export const DeletedText = styled(Text)`
     font-style: italic;
     color: #8fa3b2;
 `;
+
+export const ClosedBar = styled.View`
+    padding: 14px;
+    background-color: #efe9df;
+    border-top-width: 1px;
+    border-top-color: #e0d8c8;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+`;
+
+export const ClosedText = styled(Text)`
+    font-size: ${({ theme }) => theme.size.fontSize(13)};
+    color: #8a7a5f;
+`;
+
+export const RateActionButton = styled.TouchableOpacity`
+    margin-left: 8px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    background-color: #4BB543;
+`;
+
+export const RateActionText = styled(Text)`
+    color: #fff;
+    font-weight: 700;
+    font-size: ${({ theme }) => theme.size.fontSize(13)};
+`;

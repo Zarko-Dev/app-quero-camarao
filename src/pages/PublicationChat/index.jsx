@@ -13,6 +13,8 @@ import { GetUserStorage } from "../../services/Storage/UserStorage";
 import { firestore } from "../../services/Firebase";
 import { models } from "../../services/Firebase/models";
 import { sendChatMessage, subscribeToChat, markChatAsSeen, markAutoMessageSent, chatDocId, getMyChats } from "../../controllers/Chat";
+import { submitRating, getMyRating } from "../../controllers/Chat/ratings";
+import { markPublicationSold, closeChatsForPublication } from "../../controllers/Chat/sold";
 import {
     deleteMessageForMe,
     deleteMessageForEveryone,
@@ -25,6 +27,7 @@ import { uploadChatFile } from "../../controllers/Chat/uploadFile";
 import { getMessageDeliveryStatus } from "../../utils/messageStatus";
 import { buildMessagePreview } from "../../utils/messagePreview";
 import { formatFileSize } from "../../utils/formatFileSize";
+import { formatRatingLabel } from "../../utils/ratingLabel";
 import { buildPublicationSummary } from "../../utils/publicationSummary";
 import { setActiveChatId } from "../../utils/activeChatTracker";
 import { dataRoutes } from "../../routes/dataRoutes";
@@ -43,6 +46,8 @@ import {
     BubbleWrap,
     CameraButton,
     ChatInput,
+    ClosedBar,
+    ClosedText,
     Container,
     DeletedText,
     FileInfo,
@@ -66,6 +71,8 @@ import {
     QuoteBlock,
     QuoteName,
     QuoteText,
+    RateActionButton,
+    RateActionText,
     RateButton,
     RateText,
     RecordButton,
@@ -83,6 +90,7 @@ import {
 import { ChatWallpaper } from "./ChatWallpaper";
 import { MessageActionsSheet } from "./MessageActionsSheet";
 import { ForwardModal } from "./ForwardModal";
+import { RatingModal } from "../../components/RatingModal";
 
 const NEXT_PLAYBACK_RATE = { 1: 1.5, 1.5: 2, 2: 1 };
 const PLAYBACK_RATE_LABEL = { 1: "1x", 1.5: "1,5x", 2: "2x" };
@@ -119,6 +127,9 @@ export const PublicationChat = ({ route, navigation }) => {
     const [buyerName, setBuyerName] = useState(paramBuyerName || "");
     const [publicationData, setPublicationData] = useState(publication);
     const [chatMeta, setChatMeta] = useState(null);
+    const [myRating, setMyRating] = useState(undefined);
+    const [showRatingModal, setShowRatingModal] = useState(false);
+    const [otherUserRating, setOtherUserRating] = useState(null);
 
     const lastSeenAt = chatMeta?.lastSeenAt || {};
 
@@ -155,6 +166,7 @@ export const PublicationChat = ({ route, navigation }) => {
     const otherUserId = myId === sellerId ? buyerId : sellerId;
     const resolvedChatId = chatId ?? (publication.id && buyerId ? chatDocId(publication.id, buyerId) : null);
     const publicationSummary = buildPublicationSummary(publicationData?.shrimps);
+    const isChatClosed = chatMeta?.status === "closed";
 
     useEffect(() => {
         GetUserStorage().then((user) => {
@@ -203,6 +215,28 @@ export const PublicationChat = ({ route, navigation }) => {
             })
             .catch(() => {});
     }, [sellerId]);
+
+    // Avaliação do outro participante (média + contagem) pro cabeçalho
+    useEffect(() => {
+        if (!otherUserId) return;
+        getDoc(doc(firestore, models.users, otherUserId))
+            .then((snap) => {
+                if (snap.exists()) {
+                    const data = snap.data() || {};
+                    setOtherUserRating({
+                        average: data.ratingAverage,
+                        count: data.ratingCount,
+                    });
+                }
+            })
+            .catch(() => {});
+    }, [otherUserId]);
+
+    // Chat encerrado: carrega minha avaliação (null = ainda não avaliei)
+    useEffect(() => {
+        if (!isChatClosed || !myId || !resolvedChatId) return;
+        getMyRating(resolvedChatId, myId).then(setMyRating);
+    }, [isChatClosed, myId, resolvedChatId]);
 
     // Busca dados completos da publicação quando vem do MyChats (sem location/shrimps)
     useEffect(() => {
@@ -399,6 +433,33 @@ export const PublicationChat = ({ route, navigation }) => {
         }
     };
 
+    const confirmMarkAsSold = () => {
+        Alert.alert(
+            "Camarão vendido",
+            "Este camarão foi vendido. Deseja encerrar todas as conversas ligadas a este anúncio?",
+            [
+                { text: "Cancelar", style: "cancel" },
+                {
+                    text: "Confirmar",
+                    onPress: async () => {
+                        const soldOk = await markPublicationSold(publication.id);
+                        const closedCount = soldOk
+                            ? await closeChatsForPublication(publication.id)
+                            : -1;
+                        if (soldOk && closedCount >= 0) {
+                            Toast.show({ type: "success", text1: "Anúncio marcado como vendido" });
+                            setPublicationData((p) => ({ ...p, sold: true }));
+                        } else {
+                            Toast.show({ type: "error", text1: "Não foi possível concluir" });
+                        }
+                    },
+                },
+            ],
+        );
+    };
+
+    const canMarkAsSold = myId === sellerId && publicationData && !publicationData.sold;
+
     const openHeaderMenu = () => {
         const details = [
             publicationData?.location ? `📍 ${publicationData.location}` : null,
@@ -406,14 +467,41 @@ export const PublicationChat = ({ route, navigation }) => {
         ].filter(Boolean).join("\n");
         const body = details || "Sem dados do anúncio";
         if (Platform.OS === "ios") {
+            const options = ["Cancelar", "Ver dados do anúncio"];
+            if (canMarkAsSold) options.push("Marcar como vendido");
             ActionSheetIOS.showActionSheetWithOptions(
-                { options: ["Cancelar", "Ver dados do anúncio"], cancelButtonIndex: 0 },
+                { options, cancelButtonIndex: 0 },
                 (idx) => {
                     if (idx === 1) Alert.alert("Anúncio", body);
+                    if (idx === 2) confirmMarkAsSold();
                 },
             );
         } else {
-            Alert.alert("Anúncio", body, [{ text: "OK" }], { cancelable: true });
+            const buttons = [
+                ...(canMarkAsSold
+                    ? [{ text: "Marcar como vendido", onPress: confirmMarkAsSold }]
+                    : []),
+                { text: "OK" },
+            ];
+            Alert.alert("Anúncio", body, buttons, { cancelable: true });
+        }
+    };
+
+    const handleRatingSubmit = async (stars, comment) => {
+        const ok = await submitRating({
+            chatId: resolvedChatId,
+            publicationId: publication.id,
+            raterId: myId,
+            ratedId: otherUserId,
+            stars,
+            comment,
+        });
+        if (ok) {
+            Toast.show({ type: "success", text1: "Avaliação enviada" });
+            setMyRating({ stars });
+            setShowRatingModal(false);
+        } else {
+            Toast.show({ type: "error", text1: "Não foi possível concluir" });
         }
     };
 
@@ -705,32 +793,33 @@ export const PublicationChat = ({ route, navigation }) => {
         ]);
     };
 
+    // Chat encerrado: sem novas escritas na negociação — só Copiar/Apagar para mim/Denunciar
     const messageActions = actionsFor ? [
-        {
+        ...(!isChatClosed ? [{
             key: "reply",
             label: "Responder",
             icon: "corner-up-left",
             onPress: handleReplyAction,
-        },
+        }] : []),
         ...(actionsFor.text ? [{
             key: "copy",
             label: "Copiar",
             icon: "copy",
             onPress: handleCopyAction,
         }] : []),
-        {
+        ...(!isChatClosed ? [{
             key: "forward",
             label: "Encaminhar",
             icon: "share",
             onPress: handleForwardAction,
-        },
+        }] : []),
         {
             key: "deleteForMe",
             label: "Apagar para mim",
             icon: "trash",
             onPress: handleDeleteForMeAction,
         },
-        ...(actionsFor.senderId === myId ? [{
+        ...(!isChatClosed && actionsFor.senderId === myId ? [{
             key: "deleteForEveryone",
             label: "Apagar para todos",
             icon: "trash-2",
@@ -931,6 +1020,15 @@ export const PublicationChat = ({ route, navigation }) => {
             );
         }
 
+        // Chat encerrado: sem swipe-to-reply (não há envio)
+        if (isChatClosed) {
+            return (
+                <BubbleWrap isMine={isMine}>
+                    {renderBubbleBody(item, isMine)}
+                </BubbleWrap>
+            );
+        }
+
         return (
             <Swipeable
                 ref={(r) => {
@@ -956,6 +1054,22 @@ export const PublicationChat = ({ route, navigation }) => {
     const visibleMessages = messages.filter((m) => !m.deletedFor?.[mySafeIdMemo]);
 
     const renderInputArea = () => {
+        if (isChatClosed) {
+            return (
+                <ClosedBar>
+                    <ClosedText>🔒 Conversa encerrada</ClosedText>
+                    {myRating === null && (
+                        <RateActionButton
+                            onPress={() => setShowRatingModal(true)}
+                            activeOpacity={0.8}
+                        >
+                            <RateActionText>Avaliar</RateActionText>
+                        </RateActionButton>
+                    )}
+                </ClosedBar>
+            );
+        }
+
         if (isSelfChat) {
             return (
                 <InputRow>
@@ -1074,7 +1188,12 @@ export const PublicationChat = ({ route, navigation }) => {
                             <HeaderTitle numberOfLines={1}>
                                 {headerName}
                             </HeaderTitle>
-                            <HeaderRating>⭐ Sem avaliações</HeaderRating>
+                            <HeaderRating>
+                                {formatRatingLabel(
+                                    otherUserRating?.average,
+                                    otherUserRating?.count,
+                                )}
+                            </HeaderRating>
                             {(publicationData?.location || publicationSummary) ? (
                                 <HeaderSubtitle numberOfLines={1}>
                                     {[publicationData?.location, publicationSummary]
@@ -1160,6 +1279,13 @@ export const PublicationChat = ({ route, navigation }) => {
                     chats={forwardChats}
                     onSelect={handleForwardSelect}
                     currentChatId={resolvedChatId}
+                />
+
+                <RatingModal
+                    visible={showRatingModal}
+                    onClose={() => setShowRatingModal(false)}
+                    targetName={headerName}
+                    onSubmit={handleRatingSubmit}
                 />
             </GestureHandlerRootView>
         </Container>
