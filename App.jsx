@@ -2,7 +2,7 @@ import "react-native-gesture-handler";
 import "./src/polyfills/cryptoRandom";
 
 import { useEffect } from "react";
-import { Platform } from "react-native";
+import { Platform, Vibration } from "react-native";
 import { pt, registerTranslation } from "react-native-paper-dates";
 import { ThemeProvider } from "styled-components/native";
 import { PaperProvider, MD3LightTheme } from "react-native-paper";
@@ -125,7 +125,8 @@ const App = () => {
         let handledNotificationId = null;
 
         const navigateToChatFromNotificationData = (data, notificationId) => {
-            if (!data || data.type !== "chat" || !data.publicationId) return;
+            const isChatType = data?.type === "chat" || data?.type === "attention";
+            if (!data || !isChatType || !data.publicationId) return;
             if (notificationId && notificationId === handledNotificationId) return;
             if (notificationId) handledNotificationId = notificationId;
 
@@ -169,7 +170,18 @@ const App = () => {
             );
         });
 
-        return () => subscription.remove();
+        const receivedSubscription = Notifications.addNotificationReceivedListener(
+            (notification) => {
+                if (notification.request?.content?.data?.type === "attention") {
+                    Vibration.vibrate([0, 250, 100, 250]);
+                }
+            },
+        );
+
+        return () => {
+            subscription.remove();
+            receivedSubscription.remove();
+        };
     }, []);
 
     const [fontLoad] = useFonts({

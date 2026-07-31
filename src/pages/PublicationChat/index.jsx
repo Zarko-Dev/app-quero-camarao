@@ -13,6 +13,7 @@ import { GetUserStorage } from "../../services/Storage/UserStorage";
 import { firestore } from "../../services/Firebase";
 import { models } from "../../services/Firebase/models";
 import { sendChatMessage, subscribeToChat, markChatAsSeen, markAutoMessageSent, chatDocId, getMyChats } from "../../controllers/Chat";
+import { sendAttention, setAttentionEnabled } from "../../controllers/Chat/attention";
 import { submitRating, getMyRating } from "../../controllers/Chat/ratings";
 import { markPublicationSold, closeChatsForPublication } from "../../controllers/Chat/sold";
 import {
@@ -148,6 +149,8 @@ export const PublicationChat = ({ route, navigation }) => {
     const [replyingTo, setReplyingTo] = useState(null);
     const [forwardingMsg, setForwardingMsg] = useState(null);
     const [forwardChats, setForwardChats] = useState([]);
+    const [attentionCooldown, setAttentionCooldown] = useState(false);
+    const [myAttentionEnabled, setMyAttentionEnabled] = useState(true);
 
     const listRef = useRef(null);
     const recordingRef = useRef(null);
@@ -159,6 +162,7 @@ export const PublicationChat = ({ route, navigation }) => {
     const deliveredMarkedRef = useRef(new Set());
     const lastSeenSignatureRef = useRef("");
     const swipeableRefs = useRef({});
+    const attentionTimeoutRef = useRef(null);
 
     // Self-chat: usuário abre a própria publicação sem paramBuyerId (seria comprador e vendedor ao mesmo tempo)
     const isSelfChat = myId && sellerId && !paramBuyerId && myId === sellerId;
@@ -231,6 +235,22 @@ export const PublicationChat = ({ route, navigation }) => {
             })
             .catch(() => {});
     }, [otherUserId]);
+
+    // Minha preferência de chamadas de atenção (toggle no menu 3 pontos)
+    useEffect(() => {
+        if (!myId) return;
+        getDoc(doc(firestore, models.users, myId))
+            .then((snap) => {
+                if (snap.exists()) {
+                    setMyAttentionEnabled(snap.data()?.attentionEnabled !== false);
+                }
+            })
+            .catch(() => {});
+    }, [myId]);
+
+    useEffect(() => () => {
+        if (attentionTimeoutRef.current) clearTimeout(attentionTimeoutRef.current);
+    }, []);
 
     // Chat encerrado: carrega minha avaliação (null = ainda não avaliei)
     useEffect(() => {
@@ -460,20 +480,69 @@ export const PublicationChat = ({ route, navigation }) => {
 
     const canMarkAsSold = myId === sellerId && publicationData && !publicationData.sold;
 
+    const handleAttentionPress = async () => {
+        if (attentionCooldown || !myId || !resolvedChatId || !otherUserId) return;
+        const myName = myId === sellerId
+            ? (resolvedSellerName || sellerName || "")
+            : buyerName;
+        const result = await sendAttention({
+            chatId: resolvedChatId,
+            senderId: myId,
+            senderName: myName,
+            recipientId: otherUserId,
+            publicationId: publication.id,
+            sellerId,
+            buyerId,
+        });
+        if (result.ok) {
+            setAttentionCooldown(true);
+            attentionTimeoutRef.current = setTimeout(() => setAttentionCooldown(false), 30_000);
+            Toast.show({ type: "success", text1: "Chamada de atenção enviada" });
+        } else if (result.reason === "cooldown" || result.reason === "window") {
+            Toast.show({ type: "info", text1: "Aguarde para chamar atenção novamente" });
+        } else if (result.reason === "disabled") {
+            Toast.show({ type: "info", text1: "Este usuário desativou chamadas de atenção" });
+        } else if (result.reason === "error") {
+            Toast.show({ type: "error", text1: "Não foi possível concluir" });
+        }
+    };
+
+    const toggleMyAttention = async () => {
+        const next = !myAttentionEnabled;
+        const ok = await setAttentionEnabled(myId, next);
+        if (ok) {
+            setMyAttentionEnabled(next);
+            Toast.show({
+                type: "success",
+                text1: next
+                    ? "Chamadas de atenção reativadas"
+                    : "Chamadas de atenção silenciadas",
+            });
+        } else {
+            Toast.show({ type: "error", text1: "Não foi possível concluir" });
+        }
+    };
+
     const openHeaderMenu = () => {
         const details = [
             publicationData?.location ? `📍 ${publicationData.location}` : null,
             publicationSummary ? `🦐 ${publicationSummary}` : null,
         ].filter(Boolean).join("\n");
         const body = details || "Sem dados do anúncio";
+        const attentionLabel = myAttentionEnabled
+            ? "Silenciar chamadas de atenção"
+            : "Reativar chamadas de atenção";
         if (Platform.OS === "ios") {
             const options = ["Cancelar", "Ver dados do anúncio"];
             if (canMarkAsSold) options.push("Marcar como vendido");
+            options.push(attentionLabel);
+            const attentionIdx = options.length - 1;
             ActionSheetIOS.showActionSheetWithOptions(
                 { options, cancelButtonIndex: 0 },
                 (idx) => {
                     if (idx === 1) Alert.alert("Anúncio", body);
-                    if (idx === 2) confirmMarkAsSold();
+                    else if (canMarkAsSold && idx === 2) confirmMarkAsSold();
+                    else if (idx === attentionIdx) toggleMyAttention();
                 },
             );
         } else {
@@ -481,6 +550,7 @@ export const PublicationChat = ({ route, navigation }) => {
                 ...(canMarkAsSold
                     ? [{ text: "Marcar como vendido", onPress: confirmMarkAsSold }]
                     : []),
+                { text: attentionLabel, onPress: toggleMyAttention },
                 { text: "OK" },
             ];
             Alert.alert("Anúncio", body, buttons, { cancelable: true });
@@ -1203,6 +1273,16 @@ export const PublicationChat = ({ route, navigation }) => {
                             ) : null}
                         </HeaderInfo>
                     </HeaderTouchable>
+                    {!isChatClosed && (
+                        <MenuButton
+                            onPress={handleAttentionPress}
+                            activeOpacity={0.7}
+                            disabled={attentionCooldown}
+                            style={{ opacity: attentionCooldown ? 0.4 : 1 }}
+                        >
+                            <Feather name="bell" size={20} color="#36536e" />
+                        </MenuButton>
+                    )}
                     <MenuButton onPress={openHeaderMenu} activeOpacity={0.7}>
                         <Feather name="more-vertical" size={20} color="#36536e" />
                     </MenuButton>
