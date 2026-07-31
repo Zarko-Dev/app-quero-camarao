@@ -255,3 +255,50 @@ export const FileSize = styled(Text)`
     font-size: ${({ theme }) => theme.size.fontSize(11)};
     margin-top: 2px;
 `;
+
+export const ReplyBar = styled.View`
+    flex-direction: row;
+    align-items: center;
+    background-color: #e9f5e4;
+    border-left-width: 3px;
+    border-left-color: #4BB543;
+    padding: 8px;
+`;
+
+export const ReplyBarText = styled(Text)`
+    flex: 1;
+    font-size: ${({ theme }) => theme.size.fontSize(13)};
+    color: #36536e;
+`;
+
+export const QuoteBlock = styled.View`
+    background-color: rgba(0, 0, 0, 0.05);
+    border-left-width: 3px;
+    border-left-color: #4BB543;
+    border-radius: 6px;
+    padding: 6px;
+    margin-bottom: 4px;
+`;
+
+export const QuoteName = styled(Text)`
+    font-size: ${({ theme }) => theme.size.fontSize(11)};
+    font-weight: 700;
+    color: #4BB543;
+`;
+
+export const QuoteText = styled(Text)`
+    font-size: ${({ theme }) => theme.size.fontSize(11)};
+    color: #5f7b94;
+`;
+
+export const ForwardedLabel = styled(Text)`
+    font-size: ${({ theme }) => theme.size.fontSize(10)};
+    font-style: italic;
+    color: #8fa3b2;
+`;
+
+export const DeletedText = styled(Text)`
+    font-size: ${({ theme }) => theme.size.fontSize(13)};
+    font-style: italic;
+    color: #8fa3b2;
+`;
