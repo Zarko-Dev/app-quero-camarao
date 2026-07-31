@@ -140,6 +140,7 @@ export const PublicationChat = ({ route, navigation }) => {
     const recordingTouchCurrentYRef = useRef(null);
     const recordingLockedRef = useRef(false);
     const deliveredMarkedRef = useRef(new Set());
+    const lastSeenSignatureRef = useRef("");
     const swipeableRefs = useRef({});
 
     // Self-chat: usuário abre a própria publicação sem paramBuyerId (seria comprador e vendedor ao mesmo tempo)
@@ -216,7 +217,13 @@ export const PublicationChat = ({ route, navigation }) => {
                 messagesReadyRef.current = true;
                 setMessages([...msgs].reverse());
                 if (myId && resolvedChatId) {
-                    markChatAsSeen(resolvedChatId, myId);
+                    // Evita write de lastSeenAt em eventos metadata-only (includeMetadataChanges
+                    // triplica os snapshots); só marca visto quando o conjunto de ids muda.
+                    const idsSignature = msgs.map((m) => m.id).join("|");
+                    if (idsSignature !== lastSeenSignatureRef.current) {
+                        lastSeenSignatureRef.current = idsSignature;
+                        markChatAsSeen(resolvedChatId, myId);
+                    }
                     const mySafeId = String(myId).replace(/[@.]/g, "_");
                     const toDeliver = msgs.filter((m) => m.senderId !== myId
                         && !m.pending
@@ -711,6 +718,7 @@ export const PublicationChat = ({ route, navigation }) => {
     };
 
     const formatTime = (createdAt) => {
+        if (!createdAt) return "";
         try {
             const d = createdAt?.toDate?.() ?? new Date(createdAt);
             return d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
@@ -865,7 +873,10 @@ export const PublicationChat = ({ route, navigation }) => {
 
         return (
             <Swipeable
-                ref={(r) => { if (r) swipeableRefs.current[item.id] = r; }}
+                ref={(r) => {
+                    if (r) swipeableRefs.current[item.id] = r;
+                    else delete swipeableRefs.current[item.id];
+                }}
                 renderLeftActions={renderReplyHint}
                 leftThreshold={40}
                 friction={2}
