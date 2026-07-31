@@ -43,6 +43,7 @@ import { DrawPrizeNewWinnerResult } from "../pages/Admin/DrawPrizeNewWinnerResul
 import { DrawPrizeWinnersResult } from "../pages/Admin/DrawPrizeWinnersResult";
 import { PublicationChat } from "../pages/PublicationChat";
 import { MyChats } from "../pages/MyChats";
+import { UserProfile } from "../pages/UserProfile";
 import { CreateNewPassword } from "../pages/CreateNewPassword";
 
 const { Navigator, Screen } = createNativeStackNavigator();
@@ -358,6 +359,11 @@ export const Routes = () => (
             <Screen
                 name={dataRoutes.myChats}
                 component={MyChats}
+                options={{ headerShown: false }}
+            />
+            <Screen
+                name={dataRoutes.userProfile}
+                component={UserProfile}
                 options={{ headerShown: false }}
             />
         </Navigator>
