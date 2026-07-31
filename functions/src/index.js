@@ -1,4 +1,4 @@
-const { onCall, HttpsError } = require("firebase-functions/v2/https");
+const { onCall, onRequest, HttpsError } = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
 
 const {
@@ -124,3 +124,20 @@ exports.resetPasswordByIdentifier = onCall(
         return { success: true };
     },
 );
+
+const { handlePaymentPix } = require("./paymentPix");
+const { handlePaymentWebhook } = require("./paymentWebhook");
+
+exports.paymentpix = onRequest(
+    { region: "us-central1", cors: true },
+    handlePaymentPix
+);
+
+exports.paymentwebhook = onRequest(
+    { region: "us-central1", cors: true },
+    handlePaymentWebhook
+);
+
+const { onRatingWritten } = require("./ratings");
+
+exports.onRatingWritten = onRatingWritten;

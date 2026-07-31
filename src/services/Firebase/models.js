@@ -19,6 +19,7 @@ export const models = {
     shirimpSale: "shirimpSale",
     chats: "chats",
     reports: "reports",
+    ratings: "ratings",
 };
 
 export const storageModels = {

@@ -40,6 +40,7 @@ export const countUnreadChats = async (userId) => {
             if (seen.has(d.id)) return;
             seen.add(d.id);
             const chat = d.data();
+            if (chat.status === "closed") return;
             if (!chat.lastMessageAt || !chat.lastMessage) return;
             const lastSeen = chat.lastSeenAt?.[safeId];
             if (!lastSeen) {
@@ -118,6 +119,7 @@ export const sendChatMessage = async ({
                 updatedAt: serverTimestamp(),
             });
         } else {
+            if (snap.data()?.status === "closed") return false;
             await updateDoc(chatRef, {
                 lastMessage,
                 lastMessageAt: serverTimestamp(),
@@ -232,6 +234,7 @@ export const subscribeUnreadChatsCount = (userId, onCount) => {
     const compute = () => {
         const all = [...buyerChats, ...sellerChats];
         const count = all.filter((chat) => {
+            if (chat.status === "closed") return false;
             const lastSeen = chat.lastSeenAt?.[safeId];
             const lastMsg = chat.lastMessageAt;
             if (!lastMsg || !chat.lastMessage) return false;
