@@ -81,6 +81,8 @@ export const sendChatMessage = async ({
     fileSize = null,
     publicationLocation = "",
     publicationSummary = "",
+    replyTo = null,
+    forwarded = false,
     sellerName = "",
     buyerName = "",
     publicationTitle = "",
@@ -139,6 +141,8 @@ export const sendChatMessage = async ({
         } else {
             msgData.text = trimmed;
         }
+        if (replyTo) msgData.replyTo = replyTo;
+        if (forwarded) msgData.forwarded = true;
         await addDoc(messagesRef(id), msgData);
 
         const recipientId = senderId === sellerId ? buyerId : sellerId;
@@ -174,9 +178,13 @@ export const subscribeToChat = ({ publicationId, buyerId, onMessages, onChatMeta
     const id = chatDocId(publicationId, buyerId);
     console.log("[Chat] subscribeToChat id=", id, "publicationId=", publicationId, "buyerId=", buyerId);
     const q = query(messagesRef(id), orderBy("createdAt", "asc"));
-    const unsubMessages = onSnapshot(q, (snap) => {
+    const unsubMessages = onSnapshot(q, { includeMetadataChanges: true }, (snap) => {
         console.log("[Chat] snapshot docs=", snap.docs.length);
-        onMessages(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+        onMessages(snap.docs.map((d) => ({
+            id: d.id,
+            pending: d.metadata.hasPendingWrites,
+            ...d.data(),
+        })));
     }, (error) => {
         console.error("[Chat] subscribeToChat error:", error.code, error.message);
         Sentry.captureException(error);
@@ -245,6 +253,31 @@ export const subscribeUnreadChatsCount = (userId, onCount) => {
     });
 
     return () => { unsubBuyer(); unsubSeller(); };
+};
+
+export const getMyChats = async (userId) => {
+    try {
+        const ref = collection(firestore, models.chats);
+        const [buyerSnap, sellerSnap] = await Promise.all([
+            getDocs(query(ref, where("buyerId", "==", userId))),
+            getDocs(query(ref, where("sellerId", "==", userId))),
+        ]);
+        const seen = new Set();
+        const all = [...buyerSnap.docs, ...sellerSnap.docs]
+            .filter((d) => {
+                if (seen.has(d.id)) return false;
+                seen.add(d.id);
+                return true;
+            })
+            .map((d) => ({ id: d.id, ...d.data() }));
+        all.sort(
+            (a, b) => (b.lastMessageAt?.toMillis?.() ?? 0) - (a.lastMessageAt?.toMillis?.() ?? 0),
+        );
+        return all;
+    } catch (error) {
+        Sentry.captureException(error);
+        return [];
+    }
 };
 
 export const subscribeMyChats = (userId, onChats) => {

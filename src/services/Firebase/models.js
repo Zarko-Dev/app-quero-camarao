@@ -18,6 +18,7 @@ export const models = {
     drawPrizesLive: "drawPrizesLive",
     shirimpSale: "shirimpSale",
     chats: "chats",
+    reports: "reports",
 };
 
 export const storageModels = {
