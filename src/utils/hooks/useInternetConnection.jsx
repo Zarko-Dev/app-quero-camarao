@@ -5,6 +5,22 @@ import Toast from "react-native-toast-message";
 
 import { firestoreInstance } from "../../services/Firebase";
 
+const probeInternet = async (timeoutMs = 4000) => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+        await fetch("https://www.google.com", {
+            method: "HEAD",
+            signal: controller.signal,
+        });
+        return true;
+    } catch (error) {
+        return false;
+    } finally {
+        clearTimeout(timeout);
+    }
+};
+
 export function useInternetConnection(enabled = true) {
     const [isConnected, setIsConnected] = useState(true);
     const offlineTimerRef = useRef(null);
@@ -12,6 +28,7 @@ export function useInternetConnection(enabled = true) {
 
     const OFFLINE_CONFIRMATION_DELAY_MS = 3000;
     const QUALITY_TOAST_COOLDOWN_MS = 20000;
+    const RECONNECT_POLL_INTERVAL_MS = 5000;
 
     const checkConnectionQuality = async () => {
         if (!enabled) {
@@ -70,9 +87,15 @@ export function useInternetConnection(enabled = true) {
             }
 
             if (!offlineTimerRef.current) {
-                offlineTimerRef.current = setTimeout(() => {
-                    setIsConnected(false);
+                offlineTimerRef.current = setTimeout(async () => {
                     offlineTimerRef.current = null;
+                    // NetInfo's isConnected/isInternetReachable podem estar errados
+                    // (comum no Android com VPN, portal cativo ou certas operadoras).
+                    // Só declara offline se uma checagem real também falhar.
+                    const reallyOffline = !(await probeInternet());
+                    if (reallyOffline) {
+                        setIsConnected(false);
+                    }
                 }, OFFLINE_CONFIRMATION_DELAY_MS);
             }
         });
@@ -85,6 +108,24 @@ export function useInternetConnection(enabled = true) {
             unsubscribe();
         };
     }, [enabled]);
+
+    useEffect(() => {
+        if (!enabled || isConnected) {
+            return undefined;
+        }
+
+        // Enquanto marcado como offline, tenta se reconectar ativamente em vez de
+        // depender só de um novo evento do NetInfo (que pode nunca chegar depois
+        // que o app volta do segundo plano em alguns Androids).
+        const interval = setInterval(async () => {
+            const hasInternet = await probeInternet();
+            if (hasInternet) {
+                setIsConnected(true);
+            }
+        }, RECONNECT_POLL_INTERVAL_MS);
+
+        return () => clearInterval(interval);
+    }, [enabled, isConnected]);
 
     const updateNetwork = useCallback(async () => {
         if (!firestoreInstance || !enabled) {
