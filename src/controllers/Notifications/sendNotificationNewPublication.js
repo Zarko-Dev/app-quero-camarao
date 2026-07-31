@@ -1,34 +1,43 @@
 import { getAllUserTokenNotification } from "../User/notification";
 import { SendNotifications } from "./sendNotifications";
+import { buildPublicationSummary } from "../../utils/publicationSummary";
 
-export const sendNotificationNewPublication = async () => {
+const getClientTokensExcluding = async (excludeUserId) => {
     const resultDataTokens = await getAllUserTokenNotification();
-
-    if (!resultDataTokens.error) {
-        const notificationTokens = resultDataTokens.data.map(
-            (item) => item.notification.token,
-        );
-
-        SendNotifications(
-            notificationTokens,
-            "🎉 Quero Camarão Informa",
-            "Um novo camarão 🦐 foi publicado, venha conferir!",
-        );
-    }
+    if (resultDataTokens.error) return [];
+    return resultDataTokens.data
+        .filter((item) => item.userType === "client" && item.id !== excludeUserId)
+        .map((item) => item.notification.token);
 };
 
-export const sendNotificationEditPublication = async () => {
-    const resultDataTokens = await getAllUserTokenNotification();
+export const sendNotificationNewPublication = async ({ publisherId, location, shrimps } = {}) => {
+    const notificationTokens = await getClientTokensExcluding(publisherId);
+    if (notificationTokens.length === 0) return;
 
-    if (!resultDataTokens.error) {
-        const notificationTokens = resultDataTokens.data.map(
-            (item) => item.notification.token,
-        );
+    const summary = buildPublicationSummary(shrimps);
+    const details = [summary, location].filter(Boolean).join(" • ");
+    const body = details
+        ? `${details}. Toque para conferir.`
+        : "Um novo camarão 🦐 foi publicado, venha conferir!";
 
-        SendNotifications(
-            notificationTokens,
-            "🎉 Quero Camarão Informa",
-            "Uma publicação foi alterada, venha conferir!",
-        );
-    }
+    SendNotifications(
+        notificationTokens,
+        "🎉 Novo camarão publicado!",
+        body,
+        () => {},
+        { type: "publication" },
+    );
+};
+
+export const sendNotificationEditPublication = async ({ publisherId } = {}) => {
+    const notificationTokens = await getClientTokensExcluding(publisherId);
+    if (notificationTokens.length === 0) return;
+
+    SendNotifications(
+        notificationTokens,
+        "🎉 Quero Camarão Informa",
+        "Uma publicação foi alterada, venha conferir!",
+        () => {},
+        { type: "publication" },
+    );
 };

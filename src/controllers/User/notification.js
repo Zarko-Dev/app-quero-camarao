@@ -51,6 +51,7 @@ export const getAllUserTokenNotification = async () => {
 
             if (dataUser?.notification) {
                 dataNotificationToken.push({
+                    id: document.id,
                     user: document.data().name,
                     notification: document.data().notification,
                     userType: document.data().userType,

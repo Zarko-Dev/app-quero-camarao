@@ -141,3 +141,8 @@ exports.paymentwebhook = onRequest(
 const { onRatingWritten } = require("./ratings");
 
 exports.onRatingWritten = onRatingWritten;
+
+const { mondayProducerReminder, tuesdayProducerReminder } = require("./reminders");
+
+exports.mondayProducerReminder = mondayProducerReminder;
+exports.tuesdayProducerReminder = tuesdayProducerReminder;

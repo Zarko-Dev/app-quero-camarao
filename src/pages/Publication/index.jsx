@@ -264,6 +264,7 @@ export const Publication = ({ navigation, route }) => {
             id,
             formatToEditPonds(dataPonds),
             edited ? edited + 1 : 1,
+            route.params.dataPublication.userId,
         );
 
         if (result) {

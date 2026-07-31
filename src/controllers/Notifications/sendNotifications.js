@@ -2,8 +2,8 @@ import { sendNotification } from "../../services/ExpoNotification/sendNotificati
 import { getAllUserTokenNotification } from "../User/notification";
 import { saveNotification } from "./saveNotification";
 
-const ExecuteSendNotification = async (dataToken, title, body) => {
-    await sendNotification(dataToken, title, body);
+const ExecuteSendNotification = async (dataToken, title, body, data = {}) => {
+    await sendNotification(dataToken, title, body, data);
 
     saveNotification(dataToken, { title, body });
 };
@@ -13,6 +13,7 @@ export const SendNotifications = (
     title,
     body,
     actionSucess = () => {},
+    data = {},
 ) => {
     let start = 0;
     let end = 100 - 1;
@@ -24,7 +25,7 @@ export const SendNotifications = (
                 Math.min(end, notificationsTokens.length - 1) + 1,
             );
 
-            ExecuteSendNotification(slicedArray, title, body);
+            ExecuteSendNotification(slicedArray, title, body, data);
 
             start = end + 1;
             end = start + 100 - 1;

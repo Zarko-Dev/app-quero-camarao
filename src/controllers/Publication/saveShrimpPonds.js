@@ -23,7 +23,11 @@ export const saveShrimpPonds = async (dataPonds, userId) => {
             updatedAt: currentDate,
         });
 
-        await sendNotificationNewPublication();
+        await sendNotificationNewPublication({
+            publisherId: userId,
+            location: dataPonds.location,
+            shrimps: dataPonds.shrimps,
+        });
 
         return true;
     } catch (error) {

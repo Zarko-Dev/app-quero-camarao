@@ -9,6 +9,7 @@ export const updateShrimpsPublication = async (
     publicationId,
     shrimps,
     edited,
+    publisherId,
 ) => {
     const publicationDoc = doc(firestore, models.shrimpPonds, publicationId);
 
@@ -19,7 +20,7 @@ export const updateShrimpsPublication = async (
             { merge: true },
         );
 
-        await sendNotificationEditPublication();
+        await sendNotificationEditPublication({ publisherId });
 
         return true;
     } catch (error) {
@@ -33,7 +34,11 @@ export const updateShrimpsPublication = async (
     }
 };
 
-export const updatePondsPublication = async (publicationId, newShrimps) => {
+export const updatePondsPublication = async (
+    publicationId,
+    newShrimps,
+    publisherId,
+) => {
     const publicationDoc = doc(firestore, models.shrimpPonds, publicationId);
 
     try {
@@ -43,7 +48,7 @@ export const updatePondsPublication = async (publicationId, newShrimps) => {
             { merge: true },
         );
 
-        await sendNotificationEditPublication();
+        await sendNotificationEditPublication({ publisherId });
 
         return true;
     } catch (error) {
