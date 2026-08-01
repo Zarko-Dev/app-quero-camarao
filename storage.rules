@@ -1,0 +1,46 @@
+rules_version = '2';
+
+// Mesmo modelo de auth do Firestore: request.auth.token.email é o
+// identificador usado no resto do app (não o uid).
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Fotos de perfil, fotos de camarão e imagens de anúncio publicitário -
+    // aparecem publicamente nas listagens do app (mesmo modelo de leitura
+    // pública que shrimpPonds/publishAds no Firestore). Path é achatado
+    // (sem prefixo por usuário), então só dá pra exigir login pra escrever,
+    // não uma checagem de dono por caminho.
+    match /user/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    match /Shrimp/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    match /ads/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Anexos de chat (fotos, áudios, documentos). O upload de uma foto/áudio/
+    // documento acontece ANTES do doc do chat no Firestore existir (a tela
+    // sobe o arquivo primeiro pra ter a URL, só depois grava a mensagem) -
+    // checar participante via firestore.get() aqui quebraria o primeiro
+    // anexo de toda conversa nova. Fica só exigindo login: a proteção real
+    // do conteúdo já está nas regras do Firestore (mensagem/chat), e as
+    // URLs de download do Storage já carregam um token não adivinhável.
+    match /chats/{chatId}/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+
+    // Qualquer outro caminho: negado por padrão.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,341 @@
+rules_version = '2';
+
+// Modelo de auth deste app: Firebase Auth por e-mail/senha, mas os documentos
+// de usuário (e todo campo "userId"/"buyerId"/"sellerId"/etc. em outras
+// coleções) usam o E-MAIL como identificador, não o uid do Firebase Auth.
+// Por isso toda checagem de dono usa request.auth.token.email.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function myEmail() {
+      return request.auth.token.email;
+    }
+
+    function isOwner(field) {
+      return isSignedIn() && myEmail() == field;
+    }
+
+    // Só usar em regras de leitura ou quando já se sabe que o doc existe -
+    // get() falha se o documento não existir.
+    function isAdmin() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(myEmail()))
+        && get(/databases/$(database)/documents/users/$(myEmail())).data.rules.hasAny(['Admin']);
+    }
+
+    // Verdadeiro se a atualização não tenta mudar nenhum dos campos listados
+    // (usado como bloqueio - o dono pode mudar qualquer coisa, menos isso).
+    function unchanged(fields) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasAny(fields) == false;
+    }
+
+    // Verdadeiro se a atualização só mexe nos campos listados (lista de
+    // permissão - usado pra abrir uma exceção estreita pra quem não é dono).
+    function onlyChanges(fields) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
+    }
+
+    // ---------------------------------------------------------------
+    // users
+    // ---------------------------------------------------------------
+    match /users/{userId} {
+      // Leitura ampla e autenticada: perfil público (UserProfile), chat
+      // (ver dados do outro participante) e o fan-out de notificação de
+      // novo anúncio hoje fazem um getDocs() irrestrito na coleção inteira.
+      // Restringir a "só o próprio doc" quebraria essas 3 features - fica
+      // como pendência de refatoração (mover o fan-out para Cloud Function),
+      // não coberta por esta rodada de regras.
+      allow read: if isSignedIn();
+
+      // No cadastro o próprio client grava rules: ["Normal"] (o único valor
+      // seguro que a criação de conta pode gravar) - qualquer outro valor,
+      // ou qualquer mudança depois de criado, é bloqueada.
+      allow create: if isOwner(userId)
+        && (!('rules' in request.resource.data) || request.resource.data.rules == ['Normal'])
+        && unchanged(['ratingAverage', 'ratingCount']);
+      allow update: if (isOwner(userId) && unchanged(['rules', 'ratingAverage', 'ratingCount']))
+        // Fluxo de indicação: o convidado atualiza guestData no doc do
+        // INDICADOR (não é o dono), pra marcar que a indicação foi usada.
+        || (isSignedIn() && onlyChanges(['guestData', 'updatedAt']));
+      allow delete: if isOwner(userId) || isAdmin();
+    }
+
+    // ---------------------------------------------------------------
+    // chats (+ messages) - dado de duas partes, sem "dono" único
+    // ---------------------------------------------------------------
+    match /chats/{chatId} {
+      // resource é null quando o doc ainda não existe (1ª mensagem de uma
+      // conversa nova) - sem esse guard, ler/escutar um chat inexistente
+      // dá erro em vez de simplesmente negar, e trava a tela de chat nova.
+      function isParticipant() {
+        return isSignedIn()
+          && (resource == null
+              || myEmail() == resource.data.buyerId
+              || myEmail() == resource.data.sellerId);
+      }
+
+      function isParticipantOnCreate() {
+        return isSignedIn()
+          && (myEmail() == request.resource.data.buyerId || myEmail() == request.resource.data.sellerId);
+      }
+
+      allow read: if isParticipant();
+      allow create: if isParticipantOnCreate();
+      allow update: if isParticipant();
+      // Nunca apagar um chat pelo cliente (encerrar = status "closed").
+      allow delete: if false;
+
+      match /messages/{messageId} {
+        function chatExists() {
+          return exists(/databases/$(database)/documents/chats/$(chatId));
+        }
+
+        function chatDoc() {
+          return get(/databases/$(database)/documents/chats/$(chatId)).data;
+        }
+
+        // A listagem de mensagens é montada assim que a tela de chat abre,
+        // antes mesmo de qualquer mensagem existir - chatExists() evita
+        // que get() estoure erro num chat que ainda não tem doc pai.
+        function isChatParticipant() {
+          return isSignedIn() && chatExists()
+            && (myEmail() == chatDoc().buyerId || myEmail() == chatDoc().sellerId);
+        }
+
+        allow read: if isChatParticipant();
+        allow create: if isChatParticipant() && myEmail() == request.resource.data.senderId;
+        // Apagar-pra-mim/apagar-pra-todos/marcar entregue são updates, não deletes.
+        allow update: if isChatParticipant();
+        allow delete: if false;
+      }
+    }
+
+    // ---------------------------------------------------------------
+    // ratings
+    // ---------------------------------------------------------------
+    match /ratings/{ratingId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && myEmail() == request.resource.data.raterId;
+      // Avaliação não é editável depois de enviada.
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // ---------------------------------------------------------------
+    // reports - só o app escreve, ninguém lê pelo client
+    // ---------------------------------------------------------------
+    match /reports/{reportId} {
+      allow read: if false;
+      allow create: if isSignedIn() && myEmail() == request.resource.data.reportedBy;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // ---------------------------------------------------------------
+    // shrimpPonds - vitrine pública
+    // ---------------------------------------------------------------
+    match /shrimpPonds/{publicationId} {
+      allow read: if true;
+      allow create: if isSignedIn() && myEmail() == request.resource.data.userId;
+      // Dono edita tudo; admin aprova prorrogação de prazo
+      // (requestExtensionDate/expirationDate); qualquer autenticado pode só
+      // incrementar o contador de visualizações (setNewVisuaization não
+      // tem dono).
+      allow update: if isOwner(resource.data.userId)
+        || isAdmin()
+        || (isSignedIn() && onlyChanges(['views', 'publicationViewsId', 'updatedAt']));
+      allow delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+
+    // ---------------------------------------------------------------
+    // logPublicationsViews - userId aqui é o DONO do anúncio, não o viewer
+    // ---------------------------------------------------------------
+    match /logPublicationsViews/{logId} {
+      // getPublicationViewLogs é chamado por QUALQUER visitante (lê o doc
+      // pra anexar sua própria visualização antes de gravar) - não dá pra
+      // restringir a leitura ao dono sem quebrar essa contagem. Residual:
+      // qualquer autenticado consegue ver a lista de quem visitou o
+      // anúncio de outra pessoa (nome/telefone/imagem) - fica como
+      // pendência (mover a leitura de contagem para uma Cloud Function).
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------
+    // cupons - leitura pública (validação no checkout), escrita restrita
+    // ---------------------------------------------------------------
+    match /cupons/{cupomId} {
+      allow read: if true;
+      allow create: if isAdmin();
+      // Uso do cupom (incrementar/decrementar contador) por qualquer
+      // comprador autenticado; qualquer outra mudança é admin-only.
+      allow update: if isAdmin()
+        || (isSignedIn() && onlyChanges(['useCount', 'durationValue', 'updatedAt']));
+      allow delete: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------
+    // orders - a parte mais sensível: status/published só por Cloud Function
+    // ---------------------------------------------------------------
+    match /orders/{orderId} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow create: if isSignedIn() && myEmail() == request.resource.data.userId;
+      // O ideal é status/published serem só-Cloud-Function (a function de
+      // pagamento já faz isso via webhook), mas hoje o app também aprova
+      // pedidos gratuitos/pix client-side em alguns fluxos - bloquear isso
+      // aqui quebraria essas telas. Fica como risco residual conhecido
+      // (mover aprovação de pedido 100% para o servidor é o próximo passo).
+      allow update: if isOwner(resource.data.userId) && unchanged(['userId']);
+      allow delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+
+    // ---------------------------------------------------------------
+    // wallets
+    // ---------------------------------------------------------------
+    match /wallets/{walletId} {
+      allow read: if isOwner(walletId) || isAdmin();
+      allow create: if isOwner(walletId);
+      // O bônus de indicação é hoje creditado client-side pelo INDICADO no
+      // wallet do INDICADOR (não é o dono escrevendo) - por isso a exceção
+      // abaixo, restrita aos campos de saldo. Residual: nada valida que a
+      // indicação é legítima antes de creditar (mover pra Cloud Function
+      // é o próximo passo; a integridade do saldo em si já dependia de
+      // confiar no client antes destas regras também).
+      allow update: if isOwner(walletId)
+        || (isSignedIn() && onlyChanges(['acumulatedValue', 'currentValue', 'updatedAt']));
+      allow delete: if isOwner(walletId) || isAdmin();
+    }
+
+    // ---------------------------------------------------------------
+    // invitations - doc id = convidador; contadores mexidos por terceiros
+    // ---------------------------------------------------------------
+    match /invitations/{invitationId} {
+      // Precisa ser público: getInvitationByCode busca por código no
+      // cadastro, antes de haver uma sessão completa em alguns fluxos.
+      allow read: if true;
+      allow create: if isOwner(invitationId);
+      allow update: if isOwner(invitationId)
+        || (isSignedIn() && onlyChanges(['invitationsAccepted', 'invitationsSended', 'updatedAt']));
+      allow delete: if isOwner(invitationId) || isAdmin();
+    }
+
+    // ---------------------------------------------------------------
+    // config - singleton público, só editável manualmente
+    // ---------------------------------------------------------------
+    match /config/{configId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------
+    // publishAds
+    // ---------------------------------------------------------------
+    match /publishAds/{adId} {
+      allow read: if (resource.data.status == 'approved') || isOwner(resource.data.userId) || isAdmin();
+      allow create: if isSignedIn() && myEmail() == request.resource.data.userId;
+      allow update: if isAdmin()
+        || (isOwner(resource.data.userId) && unchanged(['status', 'userId']));
+      allow delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+
+    // ---------------------------------------------------------------
+    // feedBack - write-only pelo client
+    // ---------------------------------------------------------------
+    match /feedBack/{feedbackId} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn();
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // ---------------------------------------------------------------
+    // drawPrizesHistory - histórico de vencedores, leitura pública
+    // ---------------------------------------------------------------
+    match /drawPrizesHistory/{historyId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------
+    // drawPrizesLive - admin gerencia; participante só entra na lista
+    // ---------------------------------------------------------------
+    match /drawPrizesLive/{drawId} {
+      allow read: if isSignedIn();
+      allow create: if isAdmin();
+      allow update: if isAdmin()
+        || (isSignedIn() && onlyChanges(['participants', 'updatedAt']));
+      allow delete: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------
+    // drawPrizesRules / newDrawPrizeRules - regras do sorteio, texto público
+    // ---------------------------------------------------------------
+    match /drawPrizesRules/{ruleId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /newDrawPrizeRules/{ruleId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------
+    // notifications - modelo de dados (array de tokens) não dá pra
+    // restringir por usuário via regra; mantém leitura autenticada
+    // (como já é hoje) e broadcast/gestão admin-only.
+    // ---------------------------------------------------------------
+    match /notifications/{notificationId} {
+      allow read: if isSignedIn();
+      // Broadcast do admin E o fan-out de "novo camarão"/"falar com o
+      // produtor" (disparado por qualquer usuário comum) escrevem aqui -
+      // não dá pra restringir a criação a admin sem quebrar essas duas
+      // features de usuário comum.
+      allow create: if isSignedIn();
+      // Marcar como lida é feito pelo próprio usuário sobre o array de
+      // tokens - não dá pra validar por regra sem mudar o formato do dado.
+      allow update: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------
+    // listSignatures - sem escrita identificada no app hoje
+    // ---------------------------------------------------------------
+    match /listSignatures/{signatureId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------
+    // shirimpSale - dono é indireto (via shrimpPonds.publicationId.userId)
+    // ---------------------------------------------------------------
+    match /shirimpSale/{saleId} {
+      function ownsPublication(publicationId) {
+        return isSignedIn()
+          && exists(/databases/$(database)/documents/shrimpPonds/$(publicationId))
+          && get(/databases/$(database)/documents/shrimpPonds/$(publicationId)).data.userId == myEmail();
+      }
+
+      allow read: if isSignedIn();
+      allow create: if ownsPublication(request.resource.data.publicationId) || isAdmin();
+      allow update: if ownsPublication(resource.data.publicationId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------
+    // shrimpPrice - singleton; vendedores (não só admin) escrevem no
+    // fluxo de venda (SaleShrimps), então não dá pra ser admin-only.
+    // ---------------------------------------------------------------
+    match /shrimpPrice/{priceId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+  }
+}
