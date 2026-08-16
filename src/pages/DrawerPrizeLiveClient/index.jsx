@@ -150,16 +150,10 @@ export const DrawerPrizeLiveClient = ({ navigation }) => {
         setItemValue("");
     };
 
-    const handleShowWinners = (winners) => {
-        const fixWinners = winners.map((item) => ({
-            ...item,
-            createdAt: item.createdAt.toDate(),
-            updatedAt: item.updatedAt.toDate(),
-        }));
-
-        navigation.navigate(dataRoutes.admin.usersList, {
-            dataListUsers: fixWinners,
-            noActions: true,
+    const handleShowWinners = (drawId) => {
+        navigation.navigate(dataRoutes.admin.drawPrizeWinnerResult, {
+            drawerPrizeLiveId: drawId,
+            showOnlyResults: false,
         });
     };
 
@@ -241,7 +235,7 @@ export const DrawerPrizeLiveClient = ({ navigation }) => {
                                                 <ButtonWinners
                                                     onPress={() =>
                                                         handleShowWinners(
-                                                            item.winners,
+                                                            item.id,
                                                         )
                                                     }
                                                 >
