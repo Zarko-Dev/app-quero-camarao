@@ -134,30 +134,6 @@ export const updateDrawPrizeName = async (drawPrizeId, drawPrizeName) => {
     }
 };
 
-export const updateDrawPrizeTheme = async (drawPrizeId, drawPrizeTheme) => {
-    try {
-        const drawPrizeLiveDoc = doc(
-            firestore,
-            models.drawPrizesLive,
-            drawPrizeId,
-        );
-
-        await setDoc(
-            drawPrizeLiveDoc,
-            {
-                theme: drawPrizeTheme,
-                updatedAt: new Date(),
-            },
-            { merge: true },
-        );
-
-        return true;
-    } catch (error) {
-        Sentry.captureException(error);
-        return false;
-    }
-};
-
 export const CloseDrawPrizeLiveById = async (drawPrizeId) => {
     try {
         const drawPrizeLiveDoc = doc(
@@ -460,6 +436,27 @@ export const setWinnerDrawPrizeLive = async (drawPrizeId, winners) => {
         Sentry.captureException(error);
 
         return true;
+    }
+};
+
+export const getUsersByCpfList = async (cpfList) => {
+    try {
+        if (!cpfList || cpfList.length === 0) {
+            return { error: false, data: [] };
+        }
+
+        const usersRef = collection(firestore, models.users);
+        const queryConfig = query(usersRef, where("cpf", "in", cpfList));
+
+        const querySnapshot = await getDocs(queryConfig);
+
+        const data = querySnapshot.docs.map((dataDoc) => dataDoc.data());
+
+        return { error: false, data };
+    } catch (error) {
+        Sentry.captureException(error);
+
+        return { error: true, data: [] };
     }
 };
 
