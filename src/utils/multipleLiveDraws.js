@@ -2,8 +2,6 @@ const DRAW_CODE_MIN = 1;
 const DRAW_CODE_MAX = 50;
 const DRAW_NAME_MIN = 2;
 const DRAW_NAME_MAX = 50;
-const DRAW_THEME_MIN = 2;
-const DRAW_THEME_MAX = 50;
 
 const validateDrawCode = (code) => {
     if (typeof code !== "string" || code.trim().length === 0) {
@@ -39,41 +37,6 @@ const validateDrawName = (name) => {
     }
 
     return { valid: true, value: trimmed };
-};
-
-const validateDrawTheme = (theme) => {
-    if (typeof theme !== "string" || theme.trim().length === 0) {
-        return { valid: false, error: "theme_required" };
-    }
-
-    const trimmed = theme.trim();
-
-    if (trimmed.length < DRAW_THEME_MIN) {
-        return { valid: false, error: "theme_too_short" };
-    }
-
-    if (trimmed.length > DRAW_THEME_MAX) {
-        return { valid: false, error: "theme_too_long" };
-    }
-
-    return { valid: true, value: trimmed };
-};
-
-const validateDrawCreation = ({ name, theme } = {}) => {
-    const nameResult = validateDrawName(name);
-    if (!nameResult.valid) {
-        return { valid: false, error: nameResult.error };
-    }
-
-    const themeResult = validateDrawTheme(theme);
-    if (!themeResult.valid) {
-        return { valid: false, error: themeResult.error };
-    }
-
-    return {
-        valid: true,
-        value: { name: nameResult.value, theme: themeResult.value },
-    };
 };
 
 const buildDrawSummary = (doc) => {
@@ -145,34 +108,13 @@ const applyDrawCodeEdit = (draws, id, newCode) => {
     );
 };
 
-const applyDrawThemeEdit = (draws, id, newTheme) => {
-    const validation = validateDrawTheme(newTheme);
-
-    if (!validation.valid) {
-        throw new Error(validation.error);
-    }
-
-    const target = findDrawById(draws, id);
-
-    if (!target) {
-        throw new Error("draw_not_found");
-    }
-
-    return draws.map((draw) =>
-        draw.id === id ? { ...draw, theme: validation.value } : draw,
-    );
-};
-
 module.exports = {
     validateDrawCode,
     validateDrawName,
-    validateDrawTheme,
-    validateDrawCreation,
     buildDrawSummary,
     sortDrawsByCreatedDesc,
     filterActiveDraws,
     findDrawById,
     applyDrawCodeEdit,
     applyDrawNameEdit,
-    applyDrawThemeEdit,
 };

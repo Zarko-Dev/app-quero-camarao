@@ -3,14 +3,11 @@ const assert = require("node:assert/strict");
 
 const {
     validateDrawName,
-    validateDrawTheme,
-    validateDrawCreation,
     buildDrawSummary,
     sortDrawsByCreatedDesc,
     filterActiveDraws,
     findDrawById,
     applyDrawNameEdit,
-    applyDrawThemeEdit,
 } = require("../src/utils/multipleLiveDraws");
 
 test("validateDrawName rejects empty or whitespace-only name", () => {
@@ -205,68 +202,6 @@ test("applyDrawNameEdit throws when draw id not found", () => {
     );
 });
 
-test("validateDrawTheme rejects empty or whitespace-only theme", () => {
-    assert.deepEqual(validateDrawTheme(""), {
-        valid: false,
-        error: "theme_required",
-    });
-    assert.deepEqual(validateDrawTheme("   "), {
-        valid: false,
-        error: "theme_required",
-    });
-    assert.deepEqual(validateDrawTheme(undefined), {
-        valid: false,
-        error: "theme_required",
-    });
-});
-
-test("validateDrawTheme rejects themes shorter than 2 chars after trim", () => {
-    assert.deepEqual(validateDrawTheme("a"), {
-        valid: false,
-        error: "theme_too_short",
-    });
-});
-
-test("validateDrawTheme rejects themes longer than 50 chars after trim", () => {
-    assert.deepEqual(validateDrawTheme("a".repeat(51)), {
-        valid: false,
-        error: "theme_too_long",
-    });
-});
-
-test("validateDrawTheme accepts valid theme and returns trimmed value", () => {
-    assert.deepEqual(validateDrawTheme("  Natal  "), {
-        valid: true,
-        value: "Natal",
-    });
-});
-
-test("validateDrawCreation returns valid with name+theme when both ok", () => {
-    const result = validateDrawCreation({
-        name: "  Sorteio Natal  ",
-        theme: "  Natal  ",
-    });
-    assert.deepEqual(result, {
-        valid: true,
-        value: { name: "Sorteio Natal", theme: "Natal" },
-    });
-});
-
-test("validateDrawCreation returns name error when name invalid", () => {
-    const result = validateDrawCreation({ name: "", theme: "Natal" });
-    assert.equal(result.valid, false);
-    assert.equal(result.error, "name_required");
-});
-
-test("validateDrawCreation returns theme error when name ok but theme invalid", () => {
-    const result = validateDrawCreation({
-        name: "Sorteio Natal",
-        theme: "",
-    });
-    assert.equal(result.valid, false);
-    assert.equal(result.error, "theme_required");
-});
-
 test("buildDrawSummary includes theme field from doc", () => {
     const doc = {
         id: "d1",
@@ -285,30 +220,3 @@ test("buildDrawSummary returns empty theme string when missing", () => {
     assert.equal(summary.theme, "");
 });
 
-test("applyDrawThemeEdit updates theme of matching draw", () => {
-    const draws = [
-        { id: "a", theme: "Old A" },
-        { id: "b", theme: "Old B" },
-    ];
-    const updated = applyDrawThemeEdit(draws, "b", "  New B  ");
-    assert.deepEqual(updated, [
-        { id: "a", theme: "Old A" },
-        { id: "b", theme: "New B" },
-    ]);
-});
-
-test("applyDrawThemeEdit throws on invalid theme", () => {
-    const draws = [{ id: "a", theme: "Old" }];
-    assert.throws(
-        () => applyDrawThemeEdit(draws, "a", ""),
-        /theme_required/,
-    );
-});
-
-test("applyDrawThemeEdit throws when draw id not found", () => {
-    const draws = [{ id: "a", theme: "Old" }];
-    assert.throws(
-        () => applyDrawThemeEdit(draws, "z", "Valid"),
-        /draw_not_found/,
-    );
-});
