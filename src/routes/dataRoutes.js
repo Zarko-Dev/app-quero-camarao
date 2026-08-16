@@ -34,6 +34,7 @@ export const dataRoutes = {
     salesShrimps: "Sales Shrimps",
     salesList: "Sales List",
     publicationChat: "Publication Chat",
+    publicationChatHistory: "Publication Chat History",
     myChats: "My Chats",
     userProfile: "User Profile",
     publicationDetail: "Publication Detail",
@@ -56,7 +57,6 @@ export const dataRoutes = {
         drawPrizeNew: "Draw Prize New",
         drawPrize: "Draw Prize",
         drawPrizeWinnerResult: "Draw Prize Winner Result",
-        drawPrizeNewWinnerResult: "Draw Prize New Winner Result",
         drawPrizeHistory: "Draw Prize History",
         shrimpPrice: "ShrimpPrice",
         drawPrizeRules: "Draw Prize Rules",
@@ -68,7 +68,7 @@ export const dataRoutes = {
 };
 
 export const linking = {
-    prefixes: ["querocamarao://"],
+    prefixes: ["querocamarao://", "https://querocamarao.com.br"],
     config: {
         screens: {
             paymentend: {

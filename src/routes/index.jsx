@@ -39,9 +39,9 @@ import { DrawPrizeNew } from "../pages/Admin/DrawPrize/DrawPrizeNew";
 import { SaleShrimps } from "../pages/SaleShrimps";
 import { SalesList } from "../pages/SalesList";
 import { SplashScreen } from "../pages/SplashScreen";
-import { DrawPrizeNewWinnerResult } from "../pages/Admin/DrawPrizeNewWinnerResult";
 import { DrawPrizeWinnersResult } from "../pages/Admin/DrawPrizeWinnersResult";
 import { PublicationChat } from "../pages/PublicationChat";
+import { PublicationChatHistory } from "../pages/PublicationChatHistory";
 import { MyChats } from "../pages/MyChats";
 import { UserProfile } from "../pages/UserProfile";
 import { PublicationDetail } from "../pages/PublicationDetail";
@@ -272,16 +272,6 @@ export const Routes = () => (
                 }}
             />
             <Screen
-                name={dataRoutes.admin.drawPrizeNewWinnerResult}
-                component={DrawPrizeNewWinnerResult}
-                options={{
-                    title: "Vencedores do Sorteio!",
-                    headerStyle: { backgroundColor: theme.colors.primary },
-                    headerTitleStyle: { color: theme.colors.white },
-                    headerShown: false,
-                }}
-            />
-            <Screen
                 name={dataRoutes.admin.drawPrizeWinnerResult}
                 component={DrawPrizeWinnersResult}
                 options={{
@@ -355,6 +345,11 @@ export const Routes = () => (
             <Screen
                 name={dataRoutes.publicationChat}
                 component={PublicationChat}
+                options={{ headerShown: false }}
+            />
+            <Screen
+                name={dataRoutes.publicationChatHistory}
+                component={PublicationChatHistory}
                 options={{ headerShown: false }}
             />
             <Screen
