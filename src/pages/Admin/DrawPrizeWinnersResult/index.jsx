@@ -9,6 +9,7 @@ import { Entypo, Feather } from "@expo/vector-icons";
 import { useTheme } from "styled-components";
 import { getDrawPrizeLiveById } from "../../../controllers/DrawPrizes/live";
 import { Linking } from "react-native";
+import { TIMING, animationSteps } from "../../../utils/drawAnimationSequence";
 
 import lottieLoadingDrawPrize from "../../../assets/lotties/lottieLoadingDrawPrize.json";
 import lottieWinDrawPrize from "../../../assets/lotties/lottieWinDrawPrize.json";
@@ -49,22 +50,8 @@ export const DrawPrizeWinnersResult = ({ route, navigation }) => {
     const [isLoadingDelete, setIsLoadingDelete] = useState(false);
     const [animationStatus, setAnimationStatus] = useState(
         showOnlyResults
-            ? {
-                  key: "continuous",
-                  width: 500,
-                  height: 500,
-                  loop: true,
-                  duration: 1,
-                  animation: lottieContinousWinDrawPrize,
-              }
-            : {
-                  key: "loading",
-                  width: 350,
-                  height: 350,
-                  loop: false,
-                  duration: 0.4,
-                  animation: lottieLoadingDrawPrize,
-              },
+            ? { ...animationSteps.continuous, animation: lottieContinousWinDrawPrize }
+            : { ...animationSteps.loading, animation: lottieLoadingDrawPrize },
     );
     const [justifyContent, setJustifyContent] = useState("center");
     const [showResult, setShowResult] = useState(false);
@@ -98,30 +85,14 @@ export const DrawPrizeWinnersResult = ({ route, navigation }) => {
             setJustifyContent("flex-start");
         } else {
             setTimeout(() => {
-                setAnimationStatus({
-                    key: "win",
-                    width: 500,
-                    height: 500,
-                    loop: false,
-                    duration: 0.7,
-                    animation: lottieWinDrawPrize,
-                });
-
+                setAnimationStatus({ ...animationSteps.win, animation: lottieWinDrawPrize });
                 setShowResult(true);
 
                 setTimeout(() => {
                     setJustifyContent("flex-start");
-
-                    setAnimationStatus({
-                        key: "continuous",
-                        width: 500,
-                        height: 500,
-                        loop: true,
-                        duration: 1,
-                        animation: lottieContinousWinDrawPrize,
-                    });
-                }, 2500);
-            }, 7000);
+                    setAnimationStatus({ ...animationSteps.continuous, animation: lottieContinousWinDrawPrize });
+                }, TIMING.WIN_TO_CONTINUOUS_MS);
+            }, TIMING.LOADING_REVEAL_MS);
         }
     }, []);
 
@@ -200,7 +171,7 @@ export const DrawPrizeWinnersResult = ({ route, navigation }) => {
                         height: animationStatus.height,
                     }}
                     loop={animationStatus.loop || false}
-                    speed={animationStatus.duration}
+                    speed={animationStatus.speed}
                     source={animationStatus.animation}
                 />
             </Content>
@@ -225,7 +196,6 @@ export const DrawPrizeWinnersResult = ({ route, navigation }) => {
                      
                     </Header>
                     <ContainerCards>
-                        <ContainerCards>
                     <ContentCards>
                         {usersWinner.map((user) => (
                             <CardUser
@@ -278,7 +248,6 @@ export const DrawPrizeWinnersResult = ({ route, navigation }) => {
                             </CardUser>
                         ))}
                     </ContentCards>
-                </ContainerCards>
                     </ContainerCards>
                     {showOnlyResults && (
                         <SaveDrawPrize onPress={hadleDeleteDrawPrizeHistory}>
