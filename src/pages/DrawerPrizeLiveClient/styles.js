@@ -170,14 +170,38 @@ export const TitleButtonParticipate = styled.Text`
 export const ModalContent = styled.SafeAreaView`
     width: 100%;
     background-color: white;
-    border-top-left-radius: 20px;
-    border-top-right-radius: 20px;
-    padding: 24px 20px;
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+    padding: 12px 20px 24px 20px;
     elevation: 10;
+    shadow-color: #000;
+    shadow-offset: 0px -2px;
+    shadow-opacity: 0.15;
+    shadow-radius: 8px;
+`;
+
+export const ModalHandle = styled.View`
+    width: 42px;
+    height: 4px;
+    border-radius: 2px;
+    background-color: #e5e5e5;
+    align-self: center;
+    margin-bottom: 16px;
+`;
+
+export const ModalIconBadge = styled.View`
+    width: 64px;
+    height: 64px;
+    border-radius: 32px;
+    background-color: ${({ theme }) => theme.colors.secondary};
+    justify-content: center;
+    align-items: center;
+    align-self: center;
+    margin-bottom: 12px;
 `;
 
 export const TitleModal = styled.Text`
-    font-size: ${({ theme }) => theme.size.fontSize(18)};
+    font-size: ${({ theme }) => theme.size.fontSize(19)};
     font-weight: bold;
     color: ${({ theme }) => theme.colors.black};
     text-align: center;
@@ -189,7 +213,8 @@ export const SubTitleModal = styled.Text`
     text-align: center;
     color: #888;
     margin-top: 4px;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
+    line-height: 18px;
 `;
 
 export const ContentActionsModal = styled.View`
@@ -203,11 +228,17 @@ export const ContentActionsModal = styled.View`
 export const ButtonModalConfirm = styled.TouchableOpacity`
     background-color: ${({ theme }) => theme.colors.primary};
     flex: 1;
-    height: ${({ theme }) => theme.size.componentSize(44)};
+    height: ${({ theme }) => theme.size.componentSize(48)};
+    flex-direction: row;
+    gap: 8px;
     justify-content: center;
     align-items: center;
-    border-radius: 10px;
-    elevation: 2;
+    border-radius: 12px;
+    elevation: 3;
+    shadow-color: ${({ theme }) => theme.colors.primary};
+    shadow-offset: 0px 3px;
+    shadow-opacity: 0.3;
+    shadow-radius: 4px;
 `;
 
 export const TitleButtonModalConfirm = styled.Text`
@@ -221,10 +252,10 @@ export const ButtonModalCancel = styled.TouchableOpacity`
     border-width: 1px;
     border-color: #ddd;
     width: 28%;
-    height: ${({ theme }) => theme.size.componentSize(44)};
+    height: ${({ theme }) => theme.size.componentSize(48)};
     justify-content: center;
     align-items: center;
-    border-radius: 10px;
+    border-radius: 12px;
 `;
 
 export const TitleButtonModalCancel = styled.Text`

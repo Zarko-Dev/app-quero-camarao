@@ -4,6 +4,8 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useState } from "react";
 import Toast from "react-native-toast-message";
 import { ActivityIndicator, Modal } from "react-native-paper";
+import { Feather } from "@expo/vector-icons";
+import { useTheme } from "styled-components";
 import {
     BadgeCardDrawerPrize,
     BodyCardDrawerPrize,
@@ -22,6 +24,8 @@ import {
     FooterCardDrawerPrize,
     HeaderCardDrawerPrize,
     ModalContent,
+    ModalHandle,
+    ModalIconBadge,
     SubTitleModal,
     TitleBadgeCardDrawerPrize,
     TitleButtonDeleteDrawPrizeLive,
@@ -46,6 +50,7 @@ import { DialogComponent } from "../../components/Dialog";
 import { Input } from "../../components/Input";
 
 export const DrawerPrizeLiveClient = ({ navigation }) => {
+    const theme = useTheme();
     const [dialogInputVisible, setDialogInputVisible] = useState(false);
     const [itemValue, setItemValue] = useState("");
 
@@ -131,13 +136,13 @@ export const DrawerPrizeLiveClient = ({ navigation }) => {
             } else {
                 Toast.show({
                     type: "success",
-                    text1: "Participação realizada com sucesso",
+                    text1: response.data.name
+                        ? `Você está participando do sorteio ${response.data.name}!`
+                        : "Participação realizada com sucesso",
                     text2: "Boa sorte!",
                 });
 
-                setTimeout(async () => {
-                    await handleGetInitialData();
-                }, 2000);
+                await handleGetInitialData();
             }
         }
 
@@ -207,11 +212,6 @@ export const DrawerPrizeLiveClient = ({ navigation }) => {
                                    {item.name ? (
                                         <TitleCardDrawerPrize>
                                             {item.name}
-                                        </TitleCardDrawerPrize>
-                                    ) : null}
-                                   {item.theme ? (
-                                        <TitleCardDrawerPrize>
-                                            Tema: {item.theme}
                                         </TitleCardDrawerPrize>
                                     ) : null}
                                         <BodyCardDrawerPrize>
@@ -301,17 +301,27 @@ export const DrawerPrizeLiveClient = ({ navigation }) => {
                             }}
                         >
                             <ModalContent>
+                                <ModalHandle />
+                                <ModalIconBadge>
+                                    <Feather
+                                        name="gift"
+                                        size={28}
+                                        color={theme.colors.primary}
+                                    />
+                                </ModalIconBadge>
                                 <TitleModal>
                                     Informe o código do sorteio
                                 </TitleModal>
                                 <SubTitleModal>
-                                    Para participar do sorteio ao vivo, é
-                                    necessário informar o código do sorteio
+                                    Digite o código informado pelo produtor
+                                    para participar do sorteio ao vivo
                                 </SubTitleModal>
                                 <Input
                                     label="Código do sorteio"
+                                    icon="hash"
                                     onChange={setItemValue}
                                     value={itemValue}
+                                    autoCapitalize="characters"
                                 />
                                 <ContentActionsModal>
                                     <ButtonModalCancel
@@ -324,8 +334,14 @@ export const DrawerPrizeLiveClient = ({ navigation }) => {
                                         </TitleButtonModalCancel>
                                     </ButtonModalCancel>
                                     <ButtonModalConfirm
+                                        activeOpacity={0.8}
                                         onPress={handleParticipateDrawPriseLive}
                                     >
+                                        <Feather
+                                            name="check-circle"
+                                            size={18}
+                                            color={theme.colors.white}
+                                        />
                                         <TitleButtonModalConfirm>
                                             Participar deste sorteio
                                         </TitleButtonModalConfirm>
