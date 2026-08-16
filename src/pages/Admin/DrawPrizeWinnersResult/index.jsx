@@ -8,7 +8,7 @@ import { ActivityIndicator } from "react-native-paper";
 import { Entypo, Feather } from "@expo/vector-icons";
 import { useTheme } from "styled-components";
 import { getDrawPrizeLiveById } from "../../../controllers/DrawPrizes/live";
-import { Linking, Share } from "react-native";
+import { Linking } from "react-native";
 
 import lottieLoadingDrawPrize from "../../../assets/lotties/lottieLoadingDrawPrize.json";
 import lottieWinDrawPrize from "../../../assets/lotties/lottieWinDrawPrize.json";
@@ -34,8 +34,6 @@ import {
     UserNameTitle,
 } from "./styles";
 import { dataRoutes } from "../../../routes/dataRoutes";
-import { saveDrawPrize } from "../../../controllers/DrawPrizes/create";
-import { DrawPrizeNameDialog } from "./components/DrawPrizeNameDialog";
 import { deleteDrawPrize } from "../../../controllers/DrawPrizes/delete";
 import {
     buildSingleWinnerShareMessage,
@@ -46,13 +44,13 @@ export const DrawPrizeWinnersResult = ({ route, navigation }) => {
     const theme = useTheme();
     const { drawPrizeId, showOnlyResults, drawerPrizeLiveId, newWinnersCount } =
         route.params;
-    const [usersWinner, setUsersWinner] = useState([]); // ?? vira estado    
+    const [usersWinner, setUsersWinner] = useState([]); // ?? vira estado
 
-    const [isLoading, setIsLoading] = useState(false);
     const [isLoadingDelete, setIsLoadingDelete] = useState(false);
     const [animationStatus, setAnimationStatus] = useState(
         showOnlyResults
             ? {
+                  key: "continuous",
                   width: 500,
                   height: 500,
                   loop: true,
@@ -60,6 +58,7 @@ export const DrawPrizeWinnersResult = ({ route, navigation }) => {
                   animation: lottieContinousWinDrawPrize,
               }
             : {
+                  key: "loading",
                   width: 350,
                   height: 350,
                   loop: false,
@@ -69,14 +68,11 @@ export const DrawPrizeWinnersResult = ({ route, navigation }) => {
     );
     const [justifyContent, setJustifyContent] = useState("center");
     const [showResult, setShowResult] = useState(false);
-    const [showAlertVisible, setShowAlertVisible] = useState(false);
-    const [drawPrizeTitle, setDrawPrizeTitle] = useState("");
     const [backAfterSave, setBackAfterSave] = useState(false);
 
     const animation = useRef(null);
 
-
-useEffect(() => {
+    useEffect(() => {
     const loadWinners = async () => {
         if (drawerPrizeLiveId) {
             const response = await getDrawPrizeLiveById(drawerPrizeLiveId);
@@ -103,6 +99,7 @@ useEffect(() => {
         } else {
             setTimeout(() => {
                 setAnimationStatus({
+                    key: "win",
                     width: 500,
                     height: 500,
                     loop: false,
@@ -116,6 +113,7 @@ useEffect(() => {
                     setJustifyContent("flex-start");
 
                     setAnimationStatus({
+                        key: "continuous",
                         width: 500,
                         height: 500,
                         loop: true,
@@ -129,17 +127,6 @@ useEffect(() => {
 
     const handleRedirectUserDetailed = (dataUser) => {
         navigation.navigate(dataRoutes.admin.userDetailed, { dataUser });
-    };
-    
-    const isShareCancellation = (error) => {
-        // iOS: usuário fechou o share sheet sem compartilhar — não é erro real
-        const msg = error?.message ?? "";
-        return (
-            error?.name === "AbortError" ||
-            msg.includes("User did not share") ||
-            msg.includes("cancelled") ||
-            msg.includes("canceled")
-        );
     };
 
     const shareSingleWinner = async (user) => {
@@ -181,39 +168,6 @@ useEffect(() => {
         }
     };
 
-    const handleActionButton = () => {
-        if (showOnlyResults || backAfterSave) {
-            navigation.goBack();
-        } else {
-            setShowAlertVisible(true);
-        }
-    };
-
-    //Não está sendo usado pois salva agora direto após a digitação do nome do sorteio no input
-    const hadleSaveDrawPrizeHistory = async () => {
-        setIsLoading(true);
-
-        const resultSave = await saveDrawPrize(
-            drawPrizeTitle,
-            usersWinner,
-            drawerPrizeLiveId,
-        );
-
-        if (resultSave) {
-            Toast.show({ type: "success", text1: "Sorteio salvo!" });
-
-            setBackAfterSave(true);
-        } else {
-            Toast.show({
-                type: "error",
-                text1: "Não foi possível savalr este sorteio!",
-            });
-        }
-
-        setIsLoading(false);
-        setShowAlertVisible(false);
-    };
-
     const hadleDeleteDrawPrizeHistory = async () => {
         setIsLoadingDelete(true);
 
@@ -238,6 +192,7 @@ useEffect(() => {
         <Container>
             <Content justifyContent={justifyContent}>
                 <LottieView
+                    key={animationStatus.key}
                     autoPlay
                     ref={animation}
                     style={{
@@ -344,17 +299,6 @@ useEffect(() => {
                     )}
                 </>
             )}
-            <DrawPrizeNameDialog
-                visible={showAlertVisible}
-                title="Salvar Sorteio"
-                text="Informe o nome do sorteio!"
-                textActionButton="Salvar"
-                hideDialog={() => setShowAlertVisible(false)}
-                actionButton={() => hadleSaveDrawPrizeHistory()}
-                dismissable={false}
-                inputValue={drawPrizeTitle}
-                actionInputValue={setDrawPrizeTitle}
-            />
         </Container>
     );
 };

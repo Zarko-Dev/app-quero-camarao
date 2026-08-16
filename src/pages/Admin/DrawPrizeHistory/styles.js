@@ -40,6 +40,34 @@ export const HeaderSubtitle = styled(Text)`
     color: #5f7b94;
 `;
 
+export const ActionBar = styled.View`
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+`;
+
+export const ActionButton = styled.TouchableOpacity`
+    flex: 1;
+    height: ${({ theme }) => theme.size.componentSize(42)};
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    border-radius: 10px;
+    background-color: ${({ danger, theme }) =>
+        danger ? "#bf756c" : theme.colors.primary};
+    opacity: ${({ disabled }) => (disabled ? 0.45 : 1)};
+`;
+
+export const ActionButtonText = styled(Text)`
+    margin-left: 6px;
+    font-size: ${({ theme }) => theme.size.fontSize(13)};
+    font-weight: 800;
+    color: #ffffff;
+`;
+
 export const ContainerCardDrawPrize = styled.TouchableOpacity`
     width: 100%;
     min-height: ${({ theme }) => theme.size.componentSize(82)};
@@ -49,9 +77,17 @@ export const ContainerCardDrawPrize = styled.TouchableOpacity`
     margin-bottom: ${({ theme }) => theme.size.dimentionsSize(1.2)};
     border-radius: 12px;
     border-width: 1px;
-    border-color: #cfe3f4;
-    background-color: #dff0ff;
+    border-color: ${({ selected }) => (selected ? "#36536e" : "#cfe3f4")};
+    background-color: ${({ selected }) => (selected ? "#cfeeff" : "#dff0ff")};
     elevation: 1;
+`;
+
+export const CardSelectionBox = styled.View`
+    width: ${({ theme }) => theme.size.componentSize(34)};
+    height: ${({ theme }) => theme.size.componentSize(34)};
+    justify-content: center;
+    align-items: center;
+    margin-right: 8px;
 `;
 
 export const CardIconBox = styled.View`

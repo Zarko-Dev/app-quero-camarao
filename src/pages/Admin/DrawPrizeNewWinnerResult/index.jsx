@@ -1,8 +1,8 @@
+// TODO: tela sem navegação de entrada, confirmar com Pedro se ainda é necessária
 import LottieView from "lottie-react-native";
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator } from "react-native-paper";
-import { collection, query, where, getDocs } from "firebase/firestore";
-import { firestore } from "../../../services/Firebase";
+import { getUsersByCpfList } from "../../../controllers/DrawPrizes/live";
 
 import lottieLoadingDrawPrize from "../../../assets/lotties/lottieLoadingDrawPrize.json";
 import lottieWinDrawPrize from "../../../assets/lotties/lottieWinDrawPrize.json";
@@ -21,7 +21,6 @@ import {
     UserNameTitle,
     PhoneTitle,
 } from "./styles";
-import { dataRoutes } from "../../../routes/dataRoutes";
 
 export const DrawPrizeNewWinnerResult = ({ route, navigation }) => {
     const { usersWinner } = route.params
@@ -31,6 +30,7 @@ export const DrawPrizeNewWinnerResult = ({ route, navigation }) => {
     const [winnersWithData, setWinnersWithData] = useState([])
     const [loadingWinners, setLoadingWinners] = useState(false)
     const [animationStatus, setAnimationStatus] = useState({
+        key: "loading",
         width: 350,
         height: 350,
         loop: false,
@@ -43,6 +43,7 @@ export const DrawPrizeNewWinnerResult = ({ route, navigation }) => {
     useEffect(() => {
         setTimeout(() => {
             setAnimationStatus({
+                key: "win",
                 width: 500,
                 height: 500,
                 loop: false,
@@ -56,6 +57,7 @@ export const DrawPrizeNewWinnerResult = ({ route, navigation }) => {
             setTimeout(() => {
                 setJustifyContent("flex-start")
                 setAnimationStatus({
+                    key: "continuous",
                     width: 500,
                     height: 500,
                     loop: true,
@@ -71,13 +73,8 @@ export const DrawPrizeNewWinnerResult = ({ route, navigation }) => {
         try {
             const cpfList = usersWinner.map(u => u.cpf)
 
-            const q = query(
-                collection(firestore, "users"),
-                where("cpf", "in", cpfList)
-            )
-
-            const snapshot = await getDocs(q)
-            const users = snapshot.docs.map(doc => doc.data())
+            const response = await getUsersByCpfList(cpfList)
+            const users = response.error ? [] : response.data
 
             const merged = usersWinner.map(winner => {
                 const found = users.find(u => u.cpf === winner.cpf)
@@ -100,6 +97,7 @@ export const DrawPrizeNewWinnerResult = ({ route, navigation }) => {
         <Container>
             <Content justifyContent={justifyContent}>
                 <LottieView
+                    key={animationStatus.key}
                     autoPlay
                     ref={animation}
                     style={{
