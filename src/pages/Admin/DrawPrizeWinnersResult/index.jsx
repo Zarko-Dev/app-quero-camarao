@@ -9,7 +9,7 @@ import { Entypo, Feather } from "@expo/vector-icons";
 import { useTheme } from "styled-components";
 import { getDrawPrizeLiveById } from "../../../controllers/DrawPrizes/live";
 import { Linking } from "react-native";
-import { TIMING, animationSteps } from "../../../utils/drawAnimationSequence";
+import { animationSteps, buildAnimationSequence } from "../../../utils/drawAnimationSequence";
 
 import lottieLoadingDrawPrize from "../../../assets/lotties/lottieLoadingDrawPrize.json";
 import lottieWinDrawPrize from "../../../assets/lotties/lottieWinDrawPrize.json";
@@ -41,11 +41,17 @@ import {
     buildWinnersShareMessage,
 } from "../../../utils/winnerShareMessage";
 
+const ANIMATION_SOURCES = {
+    loading: lottieLoadingDrawPrize,
+    win: lottieWinDrawPrize,
+    continuous: lottieContinousWinDrawPrize,
+};
+
 export const DrawPrizeWinnersResult = ({ route, navigation }) => {
     const theme = useTheme();
     const { drawPrizeId, showOnlyResults, drawerPrizeLiveId, newWinnersCount } =
         route.params;
-    const [usersWinner, setUsersWinner] = useState([]); // ?? vira estado
+    const [usersWinner, setUsersWinner] = useState([]);
 
     const [isLoadingDelete, setIsLoadingDelete] = useState(false);
     const [animationStatus, setAnimationStatus] = useState(
@@ -72,7 +78,7 @@ export const DrawPrizeWinnersResult = ({ route, navigation }) => {
                 }
             }
         } else {
-            setUsersWinner(route.params.usersWinner ?? []); // ?? usa os do histórico
+            setUsersWinner(route.params.usersWinner ?? []);
         }
     };
 
@@ -83,17 +89,17 @@ export const DrawPrizeWinnersResult = ({ route, navigation }) => {
         if (showOnlyResults) {
             setShowResult(true);
             setJustifyContent("flex-start");
-        } else {
-            setTimeout(() => {
-                setAnimationStatus({ ...animationSteps.win, animation: lottieWinDrawPrize });
-                setShowResult(true);
-
-                setTimeout(() => {
-                    setJustifyContent("flex-start");
-                    setAnimationStatus({ ...animationSteps.continuous, animation: lottieContinousWinDrawPrize });
-                }, TIMING.WIN_TO_CONTINUOUS_MS);
-            }, TIMING.LOADING_REVEAL_MS);
+            return;
         }
+        const sequence = buildAnimationSequence();
+        const timers = sequence.map(({ step, delayMs }) =>
+            setTimeout(() => {
+                setAnimationStatus({ ...animationSteps[step], animation: ANIMATION_SOURCES[step] });
+                if (step === "win") setShowResult(true);
+                if (step === "continuous") setJustifyContent("flex-start");
+            }, delayMs),
+        );
+        return () => timers.forEach(clearTimeout);
     }, []);
 
     const handleRedirectUserDetailed = (dataUser) => {
