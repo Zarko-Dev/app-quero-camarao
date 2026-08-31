@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/react-native";
+import { reportDiscordError } from "../DiscordAlerts/context";
 
 export const getOrderDetails = async (orderId) => {
     try {
@@ -14,6 +15,13 @@ export const getOrderDetails = async (orderId) => {
         return resultDetails;
     } catch (error) {
         Sentry.captureException(error);
+        void reportDiscordError({
+            source: "mercadopago.order",
+            error,
+            feature: "payments",
+            action: "get-order",
+            extra: { orderId },
+        });
 
         return null;
     }

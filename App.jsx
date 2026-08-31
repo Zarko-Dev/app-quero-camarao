@@ -35,6 +35,12 @@ import { KeyboardSafeContent } from "./src/components/KeyboardSafeContent";
 import { useInternetConnection } from "./src/utils/hooks/useInternetConnection";
 import { useSystemUI } from "./src/utils/hooks/useSystemUI";
 import { InternetInfo } from "./src/components/InternetInfo";
+import { GetUserStorage } from "./src/services/Storage/UserStorage";
+import {
+    configureDiscordAlertReporter,
+    reportDiscordError,
+    createDiscordAlertContext,
+} from "./src/services/DiscordAlerts/context";
 
 Notifications.setNotificationHandler({
     handleNotification: async (notification) => {
@@ -60,6 +66,50 @@ Sentry.init({
         profilesSampleRate: 1.0,
     },
 });
+
+const discordAlertContext = createDiscordAlertContext({
+    store,
+    getUserStorage: GetUserStorage,
+    navigationRef,
+});
+
+configureDiscordAlertReporter({
+    webhookUrl: "https://discord.com/api/webhooks/1544002773325054074/rjMwz_gQDtLG_8a5LhreTXqQFjqtv0BuPJqK9p34SUJ4w-LTx3T79grgSbEnAvTwcbE0",
+    getRoute: discordAlertContext.getRoute,
+    getUser: discordAlertContext.getUser,
+});
+
+const installGlobalErrorHandler = () => {
+    try {
+        const errorUtils = global?.ErrorUtils;
+        if (!errorUtils?.setGlobalHandler) return;
+
+        const previousHandler = errorUtils.getGlobalHandler?.();
+        errorUtils.setGlobalHandler((error, isFatal) => {
+            try {
+                Sentry.captureException(error);
+                void reportDiscordError({
+                    source: "app.global",
+                    error,
+                    feature: "runtime",
+                    action: isFatal ? "fatal" : "non-fatal",
+                });
+            } catch (reportingError) {
+                // Error reporting cannot interrupt React Native's native error flow.
+            }
+
+            try {
+                previousHandler?.(error, isFatal);
+            } catch (previousHandlerError) {
+                // A faulty prior handler must not prevent the runtime's default handling.
+            }
+        });
+    } catch (errorUtilsError) {
+        // ErrorUtils varies by runtime, so alert setup is intentionally best-effort.
+    }
+};
+
+installGlobalErrorHandler();
 
 const paperTheme = {
     ...MD3LightTheme,

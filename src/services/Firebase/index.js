@@ -13,6 +13,7 @@ import {
     getReactNativePersistence,
 } from "firebase/auth";
 import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
+import { reportDiscordError } from "../DiscordAlerts/context";
 import { config } from "./config";
 
 let firebaseApp;
@@ -52,6 +53,13 @@ try {
     functions = getFunctions(firebaseApp, "us-central1");
 } catch (error) {
     Sentry.captureException(error);
+    void reportDiscordError({
+        source: "firebase.bootstrap",
+        error,
+        feature: "firebase",
+        action: "initialize",
+        extra: { region: "us-central1" },
+    });
 
     firebaseApp = null;
     firestore = null;
