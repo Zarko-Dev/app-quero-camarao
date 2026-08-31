@@ -51,6 +51,29 @@ test("reportDiscordError formats the full alert payload", async () => {
     assert.match(body.content, /extra: .*requestId.*r1/);
 });
 
+test("reportDiscordError passes the explicit user to the user resolver", async () => {
+    const calls = [];
+    const explicitUser = { id: "explicit-user", name: "Ana" };
+    const reporter = createDiscordAlertReporter({
+        fetchImpl: async (url, options) => {
+            calls.push({ url, options });
+            return { ok: true };
+        },
+        getUser: async (user) => ({
+            userId: user.id,
+            userName: user.name,
+        }),
+    });
+
+    assert.equal(await reporter.reportDiscordError({
+        source: "explicit-user",
+        error: new Error("boom"),
+        user: explicitUser,
+    }), true);
+    assert.match(readBody(calls).content, /userId: explicit-user/);
+    assert.match(readBody(calls).content, /userName: Ana/);
+});
+
 test("createDiscordAlertReporter supports missing dependencies and global fetch", async () => {
     assert.equal(typeof createDiscordAlertReporter().reportDiscordError, "function");
 

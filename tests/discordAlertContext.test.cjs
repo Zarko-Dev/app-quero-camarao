@@ -7,6 +7,31 @@ const {
     reportDiscordError,
 } = require("../src/services/DiscordAlerts/context");
 
+test("context enables a fallback reporter before App configuration", async () => {
+    const contextPath = require.resolve("../src/services/DiscordAlerts/context");
+    const previousFetch = global.fetch;
+    const calls = [];
+    global.fetch = async (url, options) => {
+        calls.push({ url, options });
+        return { ok: true };
+    };
+
+    try {
+        delete require.cache[contextPath];
+        const fallbackContext = require("../src/services/DiscordAlerts/context");
+
+        assert.equal(await fallbackContext.reportDiscordError({
+            source: "firebase.bootstrap",
+            error: new Error("bootstrap failed"),
+        }), true);
+        assert.equal(calls.length, 1);
+        assert.match(JSON.parse(calls[0].options.body).content, /route: unknown/);
+    } finally {
+        global.fetch = previousFetch;
+        delete require.cache[contextPath];
+    }
+});
+
 test("getUser uses Redux data before storage and normalizes user fields", async () => {
     let storageCalls = 0;
     const context = createDiscordAlertContext({

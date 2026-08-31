@@ -41,6 +41,7 @@ import {
     reportDiscordError,
     createDiscordAlertContext,
 } from "./src/services/DiscordAlerts/context";
+import { DISCORD_ERROR_WEBHOOK_URL } from "./src/services/DiscordAlerts/config";
 
 Notifications.setNotificationHandler({
     handleNotification: async (notification) => {
@@ -74,7 +75,7 @@ const discordAlertContext = createDiscordAlertContext({
 });
 
 configureDiscordAlertReporter({
-    webhookUrl: "https://discord.com/api/webhooks/1544002773325054074/rjMwz_gQDtLG_8a5LhreTXqQFjqtv0BuPJqK9p34SUJ4w-LTx3T79grgSbEnAvTwcbE0",
+    webhookUrl: DISCORD_ERROR_WEBHOOK_URL,
     getRoute: discordAlertContext.getRoute,
     getUser: discordAlertContext.getUser,
 });

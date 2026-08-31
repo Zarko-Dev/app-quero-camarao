@@ -36,14 +36,21 @@ function createDiscordAlertReporter(deps = {}) {
     const sent = new Map();
 
     return {
-        async reportDiscordError({ source = "app.unknown", error, feature = "unknown", action = "unknown", extra = {} } = {}) {
+        async reportDiscordError({
+            source = "app.unknown",
+            error,
+            feature = "unknown",
+            action = "unknown",
+            extra = {},
+            user,
+        } = {}) {
             let dedupKey;
             let currentTime;
             let reservation;
 
             try {
                 const route = getRoute() || {};
-                const user = (await getUser()) || {};
+                const alertUser = (await getUser(user)) || {};
                 const message = error?.message || String(error || "unknown error");
                 const routeName = route.routeName || "unknown";
                 dedupKey = `${source}:${routeName}:${message}`;
@@ -59,10 +66,10 @@ function createDiscordAlertReporter(deps = {}) {
                     `feature: ${feature}`,
                     `action: ${action}`,
                     `route: ${routeName}`,
-                    `userId: ${user.userId || "unknown"}`,
-                    `userName: ${user.userName || "unknown"}`,
-                    `email: ${user.email || "unknown"}`,
-                    `phone: ${user.phone || "unknown"}`,
+                    `userId: ${alertUser.userId || "unknown"}`,
+                    `userName: ${alertUser.userName || "unknown"}`,
+                    `email: ${alertUser.email || "unknown"}`,
+                    `phone: ${alertUser.phone || "unknown"}`,
                     `extra: ${serializeExtra(extra)}`,
                     `message: ${message}`,
                     `stack: ${truncate(error?.stack || "no-stack")}`,

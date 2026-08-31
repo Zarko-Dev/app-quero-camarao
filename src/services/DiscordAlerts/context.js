@@ -1,3 +1,10 @@
+const { createDiscordAlertReporter } = require(".");
+const { DISCORD_ERROR_WEBHOOK_URL } = require("./config");
+
+let configuredReporter = createDiscordAlertReporter({
+    webhookUrl: DISCORD_ERROR_WEBHOOK_URL,
+});
+
 function valueOrUnknown(value) {
     return value === undefined || value === null || value === "" ? "unknown" : value;
 }
@@ -58,6 +65,3 @@ module.exports = {
     normalizeUser,
     reportDiscordError,
 };
-const { createDiscordAlertReporter } = require(".");
-
-let configuredReporter;
