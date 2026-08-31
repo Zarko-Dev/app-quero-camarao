@@ -1,3 +1,28 @@
+const DEDUP_TTL_MS = 60000;
+const MAX_FIELD_LENGTH = 1200;
+
+function truncate(value) {
+    return String(value).slice(0, MAX_FIELD_LENGTH);
+}
+
+function serializeExtra(extra) {
+    const seen = new WeakSet();
+
+    try {
+        const serialized = JSON.stringify(extra, (key, value) => {
+            if (value && typeof value === "object") {
+                if (seen.has(value)) return "[Circular]";
+                seen.add(value);
+            }
+            return value;
+        });
+
+        return truncate(serialized === undefined ? String(extra) : serialized);
+    } catch {
+        return "[unserializable extra]";
+    }
+}
+
 function createDiscordAlertReporter(deps = {}) {
     const {
         webhookUrl,
@@ -6,31 +31,48 @@ function createDiscordAlertReporter(deps = {}) {
         getRoute = () => ({}),
         getUser = async () => ({}),
     } = deps;
+    const send = fetchImpl || global.fetch;
+    const sent = new Map();
 
     return {
-        async reportDiscordError({ source, error, feature, action, extra = {} }) {
-            const route = getRoute() || {};
-            const user = (await getUser()) || {};
-            const message = error instanceof Error ? error.message : String(error);
-            const content = [
-                "App Discord error alert",
-                `Time: ${new Date(now()).toISOString()}`,
-                `Source: ${source}`,
-                `Feature: ${feature}`,
-                `Action: ${action}`,
-                `Route: ${route.routeName || "unknown"}`,
-                `User: ${user.userName || "unknown"} (${user.userId || "unknown"})`,
-                `Email: ${user.email || "unknown"}`,
-                `Phone: ${user.phone || "unknown"}`,
-                `Extra: ${JSON.stringify(extra)}`,
-                `Error: ${message}`,
-            ].join("\n");
+        async reportDiscordError({ source = "app.unknown", error, feature = "unknown", action = "unknown", extra = {} } = {}) {
+            try {
+                const route = getRoute() || {};
+                const user = (await getUser()) || {};
+                const message = error?.message || String(error || "unknown error");
+                const routeName = route.routeName || "unknown";
+                const dedupKey = `${source}:${routeName}:${message}`;
+                const currentTime = now();
 
-            return fetchImpl(webhookUrl, {
-                method: "POST",
-                headers: { "content-type": "application/json" },
-                body: JSON.stringify({ content }),
-            });
+                const lastSent = sent.get(dedupKey);
+                if (lastSent !== undefined && lastSent + DEDUP_TTL_MS > currentTime) return false;
+
+                const content = [
+                    "ERROR ALERT",
+                    `time: ${new Date(currentTime).toISOString()}`,
+                    `source: ${source}`,
+                    `feature: ${feature}`,
+                    `action: ${action}`,
+                    `route: ${routeName}`,
+                    `userId: ${user.userId || "unknown"}`,
+                    `userName: ${user.userName || "unknown"}`,
+                    `email: ${user.email || "unknown"}`,
+                    `phone: ${user.phone || "unknown"}`,
+                    `extra: ${serializeExtra(extra)}`,
+                    `message: ${message}`,
+                    `stack: ${truncate(error?.stack || "no-stack")}`,
+                ].join("\n");
+
+                await send(webhookUrl, {
+                    method: "POST",
+                    headers: { "content-type": "application/json" },
+                    body: JSON.stringify({ content }),
+                });
+                sent.set(dedupKey, currentTime);
+                return true;
+            } catch {
+                return false;
+            }
         },
     };
 }
