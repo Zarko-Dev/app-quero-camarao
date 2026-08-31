@@ -1,8 +1,9 @@
 const DEDUP_TTL_MS = 60000;
 const MAX_FIELD_LENGTH = 1200;
+const MAX_CONTENT_LENGTH = 2000;
 
-function truncate(value) {
-    return String(value).slice(0, MAX_FIELD_LENGTH);
+function truncate(value, maxLength = MAX_FIELD_LENGTH) {
+    return String(value).slice(0, maxLength);
 }
 
 function serializeExtra(extra) {
@@ -36,18 +37,22 @@ function createDiscordAlertReporter(deps = {}) {
 
     return {
         async reportDiscordError({ source = "app.unknown", error, feature = "unknown", action = "unknown", extra = {} } = {}) {
+            let dedupKey;
+            let currentTime;
+            let reservation;
+
             try {
                 const route = getRoute() || {};
                 const user = (await getUser()) || {};
                 const message = error?.message || String(error || "unknown error");
                 const routeName = route.routeName || "unknown";
-                const dedupKey = `${source}:${routeName}:${message}`;
-                const currentTime = now();
+                dedupKey = `${source}:${routeName}:${message}`;
+                currentTime = now();
 
                 const lastSent = sent.get(dedupKey);
-                if (lastSent !== undefined && lastSent + DEDUP_TTL_MS > currentTime) return false;
+                if (lastSent !== undefined && lastSent.timestamp + DEDUP_TTL_MS > currentTime) return false;
 
-                const content = [
+                const content = truncate([
                     "ERROR ALERT",
                     `time: ${new Date(currentTime).toISOString()}`,
                     `source: ${source}`,
@@ -61,16 +66,23 @@ function createDiscordAlertReporter(deps = {}) {
                     `extra: ${serializeExtra(extra)}`,
                     `message: ${message}`,
                     `stack: ${truncate(error?.stack || "no-stack")}`,
-                ].join("\n");
+                ].join("\n"), MAX_CONTENT_LENGTH);
 
-                await send(webhookUrl, {
+                reservation = { timestamp: currentTime };
+                sent.set(dedupKey, reservation);
+                const response = await send(webhookUrl, {
                     method: "POST",
                     headers: { "content-type": "application/json" },
-                    body: JSON.stringify({ content }),
+                    body: JSON.stringify({ content, allowed_mentions: { parse: [] } }),
                 });
-                sent.set(dedupKey, currentTime);
+                if (!response || response.ok !== true) {
+                    if (sent.get(dedupKey) === reservation) sent.delete(dedupKey);
+                    return false;
+                }
+
                 return true;
             } catch {
+                if (dedupKey && sent.get(dedupKey) === reservation) sent.delete(dedupKey);
                 return false;
             }
         },

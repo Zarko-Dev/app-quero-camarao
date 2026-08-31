@@ -36,6 +36,7 @@ test("reportDiscordError formats the full alert payload", async () => {
     assert.equal(calls[0].options.method, "POST");
     assert.equal(calls[0].options.headers["content-type"], "application/json");
     const body = readBody(calls);
+    assert.deepEqual(body.allowed_mentions, { parse: [] });
     assert.match(body.content, /source: chat\.send/);
     assert.match(body.content, /feature: chat/);
     assert.match(body.content, /action: sendMessage/);
@@ -121,4 +122,62 @@ test("reportDiscordError safely serializes circular and long extra data", async 
     assert.ok(extraLine);
     assert.match(extraLine, /unserializable|circular|requestId/);
     assert.ok(extraLine.length <= 1207);
+});
+
+test("reportDiscordError caps the final Discord content at 2000 characters", async () => {
+    const calls = [];
+    const reporter = createDiscordAlertReporter({
+        fetchImpl: async (url, options) => {
+            calls.push({ url, options });
+            return { ok: true };
+        },
+    });
+    const error = new Error("boom");
+    error.stack = "stack\n".repeat(1000);
+
+    assert.equal(await reporter.reportDiscordError({
+        source: "s".repeat(500),
+        feature: "f".repeat(500),
+        action: "a".repeat(500),
+        error,
+        extra: { data: "x".repeat(2000) },
+    }), true);
+    assert.ok(readBody(calls).content.length <= 2000);
+});
+
+test("reportDiscordError treats non-OK responses as failure without deduping", async () => {
+    let calls = 0;
+    const reporter = createDiscordAlertReporter({
+        fetchImpl: async () => {
+            calls += 1;
+            return calls === 1 ? { ok: false, status: 500 } : { ok: true, status: 204 };
+        },
+    });
+    const alert = { source: "http", error: new Error("boom") };
+
+    assert.equal(await reporter.reportDiscordError(alert), false);
+    assert.equal(await reporter.reportDiscordError(alert), true);
+    assert.equal(calls, 2);
+});
+
+test("reportDiscordError reserves dedup key while an identical alert is sending", async () => {
+    let resolveFetch;
+    let calls = 0;
+    const fetchPromise = new Promise((resolve) => { resolveFetch = resolve; });
+    const reporter = createDiscordAlertReporter({
+        fetchImpl: async () => {
+            calls += 1;
+            return fetchPromise;
+        },
+    });
+    const alert = { source: "concurrent", error: new Error("boom") };
+    const first = reporter.reportDiscordError(alert);
+    const second = reporter.reportDiscordError(alert);
+
+    await new Promise((resolve) => setImmediate(resolve));
+    assert.equal(calls, 1);
+    assert.equal(await second, false);
+
+    resolveFetch({ ok: true });
+    assert.equal(await first, true);
 });
