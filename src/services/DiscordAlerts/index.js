@@ -1,12 +1,14 @@
-function createDiscordAlertReporter({
-    webhookUrl,
-    fetchImpl,
-    now = () => Date.now(),
-    getRoute = () => ({}),
-    getUser = async () => ({}),
-}) {
+function createDiscordAlertReporter(deps = {}) {
+    const {
+        webhookUrl,
+        fetchImpl,
+        now = () => Date.now(),
+        getRoute = () => ({}),
+        getUser = async () => ({}),
+    } = deps;
+
     return {
-        async reportDiscordError({ source, error, feature, action }) {
+        async reportDiscordError({ source, error, feature, action, extra = {} }) {
             const route = getRoute() || {};
             const user = (await getUser()) || {};
             const message = error instanceof Error ? error.message : String(error);
@@ -20,6 +22,7 @@ function createDiscordAlertReporter({
                 `User: ${user.userName || "unknown"} (${user.userId || "unknown"})`,
                 `Email: ${user.email || "unknown"}`,
                 `Phone: ${user.phone || "unknown"}`,
+                `Extra: ${JSON.stringify(extra)}`,
                 `Error: ${message}`,
             ].join("\n");
 
