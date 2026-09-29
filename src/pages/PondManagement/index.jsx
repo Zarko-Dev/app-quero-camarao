@@ -6,7 +6,7 @@ import { ActivityIndicator } from "react-native-paper";
 import Toast from "react-native-toast-message";
 
 import { GetUserStorage } from "../../services/Storage/UserStorage";
-import { getUserPublications } from "../../controllers/Publication/getUserPublications";
+import { getUserPonds } from "../../controllers/PondTracker/getUserPonds";
 import { transcribeAudio, chatWithAssistant } from "../../services/OpenAI";
 
 import {
@@ -27,61 +27,64 @@ import {
 } from "./styles";
 
 const SYSTEM_PROMPT_BASE = `Você é um assistente especializado em gestão de viveiros de camarão.
-Você ajuda produtores a analisar custos, produtividade, estoque e tomar decisões estratégicas sobre seus viveiros.
+Você ajuda produtores a analisar o histórico semanal dos viveiros, identificar padrões, gerar previsões de colheita e tomar decisões estratégicas.
 Responda sempre em português brasileiro, de forma clara e objetiva.
 Quando o usuário pedir relatórios ou análises, estruture a resposta de forma organizada com tópicos.`;
 
-const buildSystemPrompt = (publications) => {
-    if (!publications || publications.length === 0) {
+const buildSystemPrompt = (ponds) => {
+    if (!ponds || ponds.length === 0) {
         return SYSTEM_PROMPT_BASE;
     }
 
-    const pondsInfo = publications
-        .map((pub, i) => {
-            const [city, state] = (pub.location ?? "/").split("/");
-            const shrimps =
-                pub.shrimps
-                    ?.map(
-                        (s, j) =>
-                            `    Viveiro ${j + 1}: ${s.kilo ?? "?"} kg | gramatura ${s.grammage ?? "?"}g`,
-                    )
-                    .join("\n") ?? "";
+    const pondsInfo = ponds
+        .map((pond, i) => {
+            const weeksInfo =
+                pond.weeks?.length > 0
+                    ? [...pond.weeks]
+                          .sort((a, b) => a.weekNumber - b.weekNumber)
+                          .map((w) => `    Semana ${w.weekNumber}: ${w.description}`)
+                          .join("\n")
+                    : "    Nenhuma semana registrada ainda.";
             return (
-                `Publicação ${i + 1}:\n` +
-                `  Localização: ${city ?? "?"} / ${state ?? "?"}\n` +
-                `  Total de viveiros: ${pub.shrimps?.length ?? 0}\n` +
-                `${shrimps}`
+                `Viveiro ${i + 1}: ${pond.name}\n` +
+                `  Semanas registradas: ${pond.weeks?.length ?? 0}/26\n` +
+                `${weeksInfo}`
             );
         })
         .join("\n\n");
 
-    return `${SYSTEM_PROMPT_BASE}\n\nDados das publicações do produtor:\n${pondsInfo}`;
+    return `${SYSTEM_PROMPT_BASE}\n\nDados dos viveiros do produtor:\n${pondsInfo}`;
 };
 
-const buildWelcomeWithPonds = (publications) => {
-    const lines = publications.map((pub, i) => {
-        const [city, state] = (pub.location ?? "/").split("/");
-        const shrimpLines =
-            pub.shrimps
-                ?.map(
-                    (s, j) =>
-                        `   • Viveiro ${j + 1}: ${s.kilo ?? "?"} kg | ${s.grammage ?? "?"}g`,
-                )
-                .join("\n") ?? "";
+const buildWelcomeWithPonds = (ponds) => {
+    const lines = ponds.map((pond, i) => {
+        const weeksSummary =
+            pond.weeks?.length > 0
+                ? [...pond.weeks]
+                      .sort((a, b) => a.weekNumber - b.weekNumber)
+                      .map((w) => {
+                          const preview =
+                              w.description.length > 60
+                                  ? `${w.description.substring(0, 60)}...`
+                                  : w.description;
+                          return `   • Sem. ${w.weekNumber}: ${preview}`;
+                      })
+                      .join("\n")
+                : "   Nenhuma semana registrada ainda.";
         return (
-            `📦 Publicação ${i + 1} — 📍 ${city ?? "?"} / ${state ?? "?"}\n` +
-            `   ${pub.shrimps?.length ?? 0} viveiro(s)\n` +
-            `${shrimpLines}`
+            `🌊 Viveiro ${i + 1}: ${pond.name}\n` +
+            `   ${pond.weeks?.length ?? 0} semana(s) registrada(s)\n` +
+            `${weeksSummary}`
         );
     });
 
     return (
-        `Olá! Encontrei ${publications.length} publicação(ões) cadastrada(s) na sua conta:\n\n` +
+        `Olá! Encontrei ${ponds.length} viveiro(s) cadastrado(s) na sua conta:\n\n` +
         `${lines.join("\n\n")}\n\n` +
         `Estou pronto para te ajudar! Você pode me perguntar, por exemplo:\n` +
-        `• "Faça um relatório dos meus viveiros"\n` +
-        `• "Qual o total de quilos disponível?"\n` +
-        `• "Dicas para aumentar a produtividade"\n\n` +
+        `• "Faça um relatório do meu viveiro"\n` +
+        `• "Com base nas semanas, qual a previsão para a próxima colheita?"\n` +
+        `• "Identificou algum problema no histórico?"\n\n` +
         `Como posso ajudar?`
     );
 };
@@ -89,11 +92,11 @@ const buildWelcomeWithPonds = (publications) => {
 const WELCOME_NO_PONDS =
     `Olá! Sou seu assistente de gestão de viveiros. 🦐\n\n` +
     `Ainda não encontrei viveiros cadastrados na sua conta.\n\n` +
-    `Para aproveitar melhor o assistente, cadastre seus viveiros em "Meus camarões" no menu lateral.\n\n` +
-    `Mesmo assim, posso te ajudar! Você pode me perguntar informando os dados diretamente, por exemplo:\n` +
-    `• "Tenho um viveiro com 500 kg de camarão cinza a R$ 25/kg. Qual o valor total?"\n` +
-    `• "Quais os principais custos de produção de camarão?"\n` +
-    `• "Como calcular o custo por kg produzido?"\n\n` +
+    `Para aproveitar melhor o assistente, cadastre seus viveiros em "Meus Viveiros" e registre o que acontece semana a semana.\n\n` +
+    `Mesmo assim, posso te ajudar! Informe os dados diretamente, por exemplo:\n` +
+    `• "Tenho um viveiro de 5 hectares, semana 8 com oxigênio baixo. O que devo fazer?"\n` +
+    `• "Quais os principais problemas em viveiros de camarão?"\n` +
+    `• "Como calcular o custo de produção por kg?"\n\n` +
     `Como posso ajudar?`;
 
 export const PondManagement = () => {
@@ -108,7 +111,7 @@ export const PondManagement = () => {
     const listRef = useRef(null);
 
     useEffect(() => {
-        const loadPublications = async () => {
+        const loadPonds = async () => {
             try {
                 const dataUser = await GetUserStorage();
                 if (!dataUser) {
@@ -116,7 +119,7 @@ export const PondManagement = () => {
                     return;
                 }
 
-                const result = await getUserPublications(dataUser.email);
+                const result = await getUserPonds(dataUser.email);
 
                 if (!result.error && result.data && result.data.length > 0) {
                     setSystemPrompt(buildSystemPrompt(result.data));
@@ -135,7 +138,7 @@ export const PondManagement = () => {
             }
         };
 
-        loadPublications();
+        loadPonds();
     }, []);
 
     const scrollToBottom = useCallback(() => {

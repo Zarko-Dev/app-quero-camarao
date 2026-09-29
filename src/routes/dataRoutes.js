@@ -35,6 +35,8 @@ export const dataRoutes = {
     monthlyPlan: "Monthly Plan",
     planQrCodePix: "Plan Qr Code Pix",
     pondManagement: "Pond Management",
+    myPonds: "My Ponds",
+    pondDetail: "Pond Detail",
     admin: {
         navigation: "Admin:Navigation",
         navigationTab: "Admin:Tab",

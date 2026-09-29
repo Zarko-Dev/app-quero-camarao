@@ -43,6 +43,7 @@ import { DrawPrizeNewWinnerResult } from "../pages/Admin/DrawPrizeNewWinnerResul
 import { DrawPrizeWinnersResult } from "../pages/Admin/DrawPrizeWinnersResult";
 import { PlanQRCodePix } from "../pages/PlanQRCodePix";
 import { PondManagement } from "../pages/PondManagement";
+import { PondDetail } from "../pages/PondDetail";
 
 const { Navigator, Screen } = createNativeStackNavigator();
 
@@ -356,6 +357,15 @@ export const Routes = () => (
                     headerStyle: { backgroundColor: theme.colors.primary },
                     headerTitleStyle: { color: theme.colors.white },
                 }}
+            />
+            <Screen
+                name={dataRoutes.pondDetail}
+                component={PondDetail}
+                options={({ route }) => ({
+                    title: route.params?.pond?.name ?? "Viveiro",
+                    headerStyle: { backgroundColor: theme.colors.primary },
+                    headerTitleStyle: { color: theme.colors.white },
+                })}
             />
         </Navigator>
     </NavigationContainer>

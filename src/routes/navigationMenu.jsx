@@ -25,6 +25,7 @@ import { NavigationAdminMenu } from "./AdminRoutes";
 import { DrawerPrizeLiveClient } from "../pages/DrawerPrizeLiveClient";
 import { MonthlyPlan } from "../pages/MonthlyPlan";
 import { PondManagement } from "../pages/PondManagement";
+import { MyPonds } from "../pages/MyPonds";
 
 const { Navigator, Screen } = createDrawerNavigator();
 
@@ -214,6 +215,19 @@ export const NavigationMenu = () => {
                                 size={20}
                                 color={color}
                             />
+                        ),
+                    }}
+                />
+            )}
+            {isAuthenticated && hasActivePlan && (
+                <Screen
+                    name={dataRoutes.myPonds}
+                    component={MyPonds}
+                    options={{
+                        title: "Meus Viveiros",
+                        header: (props) => <Header {...props} />,
+                        drawerIcon: ({ color }) => (
+                            <Feather name="layers" size={20} color={color} />
                         ),
                     }}
                 />
