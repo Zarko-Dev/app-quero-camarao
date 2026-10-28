@@ -32,7 +32,7 @@ test("context enables a fallback reporter before App configuration", async () =>
     }
 });
 
-test("getUser uses Redux data before storage and normalizes user fields", async () => {
+test("getUser uses Redux data before storage and masks sensitive user fields", async () => {
     let storageCalls = 0;
     const context = createDiscordAlertContext({
         store: {
@@ -56,8 +56,8 @@ test("getUser uses Redux data before storage and normalizes user fields", async 
     assert.deepEqual(await context.getUser(), {
         userId: "redux-user",
         userName: "Pedro",
-        email: "pedro@test.com",
-        phone: "88999999999",
+        email: "p***@t***.com",
+        phone: "***9999",
     });
     assert.equal(storageCalls, 0);
 });
@@ -71,14 +71,14 @@ test("getUser falls back to storage and accepts explicitly supplied users", asyn
     assert.deepEqual(await context.getUser(), {
         userId: "storage-user",
         userName: "Ana",
-        email: "unknown",
-        phone: "unknown",
+        email: "***",
+        phone: "***",
     });
     assert.deepEqual(await context.getUser({ userId: "explicit", email: "e@test.com" }), {
         userId: "explicit",
         userName: "unknown",
-        email: "e@test.com",
-        phone: "unknown",
+        email: "e***@t***.com",
+        phone: "***",
     });
 });
 
@@ -102,8 +102,8 @@ test("context falls back to unknown when state, storage, or navigation fail", as
     assert.deepEqual(await context.getUser(), {
         userId: "unknown",
         userName: "unknown",
-        email: "unknown",
-        phone: "unknown",
+        email: "***",
+        phone: "***",
     });
     assert.deepEqual(context.getRoute(), { routeName: "unknown" });
 });
