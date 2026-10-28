@@ -1,0 +1,186 @@
+{
+  "project": "app-quero-camarao",
+  "version": 1,
+  "tasks": [
+    {
+      "id": "QA-001",
+      "title": "Configurar e rodar linters",
+      "priority": 1,
+      "status": "completed",
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "Script de lint roda sem falhas, ou erros sao reportados e documentados"
+      ]
+    },
+    {
+      "id": "QA-002",
+      "title": "Executar testes locais",
+      "priority": 2,
+      "status": "completed",
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "A rotina de testes (node --test) roda com sucesso"
+      ]
+    },
+    {
+      "id": "QA-003",
+      "title": "Verificar build do Expo",
+      "priority": 3,
+      "status": "completed",
+      "dependsOn": [
+        "QA-001",
+        "QA-002"
+      ],
+      "acceptanceCriteria": [
+        "Não ha erros criticos no ambiente geral (via script de verificacao)"
+      ]
+    },
+    {
+      "id": "BUG-005",
+      "title": "Corrigir sorteio: refs incorretas, ids perdidos, dedup, guarda e delete",
+      "priority": 1,
+      "status": "completed",
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "executeDrawPrizeLive usa draw focado (getDrawPrizeLiveById)",
+        "find/getAllWhereParticipant retornam id no data",
+        "repo dedup participants + seed + soft delete isDeleted",
+        "client check boolean não .error",
+        "guard isCreatingNewDraw evita race",
+        "tests continuam verdes + regressão documentada"
+      ]
+    },
+    {
+      "id": "BUG-004",
+      "title": "Corrigir botão WhatsApp do encarte para o administrador",
+      "priority": 1,
+      "status": "completed",
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "O botão WhatsApp do admin abre o aplicativo externo sem navegar para o chat interno",
+        "O número e a mensagem do encarte são normalizados e codificados",
+        "Os testes unitários do projeto passam"
+      ]
+    },
+    {
+      "id": "BUG-006",
+      "title": "Tornar cadastro recuperável após falha no perfil Firestore",
+      "priority": 1,
+      "status": "completed",
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "Conta Auth recém-criada é removida quando a gravação do perfil falha",
+        "Conta Auth órfã pode concluir o cadastro após autenticação válida",
+        "E-mail com perfil existente não deixa sessão autenticada",
+        "Testes de regressão passam"
+      ]
+    },
+    {
+      "id": "BUG-007",
+      "title": "Migrar cadastro para Cloud Function idempotente",
+      "priority": 1,
+      "status": "in_progress",
+      "dependsOn": [
+        "BUG-006"
+      ],
+      "acceptanceCriteria": [
+        "registerUser coordena Auth e Firestore no backend",
+        "cliente só persiste sessão após sucesso server-side",
+        "falha de perfil executa rollback e alerta Discord",
+        "reconciliação diária detecta inconsistências",
+        "Function publicada e regras restritivas aguardam nova versão do app"
+      ]
+    },
+    {
+      "id": "BUG-008",
+      "title": "Corrigir atualização de endereço do usuário",
+      "priority": 1,
+      "status": "completed",
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "Tela lê endereço aninhado e mantém fallback para campos legados",
+        "Atualização normaliza o e-mail e mantém os formatos compatíveis",
+        "Falha no Firestore não fica silenciosa para diagnóstico",
+        "Teste de regressão cobre leitura, gravação e normalização"
+      ]
+    },
+    {
+      "id": "BUG-009",
+      "title": "Corrigir envio da primeira mensagem do chat",
+      "priority": 1,
+      "status": "completed",
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "Primeira mensagem cria chat e mensagem em uma gravação atômica",
+        "Envio automático não depende da assinatura de mensagens de um chat inexistente",
+        "Assinatura de mensagens só inicia após o documento do chat existir",
+        "Regras Firestore permitem o primeiro envio atômico sem abrir leitura indevida",
+        "Testes unitários passam sem falhas"
+      ]
+    },
+    {
+      "id": "BUG-010",
+      "title": "Corrigir chamada de atenção do chat",
+      "priority": 1,
+      "status": "completed",
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "Payload de atenção contém todos os dados necessários para reabrir o chat",
+        "Rejeição do Expo Push não é apresentada como envio concluído",
+        "Testes de regressão passam"
+      ]
+    },
+    {
+      "id": "BUG-011",
+      "title": "Corrigir falha de publicação/venda por divergência e-mail doc x Auth",
+      "priority": 1,
+      "status": "completed",
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "Login grava no storage o e-mail da sessão autenticada, não o campo email do doc users",
+        "Doc users com email divergente do ID corrigido em produção e verificado",
+        "Escritas do fluxo de pedido gratuito com cupom validadas contra as regras deployadas (TestRuleset)",
+        "verify.sh passa (VERIFICATION_PASS)"
+      ]
+    },
+    {
+      "id": "BUG-012",
+      "title": "Health scan release - fix CUPONS (gate admin, contadores atômicos, guarda delete)",
+      "priority": 1,
+      "status": "completed",
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "isAdmin usa doc/getDoc do FirebaseAdapter; checagem admin SÓ no controller (removida da página)",
+        "decreaseAmountCupom/incrementAmountCupom usam FieldValue.increment (atômico, number) e chamadores não passam valor stale",
+        "deleteCupom alinhado com createCupom (gate isAdmin)",
+        "Testes de cupom criados (gate admin, decremento atômico, incremento, guarda delete) e test:unit verde"
+      ]
+    },
+    {
+      "id": "BUG-013",
+      "title": "Health scan release - fix PAGAMENTO (contrato de order no runtime, R7, 1a, 1b)",
+      "priority": 1,
+      "status": "completed",
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "savePaymentOrder valida/normaliza; updateOrderStatus valida ORDER_STATUS; updateOrder valida campos gravados",
+        "Import morto OrdersWriter removido; export quebrado getAllApprovedOrders removido",
+        "getPaymentUrl/getPaymentPix sem ramo morto e com campo message no erro",
+        "Ajuste -3h (BRT) restaurado nas leituras de orders de Admin/metrics (OrdersReader)",
+        "Regra firestore.rules orders.create valida shape (sem deploy); test:unit verde"
+      ]
+    },
+    {
+      "id": "BUG-014",
+      "title": "Health scan release - fix CHAT (feedback de envio falho, upload tests reais)",
+      "priority": 1,
+      "status": "completed",
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "handleSend/pickAndSendImage/sendDocument dão feedback quando sendChatMessage falha",
+        "Testes de upload exercitam código real (storage().ref().putFile().getDownloadURL()) e não mirror",
+        "test:unit verde"
+      ]
+    }
+  ]
+}

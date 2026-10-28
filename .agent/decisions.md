@@ -1,0 +1,8 @@
+# Architectural Decisions
+
+- Para rodar testes, o CLI a ser utilizado é o Node Internal Test Runner (`node --test`), evitando comandos soltos e utilizando `npm run test:unit`.
+- Em vez de reescrever lógica para formatar arquivos globalmente de primeira, vamos priorizar as validações já declaradas em `package.json` para maior aderência ao projeto.- Identidade do usuário para ownership deve vir da sessão Auth (request.auth.token.email), nunca do campo email do doc users: o campo pode divergir do ID do doc e as regras do Firestore comparam com o token. Login agora sobrescreve o campo com o e-mail autenticado (BUG-011).
+- Contadores de cupom (duração/uso) devem ser ATÔMICOS via FieldValue.increment/decrement e ficar em `number` (nunca string). Nunca usar read-modify-write com valor do payload de checkout (estale) — causa lost update (BUG-012).
+- `normalizeOrder` de `src/contracts/orders.js` é lossy (whitelist: dropa `user`/campos ricos de `dataPublication`). Por isso as escritas de order usam validateOrder como GATE + preservam o payload original/merge; normalizeOrder NÃO é aplicado nas escritas de publicação para não perder `user`/`location`/`contactNumber`/`ponds`. updateOrder recebe payloads parciais (CardOrder envia só {status}) e valida apenas os campos gravados (BUG-013).
+- Leitura de orders consumidas por métricas/admin deve aplicar o shift BRT (-3h) para evitar erro de mês/ano em borda (revisão da antiga normalizeAndFilterApprovedOrders); getAllUserOrders não desloca (BUG-013).
+- Upload de mídia do chat centralizado em src/controllers/Chat/uploadStorage.js (CJS) para permitir teste unitário real do caminho storage().ref().putFile().getDownloadURL(), abandonando mirrors (BUG-014).
