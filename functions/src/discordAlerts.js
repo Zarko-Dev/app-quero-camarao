@@ -6,6 +6,30 @@ function truncate(value, maxLength) {
     return String(value).slice(0, maxLength);
 }
 
+function maskEmail(email) {
+    if (!email || typeof email !== "string") return "***";
+    const atIdx = email.indexOf("@");
+    if (atIdx <= 0) return "***";
+    const local = email.slice(0, atIdx);
+    const domain = email.slice(atIdx + 1);
+    const dotIdx = domain.indexOf(".");
+    if (dotIdx <= 0) return `${local[0]}***@***`;
+    return `${local[0]}***@${domain[0]}***${domain.slice(dotIdx)}`;
+}
+
+function maskPhone(phone) {
+    if (!phone || typeof phone !== "string") return "***";
+    const digits = phone.replace(/\D/g, "");
+    if (digits.length <= 4) return "***";
+    return `***${digits.slice(-4)}`;
+}
+
+function maskUserId(userId) {
+    if (!userId || typeof userId !== "string") return "***";
+    if (userId.length <= 4) return "***";
+    return `${userId.slice(0, 4)}****`;
+}
+
 function serializeExtra(extra) {
     const seen = new WeakSet();
 
@@ -62,9 +86,9 @@ function createDiscordFunctionAlertReporter(deps = {}) {
                     `time: ${new Date(currentTime).toISOString()}`,
                     `env: ${truncate(functionsEnv, 120)}`,
                     `function: ${truncate(functionName, 120)}`,
-                    `userId: ${truncate(userId, 120)}`,
-                    `email: ${truncate(email, 120)}`,
-                    `phone: ${truncate(phone, 120)}`,
+                    `userId: ${truncate(maskUserId(userId), 120)}`,
+                    `email: ${truncate(maskEmail(email), 120)}`,
+                    `phone: ${truncate(maskPhone(phone), 120)}`,
                     `requestPath: ${truncate(requestPath, 120)}`,
                     `eventId: ${truncate(eventId, 120)}`,
                     `documentPath: ${truncate(documentPath, 120)}`,

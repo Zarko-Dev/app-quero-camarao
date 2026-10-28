@@ -37,9 +37,9 @@ describe("createDiscordFunctionAlertReporter", () => {
         expect(JSON.parse(calls[0][1].body).allowed_mentions).toEqual({ parse: [] });
         expect(getContent(calls)).toEqual(expect.stringContaining("env: production"));
         expect(getContent(calls)).toEqual(expect.stringContaining("function: paymentPix"));
-        expect(getContent(calls)).toEqual(expect.stringContaining("userId: user-1"));
-        expect(getContent(calls)).toEqual(expect.stringContaining("email: user@example.com"));
-        expect(getContent(calls)).toEqual(expect.stringContaining("phone: 88999999999"));
+        expect(getContent(calls)).toEqual(expect.stringContaining("userId: user****"));
+        expect(getContent(calls)).toEqual(expect.stringContaining("email: u***@e***.com"));
+        expect(getContent(calls)).toEqual(expect.stringContaining("phone: ***9999"));
         expect(getContent(calls)).toEqual(expect.stringContaining("requestPath: /pix"));
         expect(getContent(calls)).toEqual(expect.stringContaining("eventId: event-1"));
         expect(getContent(calls)).toEqual(expect.stringContaining("documentPath: orders/order-1"));

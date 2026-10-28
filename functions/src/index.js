@@ -146,3 +146,37 @@ const { mondayProducerReminder, tuesdayProducerReminder } = require("./reminders
 
 exports.mondayProducerReminder = mondayProducerReminder;
 exports.tuesdayProducerReminder = tuesdayProducerReminder;
+
+const { adminDashboardMetrics } = require("./adminDashboardMetrics");
+
+exports.adminDashboardMetrics = adminDashboardMetrics;
+
+const { onChatMessageCreated } = require("./chatNotifications");
+exports.onChatMessageCreated = onChatMessageCreated;
+
+const { onUserWritten } = require("./users");
+exports.onUserWritten = onUserWritten;
+
+const { registerUser } = require("./registerUser");
+exports.registerUser = registerUser;
+
+const { reconcileUsers } = require("./reconcileUsers");
+exports.reconcileUsers = reconcileUsers;
+
+const { onPublicationViewWritten } = require("./publicationViews");
+exports.onPublicationViewWritten = onPublicationViewWritten;
+
+const { cronAbandonedCheckout, cronInactiveUsers } = require("./whatsappAutomations");
+exports.cronAbandonedCheckout = cronAbandonedCheckout;
+exports.cronInactiveUsers = cronInactiveUsers;
+
+// onPublicationCreated (publicationNotifications.js) desativada: o client já faz o fan-out.
+
+
+const { publicacao } = require("./publicacao");
+exports.publicacao = publicacao;
+const { publicacaoImage } = require("./publicacaoImage");
+exports.publicacaoImage = publicacaoImage;
+
+const { adminDeleteUser } = require("./adminDeleteUser");
+exports.adminDeleteUser = adminDeleteUser;
