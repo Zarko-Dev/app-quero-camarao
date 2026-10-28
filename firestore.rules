@@ -23,9 +23,21 @@ service cloud.firestore {
     // Só usar em regras de leitura ou quando já se sabe que o doc existe -
     // get() falha se o documento não existir.
     function isAdmin() {
-      return isSignedIn()
-        && exists(/databases/$(database)/documents/users/$(myEmail()))
-        && get(/databases/$(database)/documents/users/$(myEmail())).data.rules.hasAny(['Admin']);
+      return isAdminViaClaim()
+        || (isSignedIn()
+          && exists(/databases/$(database)/documents/users/$(myEmail()))
+          && (
+            (get(/databases/$(database)/documents/users/$(myEmail())).data.rules is list && get(/databases/$(database)/documents/users/$(myEmail())).data.rules.hasAny(['Admin', 'admin']))
+            || (get(/databases/$(database)/documents/users/$(myEmail())).data.rules is string && (get(/databases/$(database)/documents/users/$(myEmail())).data.rules == 'Admin' || get(/databases/$(database)/documents/users/$(myEmail())).data.rules == 'admin'))
+          )
+        );
+    }
+
+    // Suporte a claim-based admin check (request.auth.token.admin), mantendo compatibilidade com o modelo atual baseado em documento.
+    // O token admin pode ser setado por Cloud Functions ou pelo Admin SDK durante o login customizado; se disponível,
+    // concede acesso admin imediatamente sem depender da leitura do documento users/{email}.rules.
+    function isAdminViaClaim() {
+      return request.auth != null && request.auth.token.admin == true;
     }
 
     // Verdadeiro se a atualização não tenta mudar nenhum dos campos listados
@@ -52,9 +64,9 @@ service cloud.firestore {
       // não coberta por esta rodada de regras.
       allow read: if isSignedIn();
 
-      // No cadastro o próprio client grava rules: ["Normal"] (o único valor
-      // seguro que a criação de conta pode gravar) - qualquer outro valor,
-      // ou qualquer mudança depois de criado, é bloqueada.
+      // EXPAND: aceita o client antigo (v2.0.4 cria o perfil direto, rules
+      // ["Normal"]) e o fluxo registerUser (Admin SDK ignora as rules).
+      // Versão restritiva (create: false) em firestore.rules.strict.
       allow create: if isOwner(userId)
         && (!('rules' in request.resource.data) || request.resource.data.rules == ['Normal'])
         && unchanged(['ratingAverage', 'ratingCount']);
@@ -107,8 +119,16 @@ service cloud.firestore {
             && (myEmail() == chatDoc().buyerId || myEmail() == chatDoc().sellerId);
         }
 
+        function isChatParticipantAfter() {
+          return isSignedIn()
+            && existsAfter(/databases/$(database)/documents/chats/$(chatId))
+            && (myEmail() == getAfter(/databases/$(database)/documents/chats/$(chatId)).data.buyerId
+                || myEmail() == getAfter(/databases/$(database)/documents/chats/$(chatId)).data.sellerId);
+        }
+
         allow read: if isChatParticipant();
-        allow create: if isChatParticipant() && myEmail() == request.resource.data.senderId;
+        allow create: if (isChatParticipant() || isChatParticipantAfter())
+          && myEmail() == request.resource.data.senderId;
         // Apagar-pra-mim/apagar-pra-todos/marcar entregue são updates, não deletes.
         allow update: if isChatParticipant();
         allow delete: if false;
@@ -187,11 +207,8 @@ service cloud.firestore {
     match /orders/{orderId} {
       allow read: if isOwner(resource.data.userId) || isAdmin();
       allow create: if isSignedIn() && myEmail() == request.resource.data.userId;
-      // O ideal é status/published serem só-Cloud-Function (a function de
-      // pagamento já faz isso via webhook), mas hoje o app também aprova
-      // pedidos gratuitos/pix client-side em alguns fluxos - bloquear isso
-      // aqui quebraria essas telas. Fica como risco residual conhecido
-      // (mover aprovação de pedido 100% para o servidor é o próximo passo).
+      // Aprovação client-side ainda existe (risco residual); versão endurecida
+      // em firestore.rules.strict.
       allow update: if isOwner(resource.data.userId) && unchanged(['userId']);
       allow delete: if isOwner(resource.data.userId) || isAdmin();
     }

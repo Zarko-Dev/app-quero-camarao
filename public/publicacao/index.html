@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Quero Camarão</title>
+<!--OG-->
+<meta property="og:site_name" content="Quero Camarão" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Camarão disponível no Quero Camarão" />
+<meta property="og:description" content="Veja os detalhes da publicação e fale com o produtor no aplicativo." />
+<meta property="og:image" content="https://querocamarao.com.br/og-image.png" />
+<meta name="twitter:card" content="summary" />
+<!--/OG-->
+<meta name="robots" content="noindex" />
+<style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background: linear-gradient(180deg, #F05829 0%, #f7f4ef 220px, #f7f4ef 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 24px 16px 40px;
+    }
+    .logo {
+        color: #fff;
+        font-weight: 800;
+        font-size: 20px;
+        margin-bottom: 18px;
+        letter-spacing: 0.2px;
+    }
+    .card {
+        width: 100%;
+        max-width: 420px;
+        background: #fff;
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+        padding: 22px 20px;
+        text-align: center;
+    }
+    .emoji { font-size: 42px; line-height: 1; margin-bottom: 6px; }
+    h1 { font-size: 18px; color: #1e2d3d; margin: 4px 0 2px; }
+    .location { color: #64788a; font-size: 13px; margin-bottom: 16px; }
+    .row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 2px;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 14px;
+    }
+    .row:last-of-type { border-bottom: none; }
+    .row .label { color: #8fa3b2; }
+    .row .value { color: #1e2d3d; font-weight: 700; }
+    .sold-banner {
+        background: #fdecea;
+        color: #c0392b;
+        font-weight: 700;
+        font-size: 13px;
+        border-radius: 10px;
+        padding: 10px;
+        margin-bottom: 14px;
+    }
+    .open-app { display:block; margin-top:16px; background:#F05829; color:#fff; text-decoration:none; font-weight:800; font-size:16px; padding:14px; border-radius:12px; }
+    .error-msg { color: #64788a; font-size: 14px; padding: 12px 0; }
+    .cta {
+        margin-top: 18px;
+        font-size: 13px;
+        color: #64788a;
+    }
+    .stores {
+        display: flex;
+        gap: 10px;
+        margin-top: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    .stores a {
+        display: inline-block;
+        background: #F05829;
+        color: #fff;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 14px;
+        padding: 12px 18px;
+        border-radius: 12px;
+    }
+    .stores a.secondary { background: #1e2d3d; }
+    .hidden { display: none; }
+    .spinner {
+        margin: 30px auto;
+        width: 28px; height: 28px;
+        border: 3px solid #f0dccf;
+        border-top-color: #F05829;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+    <div class="logo">🦐 Quero Camarão</div>
+    <div class="card">
+        <div id="loading"><div class="spinner"></div></div>
+
+        <div id="content" class="hidden">
+            <div id="soldBanner" class="sold-banner hidden">Este camarão já foi vendido</div>
+            <div id="expiredBanner" class="sold-banner hidden">Esta publicação foi encerrada</div>
+            <div class="emoji">🦐</div>
+            <h1 id="pubTitle">Camarão disponível</h1>
+            <div class="location" id="pubLocation"></div>
+
+            <div class="row hidden" id="rowGrammage">
+                <span class="label">Gramatura</span>
+                <span class="value" id="valGrammage"></span>
+            </div>
+            <div class="row hidden" id="rowKilo">
+                <span class="label">Quantidade</span>
+                <span class="value" id="valKilo"></span>
+            </div>
+            <div class="row hidden" id="rowPonds">
+                <span class="label">Viveiros</span>
+                <span class="value" id="valPonds"></span>
+            </div>
+        </div>
+
+        <div id="notFound" class="hidden">
+            <div class="emoji">🦐</div>
+            <p class="error-msg">Não encontramos esse anúncio. Ele pode ter sido removido.</p>
+        </div>
+
+        <a id="openApp" class="open-app" href="#">Abrir no app</a>
+        <p class="cta">Abra no aplicativo Quero Camarão pra falar com o produtor</p>
+        <div class="stores">
+            <a id="iosStoreLink" href="https://apps.apple.com/app/id6467179239">📱 App Store</a>
+            <a id="androidStoreLink" class="secondary" href="https://play.google.com/store/apps/details?id=com.logicphire.querocamarao">🤖 Google Play</a>
+        </div>
+    </div>
+
+<script>
+(function () {
+    "use strict";
+
+    var FIREBASE_PROJECT_ID = "api-quero-camarao";
+    var pathParts = window.location.pathname.split("/").filter(Boolean);
+    var publicationId = pathParts[pathParts.length - 1] || "";
+
+    function fieldValue(field) {
+        if (!field) return null;
+        if ("stringValue" in field) return field.stringValue;
+        if ("integerValue" in field) return Number(field.integerValue);
+        if ("doubleValue" in field) return field.doubleValue;
+        if ("booleanValue" in field) return field.booleanValue;
+        if ("timestampValue" in field) return new Date(field.timestampValue);
+        if ("arrayValue" in field) return (field.arrayValue.values || []).map(fieldValue);
+        if ("mapValue" in field) return mapDocFields(field.mapValue);
+        return null;
+    }
+
+    function mapDocFields(doc) {
+        var fields = doc.fields || {};
+        var out = {};
+        Object.keys(fields).forEach(function (key) {
+            out[key] = fieldValue(fields[key]);
+        });
+        return out;
+    }
+
+    function show(id) {
+        document.getElementById(id).classList.remove("hidden");
+    }
+    function hide(id) {
+        document.getElementById(id).classList.add("hidden");
+    }
+    function setText(id, text) {
+        document.getElementById(id).textContent = text;
+    }
+
+    function renderPublication(pub) {
+        hide("loading");
+        show("content");
+
+        var shrimps = (pub.shrimps || []).filter(Boolean);
+        var allSold = shrimps.length > 0 && shrimps.every(function (s) { return s.sale; });
+        if (pub.sold || allSold) show("soldBanner");
+        if (pub.expirationDate instanceof Date && pub.expirationDate < new Date()) show("expiredBanner");
+
+        setText("pubLocation", pub.location || "");
+
+        if (shrimps.length > 0) {
+            setText("valGrammage", shrimps.map(function (s) { return s.grammage ? s.grammage + "g" : "-"; }).join(" / "));
+            setText("valKilo", shrimps.map(function (s) { return s.kilo ? s.kilo + "kg" : "-"; }).join(" / "));
+            show("rowGrammage");
+            show("rowKilo");
+        }
+
+        if (pub.ponds !== null && pub.ponds !== undefined && pub.ponds !== "") {
+            setText("valPonds", pub.ponds);
+            show("rowPonds");
+        }
+    }
+
+    function renderNotFound() {
+        hide("loading");
+        show("notFound");
+    }
+
+    // Se o app já estiver instalado, isso deixa o usuário cair direto nele
+    // (funciona parcialmente hoje via esquema customizado, mesmo antes do
+    // Universal/App Link nativo entrar em vigor num novo build).
+    var deepLink = "querocamarao://publicacao/" + encodeURIComponent(publicationId);
+    document.getElementById("openApp").href = deepLink;
+    if (publicationId) {
+        window.location.href = deepLink;
+    }
+
+    if (!publicationId) {
+        renderNotFound();
+        return;
+    }
+
+    var url = "https://firestore.googleapis.com/v1/projects/" + FIREBASE_PROJECT_ID
+        + "/databases/(default)/documents/shrimpPonds/" + encodeURIComponent(publicationId);
+
+    fetch(url)
+        .then(function (res) {
+            if (!res.ok) throw new Error("not found");
+            return res.json();
+        })
+        .then(function (doc) {
+            renderPublication(mapDocFields(doc));
+        })
+        .catch(function () {
+            renderNotFound();
+        });
+})();
+</script>
+</body>
+</html>

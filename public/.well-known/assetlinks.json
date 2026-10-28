@@ -1,0 +1,12 @@
+[
+    {
+        "relation": ["delegate_permission/common.handle_all_urls"],
+        "target": {
+            "namespace": "android_app",
+            "package_name": "com.logicphire.querocamarao",
+            "sha256_cert_fingerprints": [
+                "SUBSTITUIR__rode `eas credentials -p android` no terminal (interativo), escolha o app, veja \"Keystore\" e copie o SHA256 Fingerprint aqui"
+            ]
+        }
+    }
+]

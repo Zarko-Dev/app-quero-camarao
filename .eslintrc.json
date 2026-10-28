@@ -11,7 +11,10 @@
         "react/jsx-filename-extension": [
             "warn",
             {
-                "extensions": [".jsx", ".js"]
+                "extensions": [
+                    ".jsx",
+                    ".js"
+                ]
             }
         ],
         "react/function-component-definition": [
@@ -26,10 +29,23 @@
         "react/state-in-constructor": "off",
         "react/static-property-placement": "off",
         "react/jsx-props-no-spreading": "off",
-        "indent": [2, 4, { "SwitchCase": 1 }],
+        "indent": [
+            2,
+            4,
+            {
+                "SwitchCase": 1
+            }
+        ],
         "react/jsx-indent": 0,
-        "react/jsx-indent-props": [2, 4],
-        "quotes": [2, "double", "avoid-escape"],
+        "react/jsx-indent-props": [
+            2,
+            4
+        ],
+        "quotes": [
+            2,
+            "double",
+            "avoid-escape"
+        ],
         "react/prop-types": "off",
         "no-param-reassign": "off",
         "camelcase": 0,
@@ -48,5 +64,8 @@
         "no-confusing-arrow": "off",
         "no-plusplus": "off",
         "react/jsx-curly-newline": "off"
+    },
+    "globals": {
+        "__DEV__": "readonly"
     }
 }

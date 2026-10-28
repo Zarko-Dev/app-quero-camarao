@@ -28,14 +28,21 @@
             "ios": {
                 "image": "macos-tahoe-26.4-xcode-26.4"
             }
+        },
+        "production-apk": {
+            "extends": "production",
+            "distribution": "internal",
+            "android": {
+                "buildType": "apk"
+            }
         }
     },
     "submit": {
         "production": {
             "android": {
                 "track": "production",
-                "serviceAccountKeyPath": "./google-services.json",
-                "releaseStatus": "completed"
+                "releaseStatus": "inProgress",
+                "rollout": 0.05
             },
             "ios": {
                 "appleId": "logicphire@logicphire.com.br",

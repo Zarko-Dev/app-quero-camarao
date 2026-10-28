@@ -4,7 +4,7 @@
     "slug": "mobile-quero-camarao",
     "owner": "querocamarao",
     "scheme": "querocamarao",
-    "version": "2.0.4",
+    "version": "3.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -17,7 +17,7 @@
       "**/*"
     ],
     "ios": {
-      "buildNumber": "61",
+      "buildNumber": "62",
       "supportsTablet": true,
       "infoPlist": {
         "NSFaceIDUsageDescription": "Permitir que a Quero Camarão use seu Face ID para acessar o aplicativo.",
@@ -26,12 +26,17 @@
         "NSPhotoLibraryUsageDescription": "Permitir que a Quero Camarão acesse sua biblioteca de fotos para selecionar imagens utilizadas no aplicativo.",
         "NSDocumentsFolderUsageDescription": "Permitir que a Quero Camarão salve arquivos no dispositivo.",
         "NSDownloadsFolderUsageDescription": "Permitir que a Quero Camarão salve arquivos no dispositivo.",
+        "LSApplicationQueriesSchemes": ["waze"],
         "ITSAppUsesNonExemptEncryption": false
       },
-      "bundleIdentifier": "com.logicphire.querocamarao"
+      "bundleIdentifier": "com.logicphire.querocamarao",
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "associatedDomains": [
+        "applinks:querocamarao.com.br"
+      ]
     },
     "android": {
-      "versionCode": 51,
+      "versionCode": 52,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFE2CC"
@@ -48,6 +53,23 @@
         "com.google.android.gms.permission.AD_ID"
       ],
       "googleServicesFile": "./google-services.json",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "querocamarao.com.br",
+              "pathPrefix": "/publicacao"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ],
       "runtimeVersion": {
         "policy": "appVersion"
       },
@@ -83,6 +105,12 @@
         "expo-camera",
         {
           "cameraPermission": "Permitir que a Quero Camarão acesse sua camera? Esta ação permite que seja tirado fotos que serão utilizadas no aplicativo, como fotos dos produtos."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Permitir que a Quero Camarão use sua localização para enviá-la no chat, como a localização da fazenda."
         }
       ],
       [
@@ -125,6 +153,8 @@
           },
           "ios": {
             "newArchEnabled": true,
+            "useFrameworks": "dynamic",
+            "googleServicesFile": "./GoogleService-Info.plist",
             "extraBuildSettings": {
               "CLANG_CXX_LANGUAGE_STANDARD": "c++20"
             }
@@ -143,7 +173,8 @@
       ],
       "expo-asset",
       "@sentry/react-native",
-      ["react-native-share", {}]
+      ["react-native-share", {}],
+      "@react-native-firebase/app"
     ],
     "extra": {
       "eas": {
