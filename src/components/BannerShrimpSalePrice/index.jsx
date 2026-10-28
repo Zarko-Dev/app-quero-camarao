@@ -21,7 +21,7 @@ import {
 } from "./styles";
 
 import ShririmpBanner from "../../assets/images/camaraoBanner.png";
-import { getShirimpSaleLastTen } from "../../controllers/ShirimpSale/sale";
+import { getShirimpSaleByCreatedAtLastThirtyDays } from "../../controllers/ShirimpSale/sale";
 import { BannerShirimpSaleSkeleton } from "../Skeleton/BannerShirimpSaleSkeleton";
 import { dataRoutes } from "../../routes/dataRoutes";
 import {
@@ -44,7 +44,8 @@ export const BannerShrimpSalePrice = () => {
     useFocusEffect(
         useCallback(() => {
             const getData = async () => {
-                const resultData = await getShirimpSaleLastTen();
+                const resultData = await getShirimpSaleByCreatedAtLastThirtyDays();
+                console.log("DEBUG BANNER DATA:", JSON.stringify(resultData));
                 let nextData = [];
 
                 if (resultData.length === 0) {
@@ -230,11 +231,25 @@ export const BannerShrimpSalePrice = () => {
                                     $compact={isCompact}
                                 />
                             </IconContainer>
-                            <LabelText numberOfLines={1} $compact={isCompact}>
+                            <LabelText $compact={isCompact}>
                                 {"Camar\u00e3o de:"}
                             </LabelText>
                             <ValueText $compact={isCompact}>
                                 {classifyShrimpSize(currentItem.grammage)}
+                            </ValueText>
+                        </DataRow>
+
+                        <DataRow $withDivider $compact={isCompact}>
+                            <IconContainer $compact={isCompact}>
+                                <MaterialCommunityIcons name="table" size={20} color="#e85d22" />
+                            </IconContainer>
+                            <LabelText $compact={isCompact}>
+                                {"Tabela de 10:"}
+                            </LabelText>
+                            <ValueText $compact={isCompact}>
+                                {currentItem.grammageValue && currentItem.grammageValue !== "-" 
+                                    ? `R$ ${formatPriceValue(currentItem.grammageValue)}`
+                                    : "-"}
                             </ValueText>
                         </DataRow>
 
@@ -248,7 +263,7 @@ export const BannerShrimpSalePrice = () => {
                             <ValueText $compact={isCompact}>
                                 {currentItem.totalSaleValue
                                     ? `R$ ${formatPriceValue(currentItem.totalSaleValue)}`
-                                    : currentItem.grammageValue
+                                    : currentItem.grammageValue && currentItem.grammageValue !== "-"
                                         ? `R$ ${formatPriceValue(
                                               calculateShrimpSalePrice(
                                                   currentItem.grammageValue,

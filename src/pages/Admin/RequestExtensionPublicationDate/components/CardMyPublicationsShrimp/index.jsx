@@ -1,3 +1,4 @@
+import { formatKilo } from "../../../../../utils/formatKilo";
 /* eslint-disable indent */
 /* eslint-disable no-nested-ternary */
 /* eslint-disable operator-linebreak */
@@ -159,7 +160,7 @@ export const CardMyPublicationsShrimp = memo(({ item, index, action }) => {
                 } else {
                     Toast.show({
                         type: "error",
-                        text1: "Nao foi possivel realizar esta solicitacao!",
+                        text1: "Não foi possível realizar esta solicitacao!",
                         text2: "Tente novamente em instantes",
                     });
                 }
@@ -188,7 +189,7 @@ export const CardMyPublicationsShrimp = memo(({ item, index, action }) => {
                 } else {
                     Toast.show({
                         type: "error",
-                        text1: "Nao foi possivel realizar esta solicitacao!",
+                        text1: "Não foi possível realizar esta solicitacao!",
                         text2: "Tente novamente em instantes",
                     });
                 }
@@ -293,14 +294,14 @@ export const CardMyPublicationsShrimp = memo(({ item, index, action }) => {
                     <ContentDataShrimp>
                         <ShrimpInfoColumn>
                             <ContentTextInfo>
-                                <TextInfo>Gram./Kg</TextInfo>
+                                <TextInfo>Gram./kg</TextInfo>
                             </ContentTextInfo>
                             <ContainerShrimp shrimpDimentions={shrimps.length}>
                                 {shrimps.map((shrimp, shrimpIndex) => (
                                     <ContentTextShrimp key={shrimpIndex}>
                                         <ShrimpIcon source={shrimpIcon} />
                                         <TextShrimp shrimpDimentions={shrimps.length}>
-                                            {`${shrimp.grammage}g / ${shrimp.kilo}Kg`}
+                                            {`${shrimp.grammage}g / ${formatKilo(shrimp.kilo)}kg`}
                                         </TextShrimp>
                                     </ContentTextShrimp>
                                 ))}
@@ -375,8 +376,8 @@ export const CardMyPublicationsShrimp = memo(({ item, index, action }) => {
             />
             <DialogComponent
                 visible={showAlertVisible}
-                title="Aprovar extensao de data?"
-                text="Deseja aprovar a extensao de data desta publicacao?"
+                title="Aprovar extensão de data?"
+                text="Deseja aprovar a extensão de data desta publicacao?"
                 textActionButton="Aprovar"
                 hideDialog={() => setShowAlertVisible(false)}
                 actionButton={() => handleApproveExtensionDatePublication()}
@@ -385,7 +386,7 @@ export const CardMyPublicationsShrimp = memo(({ item, index, action }) => {
             <DialogComponent
                 visible={showAlertRepproved}
                 title="Reprovar solicitacao?"
-                text="Deseja reprovar esta solicitacao de extensao de data?"
+                text="Deseja reprovar esta solicitacao de extensão de data?"
                 textActionButton="Reprovar"
                 hideDialog={() => setShowAlertRepproved(false)}
                 actionButton={() => handleRepproveExtensionDatePublication()}

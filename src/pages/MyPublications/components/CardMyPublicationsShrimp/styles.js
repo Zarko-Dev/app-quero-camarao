@@ -96,8 +96,10 @@ export const ContentTextInfo = styled.View`
 `;
 
 export const TextInfo = styled(Text)`
-    height: ${({ theme }) => theme.size.componentSize(20)};
+    min-height: ${({ theme }) => theme.size.componentSize(20)};
+    padding-vertical: 2px;
     font-size: ${({ theme }) => theme.size.fontSize(12)};
+    line-height: ${({ theme }) => theme.size.fontSize(16)};
     font-weight: bold;
 
     color: ${({ theme }) => theme.colors.black};

@@ -79,12 +79,14 @@ export const ContentDataShrimp = styled.View`
 `;
 
 export const GrammageContainer = styled.View`
-    background-color: #FEF5ED;
+    background-color: #fdf5f0;
     border-radius: 12px;
     padding: 10px;
     flex: 1;
     margin-bottom: 0px;
     justify-content: center;
+    border-width: 1px;
+    border-color: #f3dfcf;
 `;
 
 export const ContentTextInfo = styled.View`
@@ -109,6 +111,7 @@ export const ShrimpIcon = styled.Image`
 `;
 
 export const TextShrimp = styled(Text)`
+    flex-shrink: 1;
     font-size: ${({ theme }) => theme.size.fontSize(18)};
     font-weight: bold;
     color: #333;
@@ -123,7 +126,7 @@ export const TextUnitMeasurement = styled(Text)`
 `;
 
 export const ButtonBuy = styled.TouchableOpacity`
-    background-color: #1a1a1a;
+    background-color: #213f56;
     align-self: stretch;
     height: 44px;
     border-radius: 12px;

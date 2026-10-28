@@ -1,5 +1,6 @@
 /* eslint-disable operator-linebreak */
 import { Feather } from "@expo/vector-icons";
+import * as Sentry from "@sentry/react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
@@ -11,7 +12,9 @@ import {
     getCurrentExtendedMonth,
     getCurrentYear,
 } from "../../../utils/convertDate";
+import { convertToMoney } from "../../../utils/convertToMoney";
 import { getViewLogs } from "../../../controllers/Publication/getViewLogs";
+import { getAdminDashboardMetrics } from "../../../controllers/Admin/metrics";
 
 import { CardChart } from "./components/CardChart";
 import SelectComponent from "../../../components/SelectComponent";
@@ -85,6 +88,59 @@ const StatRow = ({ label, value, color }) => (
     </View>
 );
 
+const STATUS_LABEL = {
+    approved: "Aprovado", pending: "Pendente", in_process: "Em análise",
+    rejected: "Recusado", cancelled: "Cancelado", refunded: "Reembolsado",
+    paid: "Pago", failed: "Falhou", expired: "Expirado",
+};
+const STATUS_COLOR = {
+    approved: "#16a34a", paid: "#16a34a", pending: "#f59e0b", in_process: "#0ea5e9",
+    rejected: "#dc2626", failed: "#dc2626", cancelled: "#94a3b8", expired: "#94a3b8",
+    refunded: "#8b5cf6",
+};
+
+const RevenueTile = ({ label, value, color, bg }) => (
+    <View style={{ flex: 1, backgroundColor: bg, borderRadius: 12, paddingVertical: 12,
+        paddingHorizontal: 10, alignItems: "center" }}>
+        <Text style={{ fontSize: 11, color: C_AXIS }}>{label}</Text>
+        <Text numberOfLines={1} adjustsFontSizeToFit
+            style={{ fontSize: 22, fontWeight: "800", color, marginTop: 2 }}>
+            R$ {convertToMoney(value)}
+        </Text>
+    </View>
+);
+
+const StatusBars = ({ breakdown }) => {
+    const entries = Object.entries(breakdown).sort((a, b) => b[1] - a[1]);
+    if (!entries.length) return null;
+    const total = entries.reduce((s, [, n]) => s + n, 0) || 1;
+    const max = entries[0][1] || 1;
+    return (
+        <View style={{ paddingTop: 4 }}>
+            <SectionLabel>Pagamentos por status ({total})</SectionLabel>
+            {entries.map(([status, count]) => {
+                const color = STATUS_COLOR[status] ?? C_TOP;
+                return (
+                    <View key={status} style={{ paddingHorizontal: 8, marginBottom: 10 }}>
+                        <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
+                            <Text style={{ fontSize: 12, color: C_TITLE, fontWeight: "600" }}>
+                                {STATUS_LABEL[status] ?? status}
+                            </Text>
+                            <Text style={{ fontSize: 12, color, fontWeight: "800" }}>
+                                {count} · {Math.round((count / total) * 100)}%
+                            </Text>
+                        </View>
+                        <View style={{ height: 8, borderRadius: 4, backgroundColor: C_RULES }}>
+                            <View style={{ height: 8, borderRadius: 4, backgroundColor: color,
+                                width: `${Math.max((count / max) * 100, 4)}%` }} />
+                        </View>
+                    </View>
+                );
+            })}
+        </View>
+    );
+};
+
 // ─── tela principal ─────────────────────────────────────────────────────────
 export const Charts = ({ navigation }) => {
     const [isLoading,             setIsLoading]             = useState(false);
@@ -98,6 +154,9 @@ export const Charts = ({ navigation }) => {
     const [dataPrevChart,         setDataPrevChart]         = useState([]);
     const [dataHourChart,         setDataHourChart]         = useState([]);
     const [dataTopPubs,           setDataTopPubs]           = useState([]);
+    const [totalRevenue,          setTotalRevenue]          = useState(0);
+    const [monthlyRevenue,        setMonthlyRevenue]        = useState(0);
+    const [statusBreakdown,       setStatusBreakdown]       = useState({});
 
     const getCurrentDateRange = () => new Date().getDate() <= 15 ? "01-15" : "16-31";
 
@@ -267,7 +326,26 @@ export const Charts = ({ navigation }) => {
 
     useFocusEffect(useCallback(() => {
         setIsLoading(true);
-        prepareData()
+
+        const loadMetrics = async () => {
+            try {
+                const result = await executeWithRetry(() =>
+                    withTimeout(getAdminDashboardMetrics(), 30000),
+                );
+
+                if (!result.error) {
+                    setTotalRevenue(result.data?.totalRevenue || 0);
+                    setMonthlyRevenue(result.data?.monthlyRevenue || 0);
+                    setStatusBreakdown(result.data?.statusBreakdown || {});
+                }
+            } catch (e) {
+                if (e?.message !== "ADMIN_CHARTS_TIMEOUT") {
+                    Sentry.captureException(e);
+                }
+            }
+        };
+
+        Promise.all([prepareData(), loadMetrics()])
             .catch((e) => Toast.show({
                 type: "error",
                 text1: "Erro ao carregar gráficos",
@@ -294,6 +372,17 @@ export const Charts = ({ navigation }) => {
     return (
         <Container>
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
+
+                {/* ── Métricas Agregadas ── */}
+                {(totalRevenue > 0 || monthlyRevenue > 0 || Object.keys(statusBreakdown).length > 0) && (
+                    <CardChart title="Métricas do Dashboard">
+                        <View style={{ flexDirection: "row", gap: 10, paddingVertical: 12 }}>
+                            <RevenueTile label="Receita Total" value={totalRevenue} color="#ff932f" bg="#fff7ed" />
+                            <RevenueTile label="Receita Mês" value={monthlyRevenue} color="#2563eb" bg="#eff6ff" />
+                        </View>
+                        <StatusBars breakdown={statusBreakdown} />
+                    </CardChart>
+                )}
 
                 {/* ── 1. Visualizações Diárias (barras agrupadas) ── */}
                 <CardChart title="Visualizações Diárias">

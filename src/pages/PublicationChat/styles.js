@@ -92,7 +92,7 @@ export const Bubble = styled.View`
 
 export const BubbleText = styled(Text)`
     color: ${({ isMine }) => (isMine ? "#1f3d2b" : "#36536e")};
-    font-size: ${({ theme }) => theme.size.fontSize(13)};
+    font-size: ${({ theme }) => theme.size.fontSize(17)};
 `;
 
 export const BubbleTime = styled(Text)`
@@ -157,8 +157,8 @@ export const InputRow = styled.View`
 `;
 
 export const AttachButton = styled.TouchableOpacity`
-    width: 36px;
-    height: 42px;
+    width: 44px;
+    height: 56px;
     align-items: center;
     justify-content: center;
 `;
@@ -166,27 +166,28 @@ export const AttachButton = styled.TouchableOpacity`
 export const ChatInput = styled(TextInput)`
     flex: 1;
     background-color: #f0f5fb;
-    border-radius: 20px;
-    padding: 10px 16px;
-    font-size: ${({ theme }) => theme.size.fontSize(13)};
+    border-radius: 28px;
+    min-height: 56px;
+    padding: 14px 18px;
+    font-size: ${({ theme }) => theme.size.fontSize(18)};
     color: #36536e;
-    max-height: 100px;
+    max-height: 140px;
 `;
 
 export const SendButton = styled.TouchableOpacity`
     background-color: #4BB543;
-    border-radius: 20px;
-    width: 42px;
-    height: 42px;
+    border-radius: 28px;
+    width: 56px;
+    height: 56px;
     align-items: center;
     justify-content: center;
 `;
 
 export const RecordButton = styled.TouchableOpacity`
     background-color: #4BB543;
-    border-radius: 20px;
-    width: 42px;
-    height: 42px;
+    border-radius: 28px;
+    width: 56px;
+    height: 56px;
     align-items: center;
     justify-content: center;
 `;
@@ -295,8 +296,8 @@ export const FullscreenClose = styled.TouchableOpacity`
 `;
 
 export const CameraButton = styled.TouchableOpacity`
-    width: 36px;
-    height: 42px;
+    width: 44px;
+    height: 56px;
     align-items: center;
     justify-content: center;
 `;

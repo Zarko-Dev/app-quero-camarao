@@ -1,10 +1,20 @@
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, View } from "react-native";
+import { ActivityIndicator, FlatList, View, Alert } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { doc, getDoc } from "firebase/firestore";
 
 import { GetUserStorage } from "../../services/Storage/UserStorage";
 import { firestore } from "../../services/Firebase";
+import {
+    doc,
+    getDoc,
+    setDoc,
+    getDocs,
+    query,
+    where,
+    orderBy,
+    collection,
+    onSnapshot,
+} from "../../services/FirebaseAdapter";
 import { models } from "../../services/Firebase/models";
 import { subscribeMyChats } from "../../controllers/Chat";
 import { dataRoutes } from "../../routes/dataRoutes";
@@ -35,6 +45,10 @@ import {
     UnreadBadge,
     UnreadBadgeText,
 } from "./styles";
+import Toast from "react-native-toast-message";
+import { RatingModal } from "../../components/RatingModal";
+import { submitRating } from "../../controllers/Chat/ratings";
+import { ChatActionsSheet } from "./ChatActionsSheet";
 
 const formatTime = (ts) => {
     if (!ts) return "";
@@ -75,6 +89,9 @@ export const MyChats = ({ navigation }) => {
     const [myId, setMyId] = useState(null);
     const [filter, setFilter] = useState("active");
     const [ratingsByUser, setRatingsByUser] = useState({});
+    const [selectedChat, setSelectedChat] = useState(null);
+    const [sheetVisible, setSheetVisible] = useState(false);
+    const [showRatingModal, setShowRatingModal] = useState(false);
     const ratingsFetchedRef = useRef(new Set());
 
     const safeId = myId?.replace(/[@.]/g, "_") ?? "";
@@ -136,6 +153,37 @@ export const MyChats = ({ navigation }) => {
     };
 
     const getOtherUserId = (chat) => (chat.sellerId === myId ? chat.buyerId : chat.sellerId);
+
+    const handleLongPress = (chat) => {
+        setSelectedChat(chat);
+        setSheetVisible(true);
+    };
+
+    const handleRatingSubmit = async (stars, comment) => {
+        if (!selectedChat) return;
+        const otherId = getOtherUserId(selectedChat);
+        const ok = await submitRating({
+            chatId: selectedChat.id,
+            publicationId: selectedChat.publicationId,
+            raterId: myId,
+            ratedId: otherId,
+            stars,
+            comment,
+        });
+        if (ok) {
+            Toast.show({
+                type: "success",
+                text1: "Avaliação enviada com sucesso!",
+            });
+            setShowRatingModal(false);
+        } else {
+            Toast.show({
+                type: "error",
+                text1: "Não foi possível enviar a avaliação.",
+            });
+        }
+    };
+
 
     const handleOpen = (chat) => {
         navigation.navigate(dataRoutes.publicationChat, {
@@ -214,7 +262,7 @@ export const MyChats = ({ navigation }) => {
                         const lastMessageIsMine = item.lastMessageSenderId === myId;
                         const initial = (other.name?.[0] ?? "?").toUpperCase();
                         return (
-                            <ConvItem unread={unread} onPress={() => handleOpen(item)} activeOpacity={0.7}>
+                            <ConvItem unread={unread} onPress={() => handleOpen(item)} onLongPress={() => handleLongPress(item)} activeOpacity={0.7}>
                                 <Avatar>
                                     <AvatarText>{initial}</AvatarText>
                                 </Avatar>
@@ -262,6 +310,87 @@ export const MyChats = ({ navigation }) => {
                     }}
                 />
             )}
+            <ChatActionsSheet
+                visible={sheetVisible}
+                onClose={() => setSheetVisible(false)}
+                actions={[
+                    ...(selectedChat?.status !== "closed"
+                        ? [
+                            {
+                                key: "mute",
+                                label: selectedChat?.mutedBy?.includes(safeId) ? "Remover silenciamento" : "Silenciar",
+                                icon: selectedChat?.mutedBy?.includes(safeId) ? "bell" : "bell-off",
+                                onPress: async () => {
+                                    if (!selectedChat) return;
+                                    try {
+                                        const isMuted = selectedChat.mutedBy?.includes(safeId);
+                                        const newMutedBy = isMuted
+                                            ? (selectedChat.mutedBy || []).filter((id) => id !== safeId)
+                                            : [...(selectedChat.mutedBy || []), safeId];
+
+                                        await setDoc(
+                                            doc(firestore, models.chats, selectedChat.id),
+                                            { mutedBy: newMutedBy },
+                                            { merge: true },
+                                        );
+                                    } catch (e) {
+                                        Alert.alert("Erro", "Não foi possível alterar o silenciamento.");
+                                    }
+                                },
+                            },
+                        ]
+                        : []),
+                    {
+                        key: "rate",
+                        label: "Avaliar usuário",
+                        icon: "star",
+                        onPress: () => {
+                            setShowRatingModal(true);
+                        },
+                    },
+                    ...(selectedChat?.status !== "closed"
+                        ? [
+                            {
+                                key: "close",
+                                label: "Encerrar",
+                                icon: "x-circle",
+                                destructive: true,
+                                onPress: () => {
+                                    Alert.alert(
+                                        "Encerrar conversa?",
+                                        "Ninguém poderá enviar novas mensagens. Confirmar?",
+                                        [
+                                            { text: "Cancelar", style: "cancel" },
+                                            {
+                                                text: "Encerrar",
+                                                style: "destructive",
+                                                onPress: async () => {
+                                                    try {
+                                                        await setDoc(
+                                                            doc(firestore, models.chats, selectedChat.id),
+                                                            { status: "closed" },
+                                                            { merge: true },
+                                                        );
+                                                    } catch (error) {
+                                                        Alert.alert("Erro", "Não foi possível encerrar a conversa.");
+                                                    }
+                                                },
+                                            },
+                                        ],
+                                    );
+                                },
+                            },
+                        ]
+                        : []),
+                ]}
+            />
+            <RatingModal
+                visible={showRatingModal}
+                onClose={() => setShowRatingModal(false)}
+                targetName={selectedChat ? getOtherUser(selectedChat).name : "Usuário"}
+                onSubmit={handleRatingSubmit}
+            />
         </Container>
     );
 };
+

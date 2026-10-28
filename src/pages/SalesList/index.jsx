@@ -33,7 +33,7 @@ import {
     FlyerLabelText,
     FlyerValueText,
 } from "./styles";
-import { getShirimpSaleByCreatedAtLastThirtyDays } from "../../controllers/ShirimpSale/sale";
+import { getAllShirimpSales } from "../../controllers/ShirimpSale/sale";
 import shrimpIcon from "../../assets/images/shrimpIcon.png";
 import ShririmpBanner from "../../assets/images/camaraoBanner.png";
 import { buildEncarteLink } from "../../utils/encarteProdutor";
@@ -86,7 +86,7 @@ export const SalesList = ({ navigation }) => {
     const getData = async () => {
         try {
             setLoading(true);
-            const resultData = await getShirimpSaleByCreatedAtLastThirtyDays();
+            const resultData = await getAllShirimpSales();
             
             // Achatando os dados para que cada gramatura seja um card individual (encarte)
             const flatSales = [];
@@ -277,6 +277,18 @@ export const SalesList = ({ navigation }) => {
                                         </FlyerLabelText>
                                         <FlyerValueText>
                                             {classifyShrimpSize(item.grammage)}
+                                        </FlyerValueText>
+                                    </FlyerDataRow>
+
+                                    <FlyerDataRow $withDivider>
+                                        <FlyerIconContainer>
+                                            <MaterialCommunityIcons name="table" size={16} color="#e85d22" />
+                                        </FlyerIconContainer>
+                                        <FlyerLabelText>Tabela de 10:</FlyerLabelText>
+                                        <FlyerValueText>
+                                            {item.grammageValue && item.grammageValue !== "-" 
+                                                ? `R$ ${formatPriceValue(item.grammageValue)}`
+                                                : "-"}
                                         </FlyerValueText>
                                     </FlyerDataRow>
 

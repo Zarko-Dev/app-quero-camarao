@@ -23,6 +23,7 @@ export const ModalShrimpImages = ({
     actionBuy,
     actionChat,
     showChatButton = false,
+    showWhatsappButton = false,
     dataShrimp,
     showActionButton = true,
     isLoading,
@@ -73,25 +74,29 @@ export const ModalShrimpImages = ({
                         onSnapToItem={handleChangeShrinpInfo}
                     />
                     {showActionButton && (
-                        <View style={{ flexDirection: "row", width: "100%", paddingHorizontal: 16, marginBottom: 8 }}>
-                            <ButtonBuyShrimp
-                                onPress={actionBuy}
-                                style={{
-                                    flex: 1,
-                                    paddingHorizontal: 16,
-                                    justifyContent: "center",
-                                    alignItems: "center",
-                                    gap: 8,
-                                    marginBottom: 0,
-                                }}
-                            >
-                                {!isLoading ? (
-                                    <FontAwesome name="whatsapp" size={26} color="white" />
-                                ) : (
-                                    <ActivityIndicator animating size={20} color="white" />
-                                )}
-                                <TextButton>Falar com o produtor</TextButton>
-                            </ButtonBuyShrimp>
+                        <View style={{ flexDirection: "row", width: "100%", paddingHorizontal: 16, marginBottom: 16, marginTop: 12 }}>
+                            {showWhatsappButton && (
+                                <ButtonBuyShrimp
+                                    onPress={actionBuy}
+                                    style={{
+                                        flex: 1,
+                                        paddingHorizontal: 16,
+                                        justifyContent: "center",
+                                        alignItems: "center",
+                                        gap: 8,
+                                        margin: 0,
+                                        borderRadius: 12,
+                                        height: 44,
+                                    }}
+                                >
+                                    {!isLoading ? (
+                                        <FontAwesome name="whatsapp" size={26} color="white" />
+                                    ) : (
+                                        <ActivityIndicator animating size={20} color="white" />
+                                    )}
+                                    <TextButton style={{ margin: 0 }}>Falar com o produtor</TextButton>
+                                </ButtonBuyShrimp>
+                            )}
                             {showChatButton && (
                                 <TouchableOpacity
                                     onPress={actionChat}
@@ -99,19 +104,19 @@ export const ModalShrimpImages = ({
                                     style={{
                                         flex: 1,
                                         height: 44,
-                                        backgroundColor: "#36536e",
-                                        borderRadius: 8,
+                                        backgroundColor: "#25D366",
+                                        borderRadius: 12,
                                         paddingHorizontal: 10,
-                                        marginLeft: 8,
+                                        marginLeft: showWhatsappButton ? 10 : 0,
                                         flexDirection: "row",
                                         alignItems: "center",
                                         justifyContent: "center",
                                         gap: 6,
                                     }}
                                 >
-                                    <Feather name="message-circle" size={16} color="#fff" />
+                                    <Feather name="message-circle" size={18} color="#fff" />
                                     <Text style={{ color: "#fff", fontSize: 13, fontWeight: "700" }}>
-                                        CHAT
+                                        Falar com o produtor
                                     </Text>
                                 </TouchableOpacity>
                             )}

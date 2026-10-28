@@ -55,6 +55,7 @@ export const Profile = ({ navigation }) => {
             colors={["#ff8f2a", "#ff5e1f"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
+            style={{ borderBottomLeftRadius: 30, borderBottomRightRadius: 30 }}
         >
             <Container>
                 <HeaderMark>
@@ -68,6 +69,7 @@ export const Profile = ({ navigation }) => {
                 <UserName numberOfLines={2}>{dataUserStore?.name}</UserName>
                 <UserEmail numberOfLines={1}>{dataUserStore?.email}</UserEmail>
                 <IdentityBadge>
+                    <Feather name="check-circle" size={14} color="#fff" style={{ marginRight: 4 }} />
                     <IdentityBadgeText>Conta conectada</IdentityBadgeText>
                 </IdentityBadge>
             </Container>
@@ -77,6 +79,7 @@ export const Profile = ({ navigation }) => {
             colors={["#ff8f2a", "#ff5e1f"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
+            style={{ borderBottomLeftRadius: 30, borderBottomRightRadius: 30 }}
         >
             <Container>
                 <HeaderMark>

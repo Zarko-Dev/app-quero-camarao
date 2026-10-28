@@ -29,3 +29,16 @@ export const TextButton = styled(Text)`
 
     color: ${({ theme }) => theme.colors.white};
 `;
+
+export const EmptyContainer = styled.View`
+    flex: 1;
+    padding: 48px 24px;
+    justify-content: center;
+    align-items: center;
+`;
+
+export const EmptyText = styled(Text)`
+    font-size: ${({ theme }) => theme.size.fontSize(15)};
+    color: #64788a;
+    text-align: center;
+`;

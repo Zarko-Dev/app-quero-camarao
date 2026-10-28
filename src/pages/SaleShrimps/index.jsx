@@ -1,7 +1,7 @@
 /* eslint-disable operator-linebreak */
 /* eslint-disable function-paren-newline */
 /* eslint-disable indent */
-import { FlatList } from "react-native";
+import { FlatList, Keyboard } from "react-native";
 import { useEffect, useState } from "react";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import Toast from "react-native-toast-message";
@@ -288,6 +288,9 @@ export const SaleShrimps = ({ route, navigation }) => {
                         dataSale.length ||
                     restSales === dataSale.length
                 ) {
+                    // Fecha o teclado antes de abrir a modal: o teclado é um
+                    // overlay do SO e cobre o Dialog do Paper se ficar aberto.
+                    Keyboard.dismiss();
                     setShowAlertVisible(true);
                 } else {
                     await handleSaveShirimpSale();
@@ -491,7 +494,7 @@ export const SaleShrimps = ({ route, navigation }) => {
 
             <DialogComponent
                 visible={showAlertVisible}
-                title="Sua publicação será finalizda!"
+                title="Sua publicação será finalizada!"
                 text="Ao vender todos os viveiros da sua publicação, a mesma será dada como finalizada! Deseja continuar sua venda?"
                 textActionButton="SIM"
                 hideDialog={() => setShowAlertVisible(false)}

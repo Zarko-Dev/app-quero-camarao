@@ -7,6 +7,7 @@ import { TouchableOpacity, View, Modal } from "react-native";
 import Toast from "react-native-toast-message";
 
 import { ShrimpCamera } from "../Camera/ShrimpCamera";
+import { sanitizeDecimalInput } from "../../utils/sanitizeDecimalInput";
 import { sanitizeGrammageInput } from "../../utils/sanitizeGrammageInput";
 
 import {
@@ -84,7 +85,7 @@ export const CardRegisterShrimp = ({
                         </TouchableOpacity>
                     </ContentImage>
                     <ContentInput>
-                        <TitleInput>Gramatura do camarao</TitleInput>
+                        <TitleInput>Gramatura do camarão</TitleInput>
                         <InputStyle
                             label="Ex.: 50g"
                             keyboardType="decimal-pad"
@@ -110,7 +111,7 @@ export const CardRegisterShrimp = ({
                         />
                     </ContentInput>
                     <ContentInput>
-                        <TitleInput>Quilo do camarao</TitleInput>
+                        <TitleInput>Quilo do camarão</TitleInput>
                         <InputStyle
                             label="Ex.: 1000kg"
                             keyboardType="decimal-pad"

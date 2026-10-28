@@ -180,7 +180,7 @@ export const DrawPrizeHistory = () => {
                 if (resultDrawPrizes.length === 0) {
                     Toast.show({
                         type: "info",
-                        text1: "Nao ha sorteios a serem listados!",
+                        text1: "Não há sorteios a serem listados!",
                     });
                 }
 

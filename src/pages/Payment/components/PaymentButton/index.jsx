@@ -43,7 +43,7 @@ import {
 } from "../../../../controllers/User/update";
 import { PaymentWalletActions } from "../ResumeCrad/actions";
 
-import { Container, TitleButton } from "./styles";
+import { Container, TitleButton, GradientBackground } from "./styles";
 import { BoxShadowIos } from "../../../../styles/IosShadow";
 import { SelectPaymentFormModal } from "../SelectPaymentoFormModal";
 
@@ -247,7 +247,6 @@ export const PaymentButton = ({ loading }) => {
             ) {
                 await decreaseAmountCupom(
                     dataValidOrder.dataCupomPayment?.cuponCode,
-                    dataValidOrder.dataCupomPayment?.cupomDurationValue,
                 );
             } else if (
                 dataValidOrder.dataCupomPayment?.cuponCode &&
@@ -255,7 +254,6 @@ export const PaymentButton = ({ loading }) => {
             ) {
                 await incrementAmountCupom(
                     dataValidOrder.dataCupomPayment?.cuponCode,
-                    dataValidOrder.dataCupomPayment?.cupomUseCount,
                 );
             }
 
@@ -350,7 +348,7 @@ export const PaymentButton = ({ loading }) => {
                         } else {
                             Toast.show({
                                 type: "error",
-                                text1: "Não foi possível savar sua publicação na ordem de pagamento",
+                                text1: "Não foi possível salvar sua publicação na ordem de pagamento",
                                 text2: "Tente novamente em instantes!",
                             });
                             deleteOrder(idOrder);
@@ -403,7 +401,7 @@ export const PaymentButton = ({ loading }) => {
                             } else {
                                 Toast.show({
                                     type: "error",
-                                    text1: "Não foi possível savar sua publicação na ordem de pagamento",
+                                    text1: "Não foi possível salvar sua publicação na ordem de pagamento",
                                     text2: "Tente novamente em instantes!",
                                 });
                                 deleteOrder(idOrder);
@@ -489,7 +487,7 @@ export const PaymentButton = ({ loading }) => {
                 } else {
                     Toast.show({
                         type: "error",
-                        text1: "Não foi possível savar sua publicação na ordem de pagamento",
+                        text1: "Não foi possível salvar sua publicação na ordem de pagamento",
                         text2: "Tente novamente em instantes!",
                     });
                     deleteOrder(idOrder);
@@ -518,11 +516,13 @@ export const PaymentButton = ({ loading }) => {
             style={BoxShadowIos}
             onPress={!isLoading && !loading ? showModalPayment : () => {}}
         >
-            {!isLoading && !loading ? (
-                <TitleButton>Realizar Pagamento</TitleButton>
-            ) : (
-                <ActivityIndicator animating color="white" />
-            )}
+            <GradientBackground>
+                {!isLoading && !loading ? (
+                    <TitleButton>Realizar Pagamento</TitleButton>
+                ) : (
+                    <ActivityIndicator animating color="white" />
+                )}
+            </GradientBackground>
             <DialogComponent
                 visible={showAlertPaymentDevelop}
                 title="Ambiente de TESTE!"

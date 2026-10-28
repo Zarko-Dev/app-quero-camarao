@@ -190,14 +190,13 @@ export const ModalHandle = styled.View`
 `;
 
 export const ModalIconBadge = styled.View`
-    width: 64px;
-    height: 64px;
-    border-radius: 32px;
-    background-color: ${({ theme }) => theme.colors.secondary};
+    width: 60px;
+    height: 60px;
+    border-radius: 30px;
+    background-color: ${props => props.success ? '#27ae60' : props.theme.colors.lightGray};
     justify-content: center;
     align-items: center;
-    align-self: center;
-    margin-bottom: 12px;
+    margin-bottom: 16px;
 `;
 
 export const TitleModal = styled.Text`

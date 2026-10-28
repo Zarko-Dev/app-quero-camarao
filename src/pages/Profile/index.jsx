@@ -2,15 +2,19 @@
 
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useState } from "react";
-import { Modal, View } from "react-native";
+import { Modal, View, Alert } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useDispatch, useSelector } from "react-redux";
 import { ActivityIndicator } from "react-native-paper";
+import * as ImagePicker from "expo-image-picker";
+import Toast from "react-native-toast-message";
 
 import {
     ClearUserStorage,
     GetUserStorage,
+    SetUserStorage,
 } from "../../services/Storage/UserStorage";
+import { saveImage } from "../../controllers/User/saveImage";
 import { dataRoutes } from "../../routes/dataRoutes";
 import { LoginActions } from "../Login/actions";
 
@@ -102,6 +106,63 @@ export const Profile = ({ navigation }) => {
         navigation.navigate(dataRoutes.deleteUser);
     };
 
+    const handlePickImage = async () => {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== "granted") {
+            Toast.show({
+                type: "error",
+                text1: "Permissão Negada",
+                text2: "Permita o acesso à galeria para escolher uma foto.",
+            });
+            return;
+        }
+
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.8,
+        });
+
+        if (!result.canceled && result.assets && result.assets.length > 0) {
+            const uri = result.assets[0].uri;
+            await uploadProfileImage(uri);
+        }
+    };
+
+    const uploadProfileImage = async (imageUri) => {
+        const dataUser = await GetUserStorage();
+        const resultUploadImage = await saveImage(dataUser.email, imageUri);
+
+        if (!resultUploadImage.error) {
+            await SetUserStorage({ ...dataUser, userImage: imageUri });
+            handleRefresh();
+            Toast.show({
+                type: "success",
+                text1: "Sucesso",
+                text2: "Foto de perfil atualizada!",
+            });
+        } else {
+            Toast.show({
+                type: "error",
+                text1: "Erro",
+                text2: "Não foi possível salvar a imagem",
+            });
+        }
+    };
+
+    const handleAvatarPress = () => {
+        Alert.alert(
+            "Foto de Perfil",
+            "Escolha como deseja adicionar sua foto:",
+            [
+                { text: "Tirar Foto", onPress: () => setShowCameraModal(true) },
+                { text: "Escolher da Galeria", onPress: handlePickImage },
+                { text: "Cancelar", style: "cancel" }
+            ]
+        );
+    };
+
     return (
         <>
             <Container>
@@ -115,7 +176,7 @@ export const Profile = ({ navigation }) => {
                     </ContentUserType>
                     <ButtonCamera
                         activeOpacity={0.8}
-                        onPress={() => setShowCameraModal(true)}
+                        onPress={handleAvatarPress}
                     >
                         <UserImage
                             source={{

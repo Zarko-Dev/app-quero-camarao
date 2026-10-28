@@ -27,6 +27,9 @@ import {
     TitleResume,
     TitleValue,
     TitleValueTotal,
+    TitleContainer,
+    TitleIcon,
+    TitleCupom,
 } from "./styles";
 import { PaymentWalletActions } from "./actions";
 import { getDefaultCouponCode } from "../../../../controllers/Cupons/defaultCoupon";
@@ -314,14 +317,18 @@ export const ResumeCrad = ({ loading, actionLoading }) => {
 
     return (
         <Container>
-            <TitleResume>Resumo</TitleResume>
+            <TitleContainer>
+                <TitleIcon>
+                    <Feather name="calendar" size={16} color="#e85d22" />
+                </TitleIcon>
+                <TitleResume>Resumo</TitleResume>
+            </TitleContainer>
             <Divider />
             <ContainerInfo>
                 <ContentInfo>
                     <TitleInfo>Subtotal</TitleInfo>
                     <TitleValue>
-                        R${" "}
-                        {convertToMoney(dataPaymentCopy.resumeConfig.subtotal)}
+                        R$ {convertToMoney(dataPaymentCopy.resumeConfig.subtotal)}
                     </TitleValue>
                 </ContentInfo>
                 {!walletValue && !loading && (
@@ -330,22 +337,22 @@ export const ResumeCrad = ({ loading, actionLoading }) => {
                         <ButtonCupom onPress={handleOpenCupomModal}>
                             {dataCupomCode ? (
                                 <>
-                                    <TitleValue>{dataCupomCode}</TitleValue>
+                                    <TitleCupom>{dataCupomCode}</TitleCupom>
                                     <Feather
                                         name="chevron-right"
-                                        size={15}
-                                        color="black"
+                                        size={14}
+                                        color="#e85d22"
                                     />
                                 </>
                             ) : (
                                 <>
-                                    <TitleValue>
-                                        Digite o código aqui{" "}
-                                    </TitleValue>
+                                    <TitleCupom>
+                                        Adicionar cupom
+                                    </TitleCupom>
                                     <Feather
                                         name="chevron-right"
-                                        size={15}
-                                        color="black"
+                                        size={14}
+                                        color="#e85d22"
                                     />
                                 </>
                             )}
@@ -355,8 +362,7 @@ export const ResumeCrad = ({ loading, actionLoading }) => {
                 <ContentInfo>
                     <TitleInfo>Desconto</TitleInfo>
                     <TitleValue>
-                        - R${" "}
-                        {convertToMoney(dataPaymentCopy.resumeConfig.discounts)}
+                        - R$ {convertToMoney(dataPaymentCopy.resumeConfig.discounts)}
                     </TitleValue>
                 </ContentInfo>
                 <ContentInfo>

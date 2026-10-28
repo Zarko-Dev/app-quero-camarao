@@ -2,9 +2,16 @@ import { Text } from "react-native-paper";
 import styled from "styled-components/native";
 import SelectComponent from "../../components/SelectComponent";
 
-export const Container = styled.ScrollView`
+export const Container = styled.ScrollView.attrs({
+    // Evita o iOS recalcular inset sob o header/abas ao focar campo ou abrir o teclado.
+    contentInsetAdjustmentBehavior: "never",
+    automaticallyAdjustContentInsets: false,
+    keyboardShouldPersistTaps: "handled",
+    automaticallyAdjustKeyboardInsets: true,
+})`
     flex: 1;
     padding: 0 5px;
+    overflow: hidden;
 `;
 
 export const Content = styled.View`

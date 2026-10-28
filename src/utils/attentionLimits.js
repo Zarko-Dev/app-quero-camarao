@@ -5,7 +5,7 @@ const WINDOW_MAX = 5;
 const normalize = (timestamps) =>
     (Array.isArray(timestamps) ? timestamps.filter((t) => typeof t === "number") : []);
 
-const canSendAttention = (timestamps, nowMs) => {
+export const canSendAttention = (timestamps, nowMs) => {
     const list = normalize(timestamps);
     if (list.length === 0) return { allowed: true };
 
@@ -18,9 +18,7 @@ const canSendAttention = (timestamps, nowMs) => {
     return { allowed: true };
 };
 
-const appendAttention = (timestamps, nowMs) =>
+export const appendAttention = (timestamps, nowMs) =>
     [...normalize(timestamps), nowMs]
         .sort((a, b) => a - b)
         .slice(-WINDOW_MAX);
-
-module.exports = { canSendAttention, appendAttention };

@@ -79,7 +79,7 @@ export const ShrimpCardShared = ({ shrimpCardRef }) => {
                                         <TextUnitMeasurement
                                             shrimpDimentions={dataShrimp.shrimps.length}
                                         >
-                                            Kg
+                                            kg
                                         </TextUnitMeasurement>
                                     </TextShrimp>
                                 </ContentTextShrimp>

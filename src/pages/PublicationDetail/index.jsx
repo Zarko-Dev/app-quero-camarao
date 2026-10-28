@@ -1,10 +1,25 @@
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, FlatList } from "react-native";
+import { useDispatch, useSelector } from "react-redux";
 import { Feather } from "@expo/vector-icons";
-import { doc, getDoc } from "firebase/firestore";
 import Toast from "react-native-toast-message";
 
+import { dataRoutes } from "../../routes/dataRoutes";
+import { GetUserStorage } from "../../services/Storage/UserStorage";
+import { LoginActions } from "../Login/actions";
+import { setPendingPublication } from "../../utils/pendingPublication";
 import { firestore } from "../../services/Firebase";
+import {
+    doc,
+    getDoc,
+    setDoc,
+    getDocs,
+    query,
+    where,
+    orderBy,
+    collection,
+    onSnapshot,
+} from "../../services/FirebaseAdapter";
 import { models } from "../../services/Firebase/models";
 import { getLatestShrimpPonds } from "../../controllers/ShrimpPonds/getAll";
 import { CardPublicationShrimp } from "../../components/CardPublicationShrimp";
@@ -29,6 +44,24 @@ export const PublicationDetail = ({ route, navigation }) => {
     const [otherPublications, setOtherPublications] = useState([]);
 
     const sharedRef = useRef(null);
+    const dispatch = useDispatch();
+    const { isAuthenticated } = useSelector((state) => state.login);
+
+    // Deep link com app fechado: Home não montou, então o redux ainda não sabe da sessão salva.
+    useEffect(() => {
+        if (isAuthenticated) return;
+        GetUserStorage()
+            .then((user) => {
+                if (user) dispatch({ type: LoginActions.ISAUTHENTICATED_ACTION });
+            })
+            .catch(() => {});
+    }, [isAuthenticated, dispatch]);
+
+    // Deep link com app fechado: Anúncio é a raiz da pilha, não há para onde voltar.
+    const goBackOrHome = () => {
+        if (navigation.canGoBack()) navigation.goBack();
+        else navigation.navigate(isAuthenticated ? dataRoutes.navigation : dataRoutes.login);
+    };
 
     useEffect(() => {
         if (!publicationId) {
@@ -65,6 +98,8 @@ export const PublicationDetail = ({ route, navigation }) => {
             type: "info",
             text1: "Entre na sua conta para continuar",
         });
+        setPendingPublication(publicationId);
+        navigation.navigate(dataRoutes.login);
     };
 
     const renderContent = () => {
@@ -124,7 +159,16 @@ export const PublicationDetail = ({ route, navigation }) => {
     return (
         <Container>
             <ScreenHeader>
-                <Feather name="arrow-left" size={22} color="#36536e" onPress={() => navigation.goBack()} />
+                <Feather
+                    name="arrow-left"
+                    size={26}
+                    color="#36536e"
+                    onPress={goBackOrHome}
+                    suppressHighlighting
+                    hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
+                    accessibilityRole="button"
+                    accessibilityLabel="Voltar"
+                />
                 <HeaderTitle>Anúncio</HeaderTitle>
             </ScreenHeader>
             {renderContent()}

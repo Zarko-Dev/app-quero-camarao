@@ -11,7 +11,13 @@ import { GetUserStorage } from "../../services/Storage/UserStorage";
 import { CardAds } from "./components/CardAds";
 import { CardAdsSkeleton } from "../../components/Skeleton/cardAdsSkeleton";
 
-import { ButtonNewAds, Container, TextButton } from "./styles";
+import {
+    ButtonNewAds,
+    Container,
+    EmptyContainer,
+    EmptyText,
+    TextButton,
+} from "./styles";
 
 export const MyAds = ({ navigation }) => {
     const [isLoading, setIsLoading] = useState(false);
@@ -69,6 +75,15 @@ export const MyAds = ({ navigation }) => {
                             />
                         )}
                         keyExtractor={(item) => item.id}
+                        contentContainerStyle={{ flexGrow: 1 }}
+                        ListEmptyComponent={(
+                            <EmptyContainer>
+                                <EmptyText>
+                                    Você ainda não tem publicidades. Toque em
+                                    &quot;Solicitar publicidade&quot; para criar a primeira.
+                                </EmptyText>
+                            </EmptyContainer>
+                        )}
                     />
                     <ButtonNewAds onPress={handleRedirectRegisterAds}>
                         <TextButton>Solicitar publicidade</TextButton>

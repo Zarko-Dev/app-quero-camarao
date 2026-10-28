@@ -101,3 +101,17 @@ export const ButtonGenerateXlsxFile = styled.TouchableOpacity`
     margin-top: ${({ theme }) => theme.size.dimentionsSize(0.5)};
     margin-left: ${({ theme }) => theme.size.dimentionsSize(1)};
 `;
+
+export const ButtonGeneratePdfFile = styled.TouchableOpacity`
+    background-color: #d32f2f;
+    width: ${({ theme }) => theme.size.componentSize(30)};
+    height: ${({ theme }) => theme.size.componentSize(30)};
+
+    justify-content: center;
+    align-items: center;
+
+    border-radius: 10px;
+
+    margin-top: ${({ theme }) => theme.size.dimentionsSize(0.5)};
+    margin-left: ${({ theme }) => theme.size.dimentionsSize(1)};
+`;

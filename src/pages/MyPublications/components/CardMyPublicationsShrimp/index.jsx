@@ -1,3 +1,4 @@
+import { formatKilo } from "../../../../utils/formatKilo";
 /* eslint-disable react/jsx-wrap-multilines */
 /* eslint-disable indent */
 /* eslint-disable no-nested-ternary */
@@ -443,7 +444,7 @@ export const CardMyPublicationsShrimp = memo(({ item, action }) => {
                                         shrimpDimentions={shrimps.length}
                                         sale={shrimp?.sale}
                                     >
-                                        {`${shrimp.grammage}g / ${shrimp.kilo}Kg`}
+                                        {`${shrimp.grammage}g / ${formatKilo(shrimp.kilo)}kg`}
                                     </TextShrimp>
                                 </ContentTextShrimp>
                             ))}

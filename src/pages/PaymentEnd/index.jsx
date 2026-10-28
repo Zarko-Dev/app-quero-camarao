@@ -232,7 +232,6 @@ export const PaymentEnd = ({ route, navigation }) => {
                         ) {
                             await decreaseAmountCupom(
                                 dataOrder.dataCupomPayment?.cuponCode,
-                                dataOrder.dataCupomPayment?.cupomDurationValue,
                             );
                         } else if (
                             dataOrder.dataCupomPayment?.cuponCode &&
@@ -240,7 +239,6 @@ export const PaymentEnd = ({ route, navigation }) => {
                         ) {
                             await incrementAmountCupom(
                                 dataOrder.dataCupomPayment?.cuponCode,
-                                dataOrder.dataCupomPayment?.cupomUseCount,
                             );
                         }
 

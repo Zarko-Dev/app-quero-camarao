@@ -36,6 +36,9 @@ export const Header = styled.View`
 `;
 
 export const ContentTextOrderNumber = styled.View`
+    flex: 1;
+    min-width: 0px;
+    margin-right: 8px;
     justify-content: flex-start;
     align-items: center;
     flex-direction: row;
@@ -47,12 +50,15 @@ export const TitleOrderNumber = styled(Text)`
 `;
 
 export const TextOrderNumber = styled(Text)`
+    flex-shrink: 1;
     font-size: ${({ theme }) => theme.size.fontSize(13)};
     font-weight: bold;
     color: #555;
 `;
 
 export const ContentAlertIndicator = styled.View`
+    flex-shrink: 0;
+    max-width: 62%;
     justify-content: flex-start;
     align-items: center;
     flex-direction: row;
@@ -64,6 +70,7 @@ export const ContentAlertIndicator = styled.View`
 `;
 
 export const TextAlert = styled(Text)`
+    flex-shrink: 1;
     font-size: ${({ theme }) => theme.size.fontSize(13)};
     font-weight: bold;
 

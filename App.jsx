@@ -2,10 +2,9 @@ import "react-native-gesture-handler";
 import "./src/polyfills/cryptoRandom";
 
 import { useEffect } from "react";
-import { Platform, Vibration } from "react-native";
 import { pt, registerTranslation } from "react-native-paper-dates";
 import { ThemeProvider } from "styled-components/native";
-import { PaperProvider, MD3LightTheme } from "react-native-paper";
+import { PaperProvider } from "react-native-paper";
 import { Provider as ProviderRedux } from "react-redux";
 import Toast from "react-native-toast-message";
 import { useFonts } from "expo-font";
@@ -15,19 +14,18 @@ import {
     Comfortaa_600SemiBold,
     Comfortaa_700Bold,
 } from "@expo-google-fonts/comfortaa";
-import { requestTrackingPermissionsAsync } from "expo-tracking-transparency";
-import * as Notifications from "expo-notifications";
 import * as Sentry from "@sentry/react-native";
-import * as SystemUI from "expo-system-ui";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { ignoreLogs } from "./src/utils/ignoreLogs";
+import { initializeObservability } from "./src/observability/init";
+import { requestStartupPermissions } from "./src/permissions/startup";
+import { installNotificationHandlers } from "./src/notifications/setup";
+import { paperTheme } from "./src/styles/paperTheme";
 
 import { theme } from "./src/styles/Theme";
 import { store } from "./src/store";
-import { Routes, navigationRef } from "./src/routes";
-import { dataRoutes } from "./src/routes/dataRoutes";
-import { getActiveChatId } from "./src/utils/activeChatTracker";
+import { Routes } from "./src/routes";
 import { AlertNewVersion } from "./src/components/AlertNewVersion";
 import { BadgeSync } from "./src/components/BadgeSync";
 import { ContentStatusBar } from "./src/components/ContentStatusBar";
@@ -35,96 +33,9 @@ import { KeyboardSafeContent } from "./src/components/KeyboardSafeContent";
 import { useInternetConnection } from "./src/utils/hooks/useInternetConnection";
 import { useSystemUI } from "./src/utils/hooks/useSystemUI";
 import { InternetInfo } from "./src/components/InternetInfo";
-import { GetUserStorage } from "./src/services/Storage/UserStorage";
-import {
-    configureDiscordAlertReporter,
-    reportDiscordError,
-    createDiscordAlertContext,
-} from "./src/services/DiscordAlerts/context";
-import { DISCORD_ERROR_WEBHOOK_URL } from "./src/services/DiscordAlerts/config";
-
-Notifications.setNotificationHandler({
-    handleNotification: async (notification) => {
-        const chatId = notification.request?.content?.data?.chatId;
-        const isActiveChat = Boolean(chatId) && chatId === getActiveChatId();
-
-        return {
-            shouldShowBanner: !isActiveChat,
-            shouldShowList: !isActiveChat,
-            shouldPlaySound: !isActiveChat,
-            shouldSetBadge: !isActiveChat,
-        };
-    },
-});
 
 ignoreLogs();
-
-Sentry.init({
-    dsn: process.env.SENTRY_DNS,
-    debug: !process.env.STATUS_PROJECT === "production",
-    tracesSampleRate: process.env.STATUS_PROJECT === "production" ? 0.5 : 1.0,
-    _experiments: {
-        profilesSampleRate: 1.0,
-    },
-});
-
-const discordAlertContext = createDiscordAlertContext({
-    store,
-    getUserStorage: GetUserStorage,
-    navigationRef,
-});
-
-configureDiscordAlertReporter({
-    webhookUrl: DISCORD_ERROR_WEBHOOK_URL,
-    getRoute: discordAlertContext.getRoute,
-    getUser: discordAlertContext.getUser,
-});
-
-const installGlobalErrorHandler = () => {
-    try {
-        const errorUtils = global?.ErrorUtils;
-        if (!errorUtils?.setGlobalHandler) return;
-
-        const previousHandler = errorUtils.getGlobalHandler?.();
-        errorUtils.setGlobalHandler((error, isFatal) => {
-            try {
-                Sentry.captureException(error);
-                void reportDiscordError({
-                    source: "app.global",
-                    error,
-                    feature: "runtime",
-                    action: isFatal ? "fatal" : "non-fatal",
-                });
-            } catch (reportingError) {
-                // Error reporting cannot interrupt React Native's native error flow.
-            }
-
-            try {
-                previousHandler?.(error, isFatal);
-            } catch (previousHandlerError) {
-                // A faulty prior handler must not prevent the runtime's default handling.
-            }
-        });
-    } catch (errorUtilsError) {
-        // ErrorUtils varies by runtime, so alert setup is intentionally best-effort.
-    }
-};
-
-installGlobalErrorHandler();
-
-const paperTheme = {
-    ...MD3LightTheme,
-    colors: {
-        ...MD3LightTheme.colors,
-        primary: theme?.colors?.primary ?? MD3LightTheme.colors.primary,
-        background: theme?.colors?.background ?? MD3LightTheme.colors.background,
-        surface: theme?.colors?.white ?? MD3LightTheme.colors.surface,
-        onSurface: theme?.colors?.text ?? MD3LightTheme.colors.onSurface,
-        error: theme?.colors?.red ?? MD3LightTheme.colors.error,
-    },
-};
-
-const shouldRequestStartupPermissions = !__DEV__;
+initializeObservability();
 
 const App = () => {
     registerTranslation("pt", pt);
@@ -133,125 +44,10 @@ const App = () => {
     useSystemUI();
 
     useEffect(() => {
-        (async () => {
-            if (Platform.OS === "android") {
-                await SystemUI.setBackgroundColorAsync("#F05829");
-            }
-
-            if (!shouldRequestStartupPermissions) {
-                return;
-            }
-
-            if (Platform.OS === "ios") {
-                const { status } = await requestTrackingPermissionsAsync();
-
-                if (status !== "granted") {
-                    Toast.show({
-                        type: "error",
-                        text1: "Permissão de rasterio de dados é necessário!",
-                        text2: "Precisamos de acesso ao seu email e informações de pagamento somente dentro do aplicativo!",
-                    });
-                }
-
-                await Notifications.requestPermissionsAsync({
-                    ios: {
-                        allowAlert: true,
-                        allowBadge: true,
-                        allowSound: true,
-                    },
-                });
-            } else {
-                await Notifications.requestPermissionsAsync({
-                    android: {
-                        allowAlert: true,
-                        allowBadge: true,
-                        allowSound: true,
-                    },
-                });
-            }
-        })();
+        requestStartupPermissions();
     }, []);
 
-    useEffect(() => {
-        let handledNotificationId = null;
-
-        const navigateToChatFromNotificationData = (data, notificationId) => {
-            const isChatType = data?.type === "chat" || data?.type === "attention";
-            const isKnownType = isChatType || data?.type === "publication" || data?.type === "registerMyAds";
-            if (!data || !isKnownType) return;
-            if (isChatType && !data.publicationId) return;
-            if (notificationId && notificationId === handledNotificationId) return;
-            if (notificationId) handledNotificationId = notificationId;
-
-            let attempts = 0;
-            const tryNavigate = () => {
-                if (navigationRef.isReady()) {
-                    if (isChatType) {
-                        navigationRef.navigate(dataRoutes.publicationChat, {
-                            publication: { id: data.publicationId },
-                            sellerId: data.sellerId,
-                            buyerId: data.buyerId,
-                            sellerName: data.sellerName,
-                            buyerName: data.buyerName,
-                            chatId: data.chatId,
-                        });
-                    } else if (data.type === "publication") {
-                        if (data.publicationId) {
-                            navigationRef.navigate(dataRoutes.publicationDetail, {
-                                publicationId: data.publicationId,
-                            });
-                        } else {
-                            navigationRef.navigate(dataRoutes.home);
-                        }
-                    } else if (data.type === "registerMyAds") {
-                        navigationRef.navigate(dataRoutes.registerMyAds);
-                    }
-                    return;
-                }
-                attempts += 1;
-                if (attempts < 10) {
-                    setTimeout(tryNavigate, 300);
-                } else {
-                    Sentry.captureMessage("Notification navigation timed out waiting for navigationRef", {
-                        extra: {
-                            type: data.type,
-                            chatId: data.chatId,
-                            publicationId: data.publicationId,
-                        },
-                    });
-                }
-            };
-            tryNavigate();
-        };
-
-        Notifications.getLastNotificationResponseAsync().then((response) => {
-            navigateToChatFromNotificationData(
-                response?.notification?.request?.content?.data,
-                response?.notification?.request?.identifier,
-            );
-            Notifications.clearLastNotificationResponseAsync();
-        });
-
-        const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
-            navigateToChatFromNotificationData(
-                response?.notification?.request?.content?.data,
-                response?.notification?.request?.identifier,
-            );
-        });
-
-        const receivedSubscription = Notifications.addNotificationReceivedListener(
-            (notification) => {
-                if (notification.request?.content?.data?.type === "attention") {
-                    Vibration.vibrate([0, 250, 100, 250]);
-                }
-            },
-        );
-
-        return () => {
-            subscription.remove();
-            receivedSubscription.remove();
-        };
-    }, []);
+    useEffect(() => installNotificationHandlers(), []);
 
     const [fontLoad] = useFonts({
         Comfortaa_300Light,

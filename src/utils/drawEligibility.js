@@ -28,7 +28,7 @@ const buildEligibleParticipants = ({
         const key = getParticipantKey(participant);
 
         if (!key) {
-            logger(`[draw] excluded missing_identifier`);
+            logger("[draw] excluded missing_identifier");
             return false;
         }
 
@@ -103,7 +103,40 @@ const partitionIndicatedAndRandom = ({
     };
 };
 
+// Pure core of executeDrawPrizeLive: who wins now, who stays indicated, what gets persisted.
+const planDrawExecution = ({
+    draw,
+    users = [],
+    prizeName,
+    countPrizes = 1,
+    logger,
+    pickRandomFn,
+}) => {
+    const previousWinners = draw?.winners ?? [];
+    const eligibleParticipants = buildEligibleParticipants({
+        participants: users,
+        previousWinners,
+        logger,
+    });
+    const { winners, remainingIndicatedIds } = partitionIndicatedAndRandom({
+        indicatedIds: draw?.indicatedParticipants ?? [],
+        previousWinners,
+        participants: users,
+        eligibleParticipants,
+        countPrizes,
+        ...(pickRandomFn ? { pickRandomFn } : {}),
+    });
+    const newWinners = winners.map((item) => ({ ...item, drawName: prizeName }));
+
+    return {
+        newWinners,
+        allWinners: [...previousWinners, ...newWinners],
+        remainingIndicatedIds,
+    };
+};
+
 module.exports = {
+    planDrawExecution,
     buildEligibleParticipants,
     pickRandomUniqueWinners,
     partitionIndicatedAndRandom,

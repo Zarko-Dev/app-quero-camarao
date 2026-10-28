@@ -1,24 +1,29 @@
 import { Text } from "react-native-paper";
 import styled from "styled-components/native";
+import { LinearGradient } from "expo-linear-gradient";
 
 export const Container = styled.TouchableOpacity`
-    height: ${({ theme }) => theme.size.componentSize(45)};
+    width: 100%;
+    margin-top: 15px;
+    border-radius: 12px;
+    overflow: hidden;
+    elevation: 3;
+    margin-bottom: 30px;
+`;
 
+export const GradientBackground = styled(LinearGradient).attrs({
+    colors: ["#ff7f3f", "#e85d22"],
+    start: { x: 0, y: 0 },
+    end: { x: 1, y: 1 },
+})`
+    width: 100%;
+    height: 56px;
     justify-content: center;
     align-items: center;
-
-    margin-top: ${({ theme }) => theme.size.dimentionsSize(1)};
-
-    border-radius: 4px;
-
-    background-color: ${({ theme }) => theme.colors.black};
-
-    elevation: 3;
 `;
 
 export const TitleButton = styled(Text)`
-    font-size: ${({ theme }) => theme.size.fontSize(16)};
+    font-size: 18px;
     font-weight: bold;
-
-    color: ${({ theme }) => theme.colors.white};
+    color: #ffffff;
 `;

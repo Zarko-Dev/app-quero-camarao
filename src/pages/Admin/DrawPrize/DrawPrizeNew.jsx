@@ -3,7 +3,12 @@ import { useCallback, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import SelectComponent from "../../../components/SelectComponent";
 import { firestore } from "../../../services/Firebase";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import {
+    collection,
+    query,
+    where,
+    getDocs,
+} from "../../../services/FirebaseAdapter";
 import { FontAwesome, Feather } from "@expo/vector-icons";
 import { Alert } from "react-native";
 import { saveDrawPrize } from "../../../controllers/DrawPrizes/create";
@@ -83,7 +88,9 @@ export const DrawPrizeNew = ({ navigation }) => {
         const cpfsPool = selectedRule.cpfs.filter(u => {
             if (!u.cpf) return false
             if (!u.blocked) return true
-            return new Date() > u.blockedUntil.toDate()
+            if (!u.blockedUntil) return true
+            const until = u.blockedUntil?.toDate ? u.blockedUntil.toDate() : new Date(u.blockedUntil)
+            return new Date() > until
         })
 
         if (cpfsPool.length === 0) {
@@ -101,19 +108,23 @@ export const DrawPrizeNew = ({ navigation }) => {
 
         try {
             const cpfList = winners.map(w => w.cpf)
+            if (cpfList.length === 0) return
 
-            const q = query(
-                collection(firestore, "users"),
-                where("cpf", "in", cpfList)
-            )
-            const snapshot = await getDocs(q)
+            let usersData = []
+            for (let i = 0; i < cpfList.length; i += 30) {
+                const chunk = cpfList.slice(i, i + 30)
+                const q = query(
+                    collection(firestore, "users"),
+                    where("cpf", "in", chunk)
+                )
+                const snapshot = await getDocs(q)
+                usersData = usersData.concat(snapshot.docs.map(doc => doc.data()))
+            }
 
-            if (snapshot.empty) {
+            if (usersData.length === 0) {
                 Alert.alert("Erro", "Não foi possível encontrar os dados dos ganhadores.")
                 return
             }
-
-            const usersData = snapshot.docs.map(doc => doc.data())
 
             const winnersFullData = winners
                 .map(w => usersData.find(u => u.cpf === w.cpf))
@@ -136,7 +147,6 @@ export const DrawPrizeNew = ({ navigation }) => {
 
             await blockWinners(selectedRule.firestoreId, updatedCpfs)
 
-            // âœ… salva no histórico automaticamente
             await saveDrawPrize(selectedRule.store, winnersFullData, null)
 
             navigation.navigate(dataRoutes.admin.drawPrizeWinnerResult, {
@@ -167,6 +177,10 @@ export const DrawPrizeNew = ({ navigation }) => {
                 .slice(0, 30)
 
             const cpfList = availableCpfs.map(u => u.cpf)
+            if (cpfList.length === 0) {
+                setParticipantsWithNames([])
+                return
+            }
 
             const q = query(
                 collection(firestore, "users"),

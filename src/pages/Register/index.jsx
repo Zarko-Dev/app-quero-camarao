@@ -1,5 +1,6 @@
 ﻿/* eslint-disable operator-linebreak */
 import { useEffect, useState } from "react";
+import { setKeyboardAvoidingEnabled } from "../../components/KeyboardSafeContent";
 import { ActivityIndicator, Checkbox } from "react-native-paper";
 import Toast from "react-native-toast-message";
 import { useDispatch, useSelector } from "react-redux";
@@ -38,6 +39,11 @@ import {
 import { getCity, getState } from "../../utils/getLocation";
 
 export const Register = ({ navigation, route }) => {
+    useEffect(() => {
+        setKeyboardAvoidingEnabled(false);
+        return () => setKeyboardAvoidingEnabled(true);
+    }, []);
+
     const dispatch = useDispatch();
     const { invitationCode } = useSelector((state) => state.invitation);
 
@@ -141,7 +147,7 @@ export const Register = ({ navigation, route }) => {
         const result = await RegisterUser({
             userType,
             name,
-            email: email.toLowerCase(),
+            email: email.trim().toLowerCase(),
             phone,
             dateBirth,
             password,
@@ -323,9 +329,8 @@ export const Register = ({ navigation, route }) => {
                                    
                                 />
                                 <Input
-                                    label="Número"
+                                    label="Número (ou S/N)"
                                     icon="hash"
-                                    keyboardType="numeric"
                                     onChange={setNumber}
                                     value={number}
                                 />
@@ -483,9 +488,8 @@ export const Register = ({ navigation, route }) => {
                                     value={street}
                                 />
                                 <Input
-                                    label="Número"
+                                    label="Número (ou S/N)"
                                     icon="hash"
-                                    keyboardType="numeric"
                                     onChange={setNumber}
                                     value={number}
                                 />

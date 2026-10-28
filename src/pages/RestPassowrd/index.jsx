@@ -46,8 +46,8 @@ export const RestPassowrd = ({ navigation, route }) => {
     const handleResetByEmail = async () => {
         setIsLoading(true);
 
-        if (email !== "" && isValidEmail(email)) {
-            const result = await resetUserPassword(email.toLowerCase());
+        if (email.trim() !== "" && isValidEmail(email.trim())) {
+            const result = await resetUserPassword(email.trim().toLowerCase());
 
             setShowAlertVisible(true);
 

@@ -53,7 +53,7 @@ export const RequestExtensionPublicationDate = () => {
 
                         Toast.show({
                             type: "error",
-                            text1: "Usuario nao encontrado!",
+                            text1: "Usuário não encontrado!",
                             text2: "Reinicie o aplicativo e tente novamente!",
                         });
                     }

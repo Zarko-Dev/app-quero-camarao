@@ -1,4 +1,6 @@
-import { NavigationContainer, createNavigationContainerRef } from "@react-navigation/native";
+import { TouchableOpacity } from "react-native";
+import { Feather } from "@expo/vector-icons";
+import { NavigationContainer, createNavigationContainerRef, useNavigation } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import { NavigationMenu } from "./navigationMenu";
@@ -51,15 +53,39 @@ const { Navigator, Screen } = createNativeStackNavigator();
 
 export const navigationRef = createNavigationContainerRef();
 
-export const Routes = () => (
-    <NavigationContainer ref={navigationRef} linking={linking}>
-        <Navigator
-            initialRouteName={dataRoutes.splash}
-            screenOptions={{
-                headerTintColor: "white",
-                headerBackTitle: "",
-            }}
-        >
+export const Routes = () => {
+    return (
+        <NavigationContainer ref={navigationRef} linking={linking}>
+            <Navigator
+                initialRouteName={dataRoutes.splash}
+                screenOptions={({ navigation }) => ({
+                    headerTintColor: "white",
+                    headerBackTitle: "",
+                    headerBackTitleVisible: false,
+                    headerLeft: (props) => {
+                        if (props.canGoBack) {
+                            return (
+                                <TouchableOpacity
+                                    onPress={() => navigation.goBack()}
+                                    style={{
+                                        width: 36,
+                                        height: 36,
+                                        borderRadius: 18,
+                                        backgroundColor: '#fff',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        marginLeft: 0,
+                                        marginRight: 10,
+                                    }}
+                                >
+                                    <Feather name="chevron-left" size={24} color="#e85d22" />
+                                </TouchableOpacity>
+                            );
+                        }
+                        return null;
+                    },
+                })}
+            >
             <Screen
                 name={dataRoutes.splash}
                 component={SplashScreen}
@@ -80,6 +106,8 @@ export const Routes = () => (
                 component={Register}
                 options={{
                     title: "Cadastro",
+                    headerTransparent: false,
+                    headerShadowVisible: false,
                     headerStyle: { backgroundColor: theme.colors.primary },
                     headerTitleStyle: { color: theme.colors.white },
                 }}
@@ -369,4 +397,5 @@ export const Routes = () => (
             />
         </Navigator>
     </NavigationContainer>
-);
+    );
+};

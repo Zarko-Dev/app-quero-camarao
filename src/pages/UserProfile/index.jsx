@@ -1,9 +1,19 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { doc, getDoc } from "firebase/firestore";
 
 import { firestore } from "../../services/Firebase";
+import {
+    doc,
+    getDoc,
+    setDoc,
+    getDocs,
+    query,
+    where,
+    orderBy,
+    collection,
+    onSnapshot,
+} from "../../services/FirebaseAdapter";
 import { models } from "../../services/Firebase/models";
 import { getUserPublications } from "../../controllers/Publication/getUserPublications";
 import { formatRatingLabel } from "../../utils/ratingLabel";

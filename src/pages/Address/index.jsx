@@ -9,6 +9,7 @@ import {
     SetUserStorage,
 } from "../../services/Storage/UserStorage";
 import { getCity, getLocationByCep, getState } from "../../utils/getLocation";
+import { getUserAddressValue } from "../../utils/userAddress";
 import { addressValidationForm } from "./validationForm";
 
 import { Input } from "../../components/Input";
@@ -34,18 +35,18 @@ export const Address = ({ route }) => {
     const [isLoadingCep, setIsLoadingCep] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
-    const [cep, setCep] = useState(dataUser?.zipCode || "");
-    const [state, setState] = useState(dataUser?.address?.state || undefined);
+    const [cep, setCep] = useState(getUserAddressValue(dataUser, "cep"));
+    const [state, setState] = useState(getUserAddressValue(dataUser, "state") || undefined);
     const [states, setStates] = useState([]);
-    const [city, setCity] = useState(dataUser?.address?.city || undefined);
+    const [city, setCity] = useState(getUserAddressValue(dataUser, "city") || undefined);
     const [cities, setCities] = useState([]);
     const [neighborhood, setNeighborhood] = useState(
-        dataUser?.neighborhood || "",
+        getUserAddressValue(dataUser, "neighborhood"),
     );
-    const [street, setStreet] = useState(dataUser?.street || "");
-    const [number, setNumber] = useState(dataUser?.number || "");
+    const [street, setStreet] = useState(getUserAddressValue(dataUser, "street"));
+    const [number, setNumber] = useState(getUserAddressValue(dataUser, "number"));
     const [complement, setComplement] = useState(
-        dataUser?.complement || "",
+        getUserAddressValue(dataUser, "complement"),
     );
 
     useEffect(() => {
@@ -57,7 +58,7 @@ export const Address = ({ route }) => {
     const handleGetAddressWithCep = async (dataCep) => {
         setCep(dataCep);
 
-        if (cep !== "" && dataCep.length === 9) {
+        if (dataCep !== "" && dataCep.length === 9) {
             setIsLoadingCep(true);
             const dataLocation = await getLocationByCep(dataCep);
 
@@ -121,6 +122,12 @@ export const Address = ({ route }) => {
                 navigation.goBack();
 
                 Toast.show({ type: "success", text1: "Endereço atualizado!" });
+            } else {
+                Toast.show({
+                    type: "error",
+                    text1: "Não foi possível atualizar o endereço.",
+                    text2: "Verifique sua conexão e tente novamente.",
+                });
             }
 
             setIsLoading(false);

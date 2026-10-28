@@ -38,7 +38,8 @@ const SelectComponent = ({
     clear,
     style,
     disabled = false,
-    selectedValues = []
+    selectedValues = [],
+    icon
 }) => {
     const [dataOptions, setDataOptions] = useState();
     const [text, setText] = useState(title);

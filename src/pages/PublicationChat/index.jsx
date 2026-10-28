@@ -1,16 +1,26 @@
 import { useEffect, useRef, useState } from "react";
-import { ActionSheetIOS, ActivityIndicator, Alert, FlatList, Image, KeyboardAvoidingView, Linking, Modal, PanResponder, Platform, TouchableOpacity, View } from "react-native";
+import { ActionSheetIOS, ActivityIndicator, Alert, FlatList, Image, KeyboardAvoidingView, Linking, Modal, PanResponder, Platform, Share, TouchableOpacity, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Audio } from "expo-av";
 import * as Clipboard from "expo-clipboard";
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
-import { doc, getDoc } from "firebase/firestore";
 import { GestureHandlerRootView, Swipeable } from "react-native-gesture-handler";
 import Toast from "react-native-toast-message";
 
 import { GetUserStorage } from "../../services/Storage/UserStorage";
 import { firestore } from "../../services/Firebase";
+import {
+    doc,
+    getDoc,
+    setDoc,
+    getDocs,
+    query,
+    where,
+    orderBy,
+    collection,
+    onSnapshot,
+} from "../../services/FirebaseAdapter";
 import { models } from "../../services/Firebase/models";
 import { sendChatMessage, subscribeToChat, markChatAsSeen, markAutoMessageSent, chatDocId, getMyChats } from "../../controllers/Chat";
 import { sendAttention, setAttentionEnabled } from "../../controllers/Chat/attention";
@@ -30,7 +40,13 @@ import { buildMessagePreview } from "../../utils/messagePreview";
 import { formatFileSize } from "../../utils/formatFileSize";
 import { formatRatingLabel } from "../../utils/ratingLabel";
 import { buildPublicationSummary } from "../../utils/publicationSummary";
+import { shouldSendInitialChatMessage } from "../../utils/initialChatMessage";
 import { setActiveChatId } from "../../utils/activeChatTracker";
+import { buildChatTranscript } from "../../utils/chatTranscript";
+import { buildLocationPayload } from "../../utils/locationMessage";
+import { openInGoogleMaps, openInWaze } from "../../utils/locationMapsUrl";
+import { MapPickerModal } from "../../components/MapPickerModal";
+import { getChatLocation } from "../../controllers/Chat/getLocation";
 import { dataRoutes } from "../../routes/dataRoutes";
 import {
     AttachButton,
@@ -121,6 +137,7 @@ export const PublicationChat = ({ route, navigation }) => {
     const { publication, sellerId, sellerName, buyerName: paramBuyerName, chatId, buyerId: paramBuyerId, initialMessage, autoSend } = route.params;
 
     const [messages, setMessages] = useState([]);
+    const [mapTarget, setMapTarget] = useState(null);
     const [text, setText] = useState("");
     const [resolvedSellerName, setResolvedSellerName] = useState(sellerName || "");
     const [resolvedBuyerName, setResolvedBuyerName] = useState(paramBuyerName || "");
@@ -158,7 +175,6 @@ export const PublicationChat = ({ route, navigation }) => {
     const soundRef = useRef(null);
     const previewSoundRef = useRef(null);
     const autoSentRef = useRef(false);
-    const messagesReadyRef = useRef(false);
     const deliveredMarkedRef = useRef(new Set());
     const lastSeenSignatureRef = useRef("");
     const swipeableRefs = useRef({});
@@ -173,6 +189,12 @@ export const PublicationChat = ({ route, navigation }) => {
     const isChatClosed = chatMeta?.status === "closed";
 
     useEffect(() => {
+        autoSentRef.current = false;
+        deliveredMarkedRef.current = new Set();
+        lastSeenSignatureRef.current = "";
+    }, [resolvedChatId]);
+
+    useEffect(() => {
         GetUserStorage().then((user) => {
             if (user) {
                 setMyId(user.email ?? user.uid);
@@ -184,29 +206,59 @@ export const PublicationChat = ({ route, navigation }) => {
     }, []);
 
     useEffect(() => {
-        if (!autoSend || !initialMessage || !myId || !buyerId || autoSentRef.current) return;
-        if (!messagesReadyRef.current) return; // aguarda subscription carregar
-        if (messages.length > 0) return; // chat já tem mensagens — não dispara de novo
-        // trava persistente: já enviada 1x p/ este cliente+anúncio
-        if (chatMeta?.autoMessageSentAt) return;
-        const effectiveSellerName = resolvedSellerName || sellerName || "";
-        if (sellerId && !effectiveSellerName) return; // aguarda resolvedSellerName
-        autoSentRef.current = true;
-        sendChatMessage({
-            publicationId: publication.id,
-            sellerId,
-            buyerId,
-            senderId: myId,
-            text: initialMessage,
-            sellerName: effectiveSellerName,
-            buyerName,
-            publicationTitle: publication?.publicationTitle || publication?.location || "",
-            publicationLocation: publicationData?.location || "",
-            publicationSummary,
-        }).then((ok) => {
-            if (ok && resolvedChatId) markAutoMessageSent(resolvedChatId);
+        let cancelled = false;
+
+        const sendInitialMessage = async () => {
+            if (!autoSend || !initialMessage || !myId || !buyerId || autoSentRef.current) return;
+            const effectiveSellerName = resolvedSellerName || sellerName || "";
+            if (sellerId && !effectiveSellerName) {
+                console.log("[Chat] auto-send waiting for seller name");
+                return;
+            }
+
+            const currentChatId = resolvedChatId || (publication.id && buyerId
+                ? chatDocId(publication.id, buyerId)
+                : null);
+            if (!currentChatId) return;
+
+            const chatSnapshot = await getDoc(doc(firestore, models.chats, currentChatId));
+            if (cancelled || !shouldSendInitialChatMessage({
+                autoSend,
+                initialMessage,
+                myId,
+                buyerId,
+                chatExists: chatSnapshot.exists(),
+                chatHasMessages: Boolean(chatSnapshot.data()?.lastMessage),
+                autoSent: autoSentRef.current,
+            })) return;
+
+            autoSentRef.current = true;
+            const ok = await sendChatMessage({
+                publicationId: publication.id,
+                sellerId,
+                buyerId,
+                senderId: myId,
+                text: initialMessage,
+                sellerName: effectiveSellerName,
+                buyerName,
+                publicationTitle: publication?.publicationTitle || publication?.location || "",
+                publicationLocation: publicationData?.location || "",
+                publicationSummary,
+            });
+            if (ok && !cancelled) markAutoMessageSent(currentChatId);
+            // Falha silenciosa: sendChatMessage já loga/Sentry; sem toast repetido.
+            if (!ok) autoSentRef.current = false;
+        };
+
+        sendInitialMessage().catch((error) => {
+            autoSentRef.current = false;
+            if (__DEV__) console.log("[Chat] automatic first message error", error?.code);
         });
-    }, [myId, resolvedSellerName, messages, chatMeta]);
+
+        return () => {
+            cancelled = true;
+        };
+    }, [autoSend, initialMessage, myId, buyerId, resolvedChatId, sellerId, resolvedSellerName, sellerName, buyerName, publication.id, publicationData?.location, publicationSummary]);
 
     useEffect(() => {
         if (!sellerId) return;
@@ -274,7 +326,6 @@ export const PublicationChat = ({ route, navigation }) => {
             publicationId: publication.id,
             buyerId,
             onMessages: (msgs) => {
-                messagesReadyRef.current = true;
                 setMessages([...msgs].reverse());
                 if (myId && resolvedChatId) {
                     // Evita write de lastSeenAt em eventos metadata-only (includeMetadataChanges
@@ -316,7 +367,7 @@ export const PublicationChat = ({ route, navigation }) => {
         const reply = replyingTo;
         setText("");
         setReplyingTo(null);
-        await sendChatMessage({
+        const sent = await sendChatMessage({
             publicationId: publication.id,
             sellerId,
             buyerId,
@@ -335,6 +386,16 @@ export const PublicationChat = ({ route, navigation }) => {
                 },
             } : {}),
         });
+
+        if (!sent) {
+            // Devolve o texto à barra para o usuário não perder o que digitou.
+            setText((current) => current || trimmed);
+            Toast.show({
+                type: "error",
+                text1: "Não foi possível enviar a mensagem.",
+                text2: "Tente novamente.",
+            });
+        }
     };
 
     const pickAndSendImage = async (source) => {
@@ -372,7 +433,7 @@ export const PublicationChat = ({ route, navigation }) => {
             setUploadingLabel("");
 
             if (!error && url) {
-                await sendChatMessage({
+                const sent = await sendChatMessage({
                     publicationId: publication.id,
                     sellerId,
                     buyerId: currentBuyerId,
@@ -384,6 +445,14 @@ export const PublicationChat = ({ route, navigation }) => {
                     publicationLocation: publicationData?.location || "",
                     publicationSummary,
                 });
+
+                if (!sent) {
+                    Toast.show({
+                        type: "error",
+                        text1: "Não foi possível enviar a foto.",
+                        text2: "Tente novamente.",
+                    });
+                }
             }
         } catch (e) {
             console.error("[Chat] pickAndSendImage error", e);
@@ -431,7 +500,7 @@ export const PublicationChat = ({ route, navigation }) => {
             setUploadingLabel("");
 
             if (!error && url) {
-                await sendChatMessage({
+                const sent = await sendChatMessage({
                     publicationId: publication.id,
                     sellerId,
                     buyerId: currentBuyerId,
@@ -445,6 +514,14 @@ export const PublicationChat = ({ route, navigation }) => {
                     publicationLocation: publicationData?.location || "",
                     publicationSummary,
                 });
+
+                if (!sent) {
+                    Toast.show({
+                        type: "error",
+                        text1: "Não foi possível enviar o documento.",
+                        text2: "Tente novamente.",
+                    });
+                }
             }
         } catch (e) {
             console.error("[Chat] sendDocument error", e);
@@ -493,15 +570,23 @@ export const PublicationChat = ({ route, navigation }) => {
             publicationId: publication.id,
             sellerId,
             buyerId,
+            sellerName: resolvedSellerName || sellerName || "",
+            buyerName,
         });
         if (result.ok) {
             setAttentionCooldown(true);
             attentionTimeoutRef.current = setTimeout(() => setAttentionCooldown(false), 30_000);
             Toast.show({ type: "success", text1: "Chamada de atenção enviada" });
+        } else if (result.reason === "not_found") {
+            Toast.show({ type: "info", text1: "Envie uma mensagem primeiro" });
         } else if (result.reason === "cooldown" || result.reason === "window") {
             Toast.show({ type: "info", text1: "Aguarde para chamar atenção novamente" });
         } else if (result.reason === "disabled") {
             Toast.show({ type: "info", text1: "Este usuário desativou chamadas de atenção" });
+        } else if (result.reason === "notification_unavailable") {
+            Toast.show({ type: "error", text1: "O destinatário não tem notificações ativas" });
+        } else if (result.reason === "notification_failed") {
+            Toast.show({ type: "error", text1: "A chamada não pôde ser entregue" });
         } else if (result.reason === "error") {
             Toast.show({ type: "error", text1: "Não foi possível concluir" });
         }
@@ -575,14 +660,59 @@ export const PublicationChat = ({ route, navigation }) => {
         }
     };
 
+    const sendLocation = async () => {
+        const location = buildLocationPayload(await getChatLocation());
+        if (!location || !myId || !buyerId) {
+            Toast.show({ type: "error", text1: "Não foi possível obter sua localização." });
+            return;
+        }
+        const sent = await sendChatMessage({
+            publicationId: publication.id,
+            sellerId,
+            buyerId,
+            senderId: myId,
+            text: "",
+            location,
+            sellerName: resolvedSellerName || "",
+            buyerName,
+            publicationTitle: publication?.publicationTitle || publication?.location || "",
+            publicationLocation: publicationData?.location || "",
+            publicationSummary,
+        });
+        if (!sent) Toast.show({ type: "error", text1: "Não foi possível enviar a localização." });
+    };
+
+    // Arrow wrappers: Linking.openURL usa `this` internamente, não pode ser passado solto.
+    const linking = {
+        openURL: (url) => Linking.openURL(url),
+        canOpenURL: (url) => Linking.canOpenURL(url),
+        platform: Platform.OS,
+    };
+
+    const shareConversation = async () => {
+        const message = buildChatTranscript(messages, {
+            myId,
+            myName: "Você",
+            otherName: myId === sellerId ? (resolvedBuyerName || buyerName || "Comprador") : (resolvedSellerName || "Produtor"),
+        });
+        if (!message) {
+            Toast.show({ type: "info", text1: "Nada para compartilhar" });
+            return;
+        }
+        try {
+            await Share.share({ message });
+        } catch (_) { /* usuário fechou o share */ }
+    };
+
     const openAttachSheet = () => {
         if (Platform.OS === "ios") {
             ActionSheetIOS.showActionSheetWithOptions(
-                { options: ["Cancelar", "Galeria", "Câmera", "Documento"], cancelButtonIndex: 0 },
+                { options: ["Cancelar", "Galeria", "Câmera", "Documento", "Localização"], cancelButtonIndex: 0 },
                 (idx) => {
                     if (idx === 1) pickAndSendImage("gallery");
                     if (idx === 2) pickAndSendImage("camera");
                     if (idx === 3) sendDocument();
+                    if (idx === 4) sendLocation();
                 },
             );
         } else {
@@ -590,7 +720,13 @@ export const PublicationChat = ({ route, navigation }) => {
             Alert.alert("Enviar", null, [
                 { text: "Galeria", onPress: () => pickAndSendImage("gallery") },
                 { text: "Câmera", onPress: () => pickAndSendImage("camera") },
-                { text: "Documento", onPress: () => sendDocument() },
+                {
+                    text: "Mais…",
+                    onPress: () => Alert.alert("Enviar", null, [
+                        { text: "Documento", onPress: () => sendDocument() },
+                        { text: "Localização", onPress: () => sendLocation() },
+                    ], { cancelable: true }),
+                },
             ], { cancelable: true });
         }
     };
@@ -1062,6 +1198,35 @@ export const PublicationChat = ({ route, navigation }) => {
             );
         }
 
+        if (item.location) {
+            return (
+                <Bubble isMine={isMine}>
+                    {renderForwardTag(item)}
+                    {renderQuote(item)}
+                    <TouchableOpacity onPress={() => setMapTarget(item.location)} onLongPress={openActions} activeOpacity={0.7}>
+                        <BubbleText isMine={isMine}>📍 Localização</BubbleText>
+                        <BubbleText isMine={isMine} style={{ fontSize: 12, textDecorationLine: "underline" }}>
+                            Toque para abrir no mapa
+                        </BubbleText>
+                    </TouchableOpacity>
+                    {renderFooter(item, isMine)}
+                </Bubble>
+            );
+        }
+
+        if (item.videoUrl) {
+            return (
+                <Bubble isMine={isMine}>
+                    {renderForwardTag(item)}
+                    {renderQuote(item)}
+                    <TouchableOpacity onPress={() => {}} onLongPress={openActions} activeOpacity={0.7}>
+                        <Feather name="video" size={24} color={isMine ? "#2e5e38" : "#f55b1f"} />
+                    </TouchableOpacity>
+                    {renderFooter(item, isMine)}
+                </Bubble>
+            );
+        }
+
         return (
             <Bubble isMine={isMine}>
                 <TouchableOpacity activeOpacity={0.9} onLongPress={openActions}>
@@ -1210,7 +1375,7 @@ export const PublicationChat = ({ route, navigation }) => {
         return (
             <InputRow>
                 <AttachButton onPress={openAttachSheet} activeOpacity={0.7}>
-                    <Feather name="paperclip" size={20} color="#64788a" />
+                    <Feather name="paperclip" size={28} color="#64788a" />
                 </AttachButton>
                 <ChatInput
                     value={text}
@@ -1220,15 +1385,15 @@ export const PublicationChat = ({ route, navigation }) => {
                     multiline
                 />
                 <CameraButton onPress={() => pickAndSendImage("camera")} activeOpacity={0.7}>
-                    <Feather name="camera" size={20} color="#64788a" />
+                    <Feather name="camera" size={28} color="#64788a" />
                 </CameraButton>
                 {text.trim().length > 0 ? (
                     <SendButton onPress={handleSend} activeOpacity={0.8}>
-                        <Feather name="send" size={18} color="#fff" />
+                        <Feather name="send" size={26} color="#fff" />
                     </SendButton>
                 ) : (
                     <RecordButton onPress={startRecording} activeOpacity={0.8}>
-                        <Feather name="mic" size={18} color="#fff" />
+                        <Feather name="mic" size={28} color="#fff" />
                     </RecordButton>
                 )}
             </InputRow>
@@ -1283,6 +1448,9 @@ export const PublicationChat = ({ route, navigation }) => {
                             <Feather name="bell" size={20} color="#36536e" />
                         </MenuButton>
                     )}
+                    <MenuButton onPress={shareConversation} activeOpacity={0.7}>
+                        <Feather name="share-2" size={20} color="#36536e" />
+                    </MenuButton>
                     <MenuButton onPress={openHeaderMenu} activeOpacity={0.7}>
                         <Feather name="more-vertical" size={20} color="#36536e" />
                     </MenuButton>
@@ -1366,6 +1534,12 @@ export const PublicationChat = ({ route, navigation }) => {
                     onClose={() => setShowRatingModal(false)}
                     targetName={headerName}
                     onSubmit={handleRatingSubmit}
+                />
+                <MapPickerModal
+                    visible={Boolean(mapTarget)}
+                    onClose={() => setMapTarget(null)}
+                    onSelectMaps={() => openInGoogleMaps(mapTarget.lat, mapTarget.lng, linking)}
+                    onSelectWaze={() => openInWaze(mapTarget.lat, mapTarget.lng, linking)}
                 />
             </GestureHandlerRootView>
         </Container>

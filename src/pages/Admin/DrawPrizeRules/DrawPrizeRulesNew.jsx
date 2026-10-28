@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import {
+    collection,
+    query,
+    where,
+    getDocs,
+} from "../../../services/FirebaseAdapter";
 import { saveUsersDrawPrizeRules } from "../../../controllers/DrawPrizes/rules";
 import SelectComponent from "../../../components/SelectComponent";
 import { firestore } from "../../../services/Firebase";

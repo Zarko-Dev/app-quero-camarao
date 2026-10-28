@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import NetInfo from "@react-native-community/netinfo";
-import { disableNetwork, enableNetwork } from "firebase/firestore";
+import {
+    disableNetwork,
+    enableNetwork,
+} from "../../services/FirebaseAdapter";
 import Toast from "react-native-toast-message";
 
 import { firestoreInstance } from "../../services/Firebase";

@@ -16,6 +16,7 @@ import { SearchBar } from "../../../components/SearchBar";
 
 import {
     ButtonGenerateXlsxFile,
+    ButtonGeneratePdfFile,
     CardUser,
     Container,
     ContentData,
@@ -32,6 +33,7 @@ import { truncateName } from "../../../utils/truncateName";
 import { redirectWhatsappLink } from "../../../utils/redirectFunctions";
 import { formatphone } from "../../../utils/formatPhone";
 import { generateXlsxFile } from "../../../utils/generateXlsxFile";
+import { generatePdfFile } from "../../../utils/generatePdfFile";
 
 export const UsersList = ({ navigation, route }) => {
     const [dataUsers] = useState(
@@ -90,6 +92,13 @@ export const UsersList = ({ navigation, route }) => {
         generateXlsxFile(
             users,
             `Quero_Camarão_Listagem_Usuários_${new Date().toLocaleDateString().replace(/\//g, "-")}_${new Date().toLocaleTimeString().replace(/:/g, "-")}`,
+        );
+    };
+
+    const handleGetPdf = () => {
+        generatePdfFile(
+            dataUsers,
+            `Quero_Camarão_Listagem_Usuários_${new Date().toLocaleDateString().replace(/\//g, "-")}_${new Date().toLocaleTimeString().replace(/:/g, "-")}`
         );
     };
 
@@ -159,9 +168,14 @@ export const UsersList = ({ navigation, route }) => {
                     />
                 )}
                 {!noActions && (
-                    <ButtonGenerateXlsxFile onPress={handleGetFile}>
-                        <Feather name="file" size={24} color="white" />
-                    </ButtonGenerateXlsxFile>
+                    <>
+                        <ButtonGeneratePdfFile onPress={handleGetPdf}>
+                            <Feather name="file-text" size={24} color="white" />
+                        </ButtonGeneratePdfFile>
+                        <ButtonGenerateXlsxFile onPress={handleGetFile}>
+                            <Feather name="file" size={24} color="white" />
+                        </ButtonGenerateXlsxFile>
+                    </>
                 )}
             </ContentSearch>
             <FlatList

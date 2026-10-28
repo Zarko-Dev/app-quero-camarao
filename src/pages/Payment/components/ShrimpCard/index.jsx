@@ -13,6 +13,7 @@ import {
     ImageComponentStyle,
     TitleButton,
     TitleShrimpInfo,
+    SubTitleShrimpInfo,
 } from "./styles";
 
 export const ShrimpCard = memo(() => {
@@ -34,16 +35,15 @@ export const ShrimpCard = memo(() => {
                         </ContentImageShrimp>
                         <ContentShrimpInfo>
                             <TitleShrimpInfo>{`Camarão de ${item.grammage}g`}</TitleShrimpInfo>
-                            <TitleShrimpInfo>{`Quantidade de ${item.kilo}kg`}</TitleShrimpInfo>
+                            <SubTitleShrimpInfo>{`Quantidade de ${item.kilo}kg`}</SubTitleShrimpInfo>
                         </ContentShrimpInfo>
                     </ContentCardInfo>
                     <Divider />
                 </Fragment>
             ))}
-            <EditButton onPress={handleGoBackEditPondShrimp}>
+            <EditButton onPress={handleGoBackEditPondShrimp} activeOpacity={0.8}>
                 <TitleButton>
-                    <Feather name="edit" size={20} color="white" /> Alterar
-                    Camarões
+                    <Feather name="edit" size={18} color="white" style={{ marginRight: 8 }} /> Alterar Camarões
                 </TitleButton>
             </EditButton>
         </Container>

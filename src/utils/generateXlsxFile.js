@@ -1,7 +1,7 @@
 /* eslint-disable operator-linebreak */
 import * as XLSX from "xlsx";
 import * as FileSystem from "expo-file-system";
-import * as Sharing from "expo-sharing";
+import Share from "react-native-share";
 import Toast from "react-native-toast-message";
 
 export const generateXlsxFile = async (sampleDataToExport, fileName) => {
@@ -20,14 +20,15 @@ export const generateXlsxFile = async (sampleDataToExport, fileName) => {
             encoding: FileSystem.EncodingType.Base64,
         });
 
-        if (await Sharing.isAvailableAsync()) {
-            await Sharing.shareAsync(filePath);
-        } else {
-            Toast.show({
-                type: "error",
-                text1: "Erro",
-                text2: "Compartilhamento não disponível",
+        try {
+            await Share.open({
+                url: `file://${filePath}`,
+                title: "Exportar XLSX",
+                filename: fileName,
+                type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             });
+        } catch (shareError) {
+            console.log("Compartilhamento cancelado ou falhou", shareError);
         }
     } catch (error) {
         Toast.show({

@@ -1,38 +1,38 @@
 import Share from "react-native-share";
 
-// Enquanto não existe um domínio próprio com Universal Links/App Links
-// configurados (ver docs/superpowers/specs/2026-07-30-fase9-compartilhar-link-design.md),
-// o link exclusivo usa o esquema customizado do app — funciona quando o
-// aplicativo já está instalado. Trocar por "https://{DOMINIO}/camarao" assim
-// que o domínio existir é a única mudança necessária aqui.
-export const PUBLICATION_SHARE_BASE_URL = "querocamarao://publicacao";
+import {
+    PUBLICATION_SHARE_BASE_URL,
+    buildShareMessage,
+} from "../../../utils/publicationShareMessage";
 
-const buildShareMessage = ({
-    id, location, ponds, shrimps,
-}) => {
-    const shrimpBlock = (shrimps || [])
-        .map((shrimp) => `🍤 Gramatura: ${shrimp.grammage} g\n📦 Quantidade: ${shrimp.kilo} kg`)
-        .join("\n");
+export { PUBLICATION_SHARE_BASE_URL };
 
-    return `🍤 Camarão disponível no Quero Camarão!
-
-📍 ${location || ""}
-${shrimpBlock}
-🌊 Viveiros: ${ponds ?? ""}
-
-Veja os detalhes e fale com o produtor:
-${PUBLICATION_SHARE_BASE_URL}/${id}`;
-};
-
-export const ShareNativeAction = async (item, dataUri) => {
+// Principal: só texto + link https. O WhatsApp iOS descarta o texto quando há
+// imagem anexa, e o link clicável precisa ir no texto.
+export const ShareNativeAction = async (item) => {
     try {
         await Share.open({
             title: "Compartilhar publicação",
             message: buildShareMessage(item),
+        });
+    } catch (error) {
+        if (__DEV__) console.log("[Share] text share dismissed/failed:", error?.message);
+    }
+};
+
+// Duas mensagens: 1) imagem do encarte; 2) texto com o link https.
+// Assim o WhatsApp iOS não descarta o texto (ele só descarta texto junto de imagem).
+export const ShareImageAction = async (item, dataUri) => {
+    try {
+        await Share.open({
+            title: "Compartilhar imagem do encarte",
             filename: `camarao-${item.ponds}-${item.location}`,
             url: dataUri,
         });
     } catch (error) {
-        console.error("Share error:", error);
+        if (__DEV__) console.log("[Share] image share dismissed/failed:", error?.message);
+        return;
     }
+
+    await ShareNativeAction(item);
 };

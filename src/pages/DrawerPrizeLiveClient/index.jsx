@@ -1,11 +1,15 @@
-/* eslint-disable indent */
 /* eslint-disable no-nested-ternary */
-import { useFocusEffect } from "@react-navigation/native";
-import { useCallback, useState } from "react";
-import Toast from "react-native-toast-message";
+/* eslint-disable max-len */
+import React from "react";
+import { useTheme } from "styled-components";
 import { ActivityIndicator, Modal } from "react-native-paper";
 import { Feather } from "@expo/vector-icons";
-import { useTheme } from "styled-components";
+import {
+    Animated, View, TouchableOpacity, Text
+} from "react-native";
+import { DialogComponent } from "../../components/Dialog";
+import { Input } from "../../components/Input";
+import { useDrawerPrizeLive } from "./useDrawerPrizeLive";
 import {
     BadgeCardDrawerPrize,
     BodyCardDrawerPrize,
@@ -38,210 +42,89 @@ import {
     TitleModal,
     TitleParticipating,
 } from "./styles";
-import {
-    deleteDrawPrizeLiveById,
-    findDrawPrizeLiveByCode,
-    getAllDrawPrizesLiveWhereParticipant,
-    setParticipantDrawPrizeLive,
-} from "../../controllers/DrawPrizes/live";
-import { GetUserStorage } from "../../services/Storage/UserStorage";
-import { dataRoutes } from "../../routes/dataRoutes";
-import { DialogComponent } from "../../components/Dialog";
-import { Input } from "../../components/Input";
 
 export const DrawerPrizeLiveClient = ({ navigation }) => {
     const theme = useTheme();
-    const [dialogInputVisible, setDialogInputVisible] = useState(false);
-    const [itemValue, setItemValue] = useState("");
-
-    const [dataUser, setDataUser] = useState();
-    const [userRules, setUserRules] = useState([]);
-    const [drawerpriseLiveList, setDrawerpriseLiveList] = useState([]);
-    const [showAlertVisible, setShowAlertVisible] = useState(false);
-    const [loadingInitialData, setLoadingInitialData] = useState(true);
-    const [deleteDrawPrizeLiveId, setDeleteDrawPrizeLiveId] = useState("");
-
-    const handleGetInitialData = async () => {
-        setLoadingInitialData(true);
-        setDrawerpriseLiveList([]);
-
-        const user = await GetUserStorage();
-        setDataUser(user);
-        const rules = Array.isArray(user?.rules) ? user.rules : [];
-        const isAdmin = rules.includes("Admin");
-
-        const response = await getAllDrawPrizesLiveWhereParticipant(
-            user?.email,
-            isAdmin,
-        );
-        setUserRules(rules);
-
-        if (response.error) {
-            Toast.show({
-                type: "error",
-                text1: isAdmin
-                    ? "Não há sorteios a serem listados!"
-                    : "Você não possui sorteios ao vivo",
-                text2: isAdmin
-                    ? "Realize a criação de um sorteio ao vivo!"
-                    : "Participe de sorteios para visualizá-los aqui",
-            });
-        } else {
-            setDrawerpriseLiveList(response.data);
-        }
-
-        setLoadingInitialData(false);
-    };
-
-    useFocusEffect(
-        useCallback(() => {
-            handleGetInitialData();
-        }, []),
-    );
-
-    const handleParticipateDrawPriseLive = async () => {
-        if (!itemValue) {
-            Toast.show({
-                type: "error",
-                text1: "Código inválido",
-                text2: "Informe o código do sorteio",
-            });
-
-            return;
-        }
-
-        const response = await findDrawPrizeLiveByCode(
-            itemValue,
-            dataUser.email,
-        );
-
-        if (response.error) {
-            Toast.show({
-                type: "error",
-                text1: "Sorteio não encontrado",
-                text2: "Verifique se o código digitado está correto!",
-            });
-        } else {
-            const responseParticipant = await setParticipantDrawPrizeLive(
-                response.data.id,
-                dataUser.email,
-            );
-
-            if (responseParticipant.error) {
-                Toast.show({
-                    type: "error",
-                    text1: "Erro ao participar do sorteio",
-                    text2: "Tente novamente em instantes",
-                });
-            } else {
-                Toast.show({
-                    type: "success",
-                    text1: response.data.name
-                        ? `Você está participando do sorteio ${response.data.name}!`
-                        : "Participação realizada com sucesso",
-                    text2: "Boa sorte!",
-                });
-
-                await handleGetInitialData();
-            }
-        }
-
-        setDialogInputVisible(false);
-        setItemValue("");
-    };
-
-    const handleShowWinners = (drawId) => {
-        navigation.navigate(dataRoutes.admin.drawPrizeWinnerResult, {
-            drawerPrizeLiveId: drawId,
-            showOnlyResults: false,
-        });
-    };
-
-    const handleDeleteDrawPrizeLive = async () => {
-        setLoadingInitialData(true);
-
-        const result = await deleteDrawPrizeLiveById(deleteDrawPrizeLiveId);
-
-        if (result) {
-            setTimeout(async () => {
-                await handleGetInitialData();
-            }, 2000);
-        } else {
-            Toast.show({
-                type: "error",
-                text1: "Erro ao excluir sorteio",
-                text2: "Tente novamente em instantes",
-            });
-        }
-
-        setShowAlertVisible(false);
-    };
+    const {
+        dialogInputVisible,
+        setDialogInputVisible,
+        itemValue,
+        setItemValue,
+        filteredDraws,
+        loadingInitialData,
+        showAlertVisible,
+        setShowAlertVisible,
+        setDeleteDrawPrizeLiveId,
+        handleParticipateDrawPriseLive,
+        handleDeleteDrawPrizeLive,
+        handleShowWinners,
+        userRules,
+        dataUser,
+        activeTab,
+        setActiveTab,
+        showSuccess,
+        scaleAnim
+    } = useDrawerPrizeLive({ navigation });
 
     return (
         <>
             <ContainerScreen>
+                <View style={{ flexDirection: "row", justifyContent: "center", marginVertical: 16 }}>
+                    <TouchableOpacity
+                        onPress={() => setActiveTab("ativos")}
+                        style={{ padding: 10, borderBottomWidth: activeTab === "ativos" ? 2 : 0, borderColor: theme.colors.primary }}
+                    >
+                        <Text style={{ fontWeight: activeTab === "ativos" ? "bold" : "normal" }}>Sorteios Atuais</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={() => setActiveTab("encerrados")}
+                        style={{
+                            padding: 10, borderBottomWidth: activeTab === "encerrados" ? 2 : 0, borderColor: theme.colors.primary, marginLeft: 20
+                        }}
+                    >
+                        <Text style={{ fontWeight: activeTab === "encerrados" ? "bold" : "normal" }}>Encerrados</Text>
+                    </TouchableOpacity>
+                </View>
+
                 {loadingInitialData ? (
-                    <ActivityIndicator
-                        animating
-                        color="black"
-                        size={50}
-                        style={{ marginTop: 10 }}
-                    />
+                    <ActivityIndicator animating color="black" size={50} style={{ marginTop: 10 }} />
                 ) : (
                     <>
                         <Container>
                             <DrawerprizeList
-                                data={drawerpriseLiveList}
+                                data={filteredDraws}
                                 keyExtractor={(item) => item.id}
                                 renderItem={({ item }) => (
                                     <CardDrawerPrize>
-                                   <HeaderCardDrawerPrize>
-                                        <BadgeCardDrawerPrize status={item.status}>
-                                            <TitleBadgeCardDrawerPrize>
-                                                {item.status ? "Ativo" : "Encerrado"}
-                                            </TitleBadgeCardDrawerPrize>
-                                        </BadgeCardDrawerPrize>
-                                    </HeaderCardDrawerPrize>
+                                        <HeaderCardDrawerPrize>
+                                            <BadgeCardDrawerPrize status={item.status}>
+                                                <TitleBadgeCardDrawerPrize>
+                                                    {item.status ? "Ativo" : "Encerrado"}
+                                                </TitleBadgeCardDrawerPrize>
+                                            </BadgeCardDrawerPrize>
+                                        </HeaderCardDrawerPrize>
 
-                                   {item.name ? (
-                                        <TitleCardDrawerPrize>
-                                            {item.name}
-                                        </TitleCardDrawerPrize>
-                                    ) : null}
+                                        {item.name ? (
+                                            <TitleCardDrawerPrize>{item.name}</TitleCardDrawerPrize>
+                                        ) : null}
                                         <BodyCardDrawerPrize>
                                             {item.status ? (
-                                                (item?.participants || []).includes(
-                                                    dataUser?.email,
-                                                ) ? (
+                                                (item?.participants || []).includes(dataUser?.email) ? (
                                                     <ContentTitleParticipating>
                                                         <TitleParticipating>
-                                                            Você já está
-                                                            participando deste
-                                                            sorteio
+                                                            Você já está participando deste sorteio
                                                         </TitleParticipating>
                                                     </ContentTitleParticipating>
                                                 ) : (
-                                                    <ContentTitleParticipating
-                                                        notParticipant
-                                                    >
+                                                    <ContentTitleParticipating notParticipant>
                                                         <TitleParticipating notParticipant>
-                                                            Clique em participar
-                                                            do sorteio e informe
-                                                            o código
+                                                            Clique em participar do sorteio e informe o código
                                                         </TitleParticipating>
                                                     </ContentTitleParticipating>
                                                 )
                                             ) : (
-                                                <ButtonWinners
-                                                    onPress={() =>
-                                                        handleShowWinners(
-                                                            item.id,
-                                                        )
-                                                    }
-                                                >
-                                                    <TitleButtonWinners>
-                                                        Ver ganhadores
-                                                    </TitleButtonWinners>
+                                                <ButtonWinners onPress={() => handleShowWinners(item.id)}>
+                                                    <TitleButtonWinners>Ver ganhadores</TitleButtonWinners>
                                                 </ButtonWinners>
                                             )}
                                         </BodyCardDrawerPrize>
@@ -251,20 +134,16 @@ export const DrawerPrizeLiveClient = ({ navigation }) => {
                                                 {item.createdAt?.toDate
                                                     ? item.createdAt.toDate().toLocaleDateString("pt-BR")
                                                     : item.createdAt?.seconds
-                                                    ? new Date(item.createdAt.seconds * 1000).toLocaleDateString("pt-BR")
-                                                    : "—"}
+                                                        ? new Date(item.createdAt.seconds * 1000).toLocaleDateString("pt-BR")
+                                                        : "—"}
                                             </TitleDateDrawPrize>
                                         </FooterCardDrawerPrize>
                                         {(userRules || []).includes("Admin") && (
                                             <ContentActionButton>
                                                 <ButtonDeleteDrawPrizeLive
                                                     onPress={() => {
-                                                        setDeleteDrawPrizeLiveId(
-                                                            item.id,
-                                                        );
-                                                        setShowAlertVisible(
-                                                            true,
-                                                        );
+                                                        setDeleteDrawPrizeLiveId(item.id);
+                                                        setShowAlertVisible(true);
                                                     }}
                                                 >
                                                     <TitleButtonDeleteDrawPrizeLive>
@@ -277,70 +156,56 @@ export const DrawerPrizeLiveClient = ({ navigation }) => {
                                 )}
                             />
                         </Container>
-                        <ButtonParticipate
-                            onPress={() => setDialogInputVisible(true)}
-                        >
-                            <TitleButtonParticipate>
-                                Participar do sorteio ao vivo
-                            </TitleButtonParticipate>
+                        <ButtonParticipate onPress={() => setDialogInputVisible(true)}>
+                            <TitleButtonParticipate>Participar do sorteio ao vivo</TitleButtonParticipate>
                         </ButtonParticipate>
+
+                        {/* Modified Modal based on UI/UX spec */}
                         <Modal
                             visible={dialogInputVisible}
                             onDismiss={() => setDialogInputVisible(false)}
                             contentContainerStyle={{
-                                flex: 1,
-                                display: "flex",
                                 justifyContent: "flex-end",
-                                alignItems: "center",
+                                alignItems: "center"
                             }}
                         >
                             <ModalContent>
                                 <ModalHandle />
-                                <ModalIconBadge>
-                                    <Feather
-                                        name="gift"
-                                        size={28}
-                                        color={theme.colors.primary}
-                                    />
-                                </ModalIconBadge>
-                                <TitleModal>
-                                    Informe o código do sorteio
-                                </TitleModal>
-                                <SubTitleModal>
-                                    Digite o código informado pelo produtor
-                                    para participar do sorteio ao vivo
-                                </SubTitleModal>
-                                <Input
-                                    label="Código do sorteio"
-                                    icon="hash"
-                                    onChange={setItemValue}
-                                    value={itemValue}
-                                    autoCapitalize="characters"
-                                />
-                                <ContentActionsModal>
-                                    <ButtonModalCancel
-                                        onPress={() =>
-                                            setDialogInputVisible(false)
-                                        }
-                                    >
-                                        <TitleButtonModalCancel>
-                                            Cancelar
-                                        </TitleButtonModalCancel>
-                                    </ButtonModalCancel>
-                                    <ButtonModalConfirm
-                                        activeOpacity={0.8}
-                                        onPress={handleParticipateDrawPriseLive}
-                                    >
-                                        <Feather
-                                            name="check-circle"
-                                            size={18}
-                                            color={theme.colors.white}
+                                <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+                                    <ModalIconBadge success={showSuccess}>
+                                        <Feather name={showSuccess ? "check-circle" : "gift"} size={28} color={showSuccess ? "#fff" : theme.colors.primary} />
+                                    </ModalIconBadge>
+                                </Animated.View>
+
+                                {showSuccess ? (
+                                    <>
+                                        <TitleModal>Você está participando!</TitleModal>
+                                        <SubTitleModal>Boa sorte no sorteio 🎉</SubTitleModal>
+                                    </>
+                                ) : (
+                                    <>
+                                        <TitleModal>Informe o código do sorteio</TitleModal>
+                                        <SubTitleModal>
+                                            Digite o código informado pelo produtor para participar do sorteio ao vivo
+                                        </SubTitleModal>
+                                        <Input
+                                            label="Código do sorteio"
+                                            icon="hash"
+                                            onChange={setItemValue}
+                                            value={itemValue}
+                                            autoCapitalize="characters"
                                         />
-                                        <TitleButtonModalConfirm>
-                                            Participar deste sorteio
-                                        </TitleButtonModalConfirm>
-                                    </ButtonModalConfirm>
-                                </ContentActionsModal>
+                                        <ContentActionsModal>
+                                            <ButtonModalCancel onPress={() => setDialogInputVisible(false)}>
+                                                <TitleButtonModalCancel>Cancelar</TitleButtonModalCancel>
+                                            </ButtonModalCancel>
+                                            <ButtonModalConfirm activeOpacity={0.8} onPress={handleParticipateDrawPriseLive}>
+                                                <Feather name="check-circle" size={18} color={theme.colors.white} />
+                                                <TitleButtonModalConfirm>Participar deste sorteio</TitleButtonModalConfirm>
+                                            </ButtonModalConfirm>
+                                        </ContentActionsModal>
+                                    </>
+                                )}
                             </ModalContent>
                         </Modal>
                     </>

@@ -19,7 +19,7 @@ const getRowMarginTop = ({ $compact, $isLocation }) => {
 
 export const BannerContainer = styled.TouchableOpacity`
     width: 100%;
-    min-height: ${({ $compact }) => ($compact ? "162px" : "186px")};
+    min-height: ${({ $compact }) => ($compact ? "183px" : "210px")};
     background-color: #fff7ee;
     border-radius: 16px;
     padding: ${({ $compact }) => ($compact ? "9px" : "12px")};
@@ -38,6 +38,7 @@ export const BannerTitle = styled.Text`
     font-weight: bold;
     color: ${({ theme }) => theme.colors.primary};
     text-align: center;
+    padding-horizontal: 24px;
     margin-bottom: ${({ $compact }) => ($compact ? "6px" : "10px")};
 `;
 
@@ -77,12 +78,12 @@ export const ContentDataInfo = styled.View`
 `;
 
 export const DataRowsGroup = styled.View`
-    min-height: 122px;
+    min-height: 146px;
     justify-content: center;
 `;
 
 export const AnimatedDataRowsGroup = styled(Animated.View)`
-    min-height: ${({ $compact }) => ($compact ? "104px" : "122px")};
+    min-height: ${({ $compact }) => ($compact ? "125px" : "146px")};
     justify-content: center;
 `;
 
@@ -111,7 +112,9 @@ export const ShrimpMiniIcon = styled.Image`
 `;
 
 export const LabelText = styled.Text`
-    width: ${({ $compact }) => ($compact ? "68px" : "78px")};
+    min-width: ${({ $compact }) => ($compact ? "68px" : "78px")};
+    max-width: 45%;
+    flex-shrink: 0;
     font-size: ${({ theme, $compact }) => theme.size.fontSize($compact ? 11 : 12)};
     color: #6f6f6f;
     margin-left: 5px;

@@ -2,12 +2,22 @@ import styled from "styled-components/native";
 
 export const Container = styled.SafeAreaView`
     flex: 1;
-    background-color: #efefef;
+    background-color: #fef5ed;
+`;
 
-    justify-content: flex-start;
+export const ScreenHeader = styled.View`
+    width: 100%;
+    background-color: ${({ theme }) => theme.colors.primary};
+    padding: 16px 20px 20px 20px;
+    border-bottom-left-radius: 30px;
+    border-bottom-right-radius: 30px;
     align-items: center;
+`;
 
-    padding: 12px 16px 0 16px;
+export const ContentList = styled.View`
+    flex: 1;
+    width: 100%;
+    padding: 0 16px;
 `;
 
 export const UserSubtitle = styled.Text`

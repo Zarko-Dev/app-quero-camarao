@@ -57,8 +57,8 @@ export const DrawPrizeRules = () => {
                 setStates(dataState);
 
                 const data = await getDrawPrizeRules();
-                setSelectedItens(data[0].rules);
-                setDataEspecifcRule(data[0].specifcRules ?? []);
+                setSelectedItens(data?.[0]?.rules ?? []);
+                setDataEspecifcRule(data?.[0]?.specifcRules ?? []);
             };
 
             getData();

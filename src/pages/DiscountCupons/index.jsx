@@ -8,6 +8,7 @@ import { FlatList, ScrollView } from "react-native";
 
 import { dataRoutes } from "../../routes/dataRoutes";
 import { getAllCupons } from "../../controllers/Cupons/getCupom";
+import { GetUserStorage } from "../../services/Storage/UserStorage";
 
 import { CardCupom } from "./components/CardCupom";
 import { CardEmpty } from "./components/CardEmpty";
@@ -29,12 +30,17 @@ export const DiscountCupons = ({ navigation }) => {
     const [isRefresh, setIsRefresh] = useState(false);
     const [dataCupons, setDataCupons] = useState([]);
     const [haveIsDefaultCoupon, setHeaveIsDefaultCoupon] = useState();
+    const [adminEmail, setAdminEmail] = useState("");
     const [searchValue, setSearchValue] = useState("");
     const [filterDataCupons, setFilterDataCupons] = useState([]);
 
     useFocusEffect(
         useCallback(() => {
             setDataIsLoading(true);
+
+            GetUserStorage().then((user) => {
+                setAdminEmail(user?.email || "");
+            });
 
             getAllCupons()
                 .then((cupons) => {
@@ -108,6 +114,7 @@ export const DiscountCupons = ({ navigation }) => {
                                                 haveIsDefaultCoupon
                                             }
                                             refresh={refresh}
+                                            adminEmail={adminEmail}
                                         >
                                             <QuantityCardCupom
                                                 durationValue={
@@ -133,6 +140,7 @@ export const DiscountCupons = ({ navigation }) => {
                                                 haveIsDefaultCoupon
                                             }
                                             refresh={refresh}
+                                            adminEmail={adminEmail}
                                         >
                                             <TimerCardCupom
                                                 durationValue={
@@ -156,6 +164,7 @@ export const DiscountCupons = ({ navigation }) => {
                                                 haveIsDefaultCoupon
                                             }
                                             refresh={refresh}
+                                            adminEmail={adminEmail}
                                         >
                                             <UnlimitedCardCupom
                                                 discountType={item.discountType}
@@ -176,6 +185,7 @@ export const DiscountCupons = ({ navigation }) => {
                                                 haveIsDefaultCoupon
                                             }
                                             refresh={refresh}
+                                            adminEmail={adminEmail}
                                         >
                                             <QuantityCardCupom
                                                 durationValue={0}

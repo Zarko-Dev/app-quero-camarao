@@ -19,7 +19,7 @@ import {
     deleteOrder,
     updateOrder,
 } from "../../../../controllers/Payment/order";
-import { convertSecondsToDate } from "../../../../utils/convertSecondsToDate";
+import { timestampToDate } from "../../../../utils/timestampToDate";
 import { dataRoutes } from "../../../../routes/dataRoutes";
 import { saveShrimpPonds } from "../../../../controllers/Publication/saveShrimpPonds";
 import { decreaseAmountCupom } from "../../../../controllers/Cupons/decreaseAmountCupom";
@@ -352,15 +352,13 @@ export const CardOrder = ({ data, reload, reloadAction }) => {
             ) {
                 await decreaseAmountCupom(
                     dataCupomPayment?.cuponCode,
-                    dataCupomPayment?.cupomDurationValue,
                 );
             } else if (
-                dataCupomPayment.dataCupomPayment?.cuponCode &&
-                dataCupomPayment.dataCupomPayment?.cupomType !== "Quantity"
+                dataCupomPayment?.cuponCode &&
+                dataCupomPayment?.cupomType !== "Quantity"
             ) {
                 await incrementAmountCupom(
-                    dataCupomPayment.dataCupomPayment?.cuponCode,
-                    dataCupomPayment.dataCupomPayment?.cupomUseCount,
+                    dataCupomPayment?.cuponCode,
                 );
             }
 
@@ -466,11 +464,11 @@ export const CardOrder = ({ data, reload, reloadAction }) => {
             <Container>
                 <Header>
                     <ContentTextOrderNumber>
-                        <TitleOrderNumber>NÂº: </TitleOrderNumber>
+                        <TitleOrderNumber>Nº: </TitleOrderNumber>
                         {isLoading ? (
                             <TextSkeleton />
                         ) : (
-                            <TextOrderNumber>{idOrder}</TextOrderNumber>
+                            <TextOrderNumber numberOfLines={1}>{idOrder}</TextOrderNumber>
                         )}
                     </ContentTextOrderNumber>
                     <ContentAlertIndicator color={statusOrder.color}>
@@ -538,9 +536,7 @@ export const CardOrder = ({ data, reload, reloadAction }) => {
                     ) : (
                         <ContentDateOrder>
                             <TextDateOrder>
-                                {convertDate(
-                                    convertSecondsToDate(updatedAt.seconds),
-                                )}
+                                {convertDate(timestampToDate(updatedAt))}
                             </TextDateOrder>
                         </ContentDateOrder>
                     )}

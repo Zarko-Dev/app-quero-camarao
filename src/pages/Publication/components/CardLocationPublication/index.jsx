@@ -41,7 +41,7 @@ export const CardLocationPublication = ({
     return (
         <Container>
             <Header>
-                <TextHeader>Localizacao</TextHeader>
+                <TextHeader>Localização</TextHeader>
             </Header>
             <ContentLocation>
                 <ContentInputSelect>

@@ -7,6 +7,7 @@ import { useCallback, useState } from "react";
 import Toast from "react-native-toast-message";
 
 import { CreateCupom } from "../../controllers/Cupons/createCupom";
+import { GetUserStorage } from "../../services/Storage/UserStorage";
 
 import { Input } from "../../components/Input";
 import { PickerModal } from "./components/PickerModal";
@@ -299,13 +300,34 @@ export const RegisterDiscountCupom = ({ navigation }) => {
         if (validateCupom()) {
             setIsLoading(true);
 
+            const dataUser = await GetUserStorage();
+
             const durationTypeProps = ["Quantity", "Time", "Unlimited"];
             const discountTypeProps = ["Percentage", "Value", "QuantityPonds"];
+            // Quantity vem de TextInput (string). Gravar como NUMBER, senão o
+            // decremento atômico FieldValue.increment(-1) falha/degrada.
+            const isQuantity =
+                durationTypeProps[durationRadioCupon - 1] === "Quantity";
+            let quantityValue = cupomQuantity;
+            if (isQuantity) {
+                const parsed = Number(cupomQuantity);
+                if (!Number.isFinite(parsed) || parsed <= 0) {
+                    Toast.show({
+                        type: "error",
+                        text1: "Informe uma quantidade de cupons válida.",
+                    });
+                    setIsLoading(false);
+                    return;
+                }
+                quantityValue = parsed;
+            }
+
+            const rawDurationValue = selectedHour
+                ? new Date(`${formatDate(true)}T${selectedHour}`)
+                : new Date(formatDate(true));
             const durationValueProps = [
-                cupomQuantity,
-                selectedHour
-                    ? new Date(`${formatDate(true)}T${selectedHour}`)
-                    : new Date(formatDate(true)),
+                quantityValue,
+                rawDurationValue,
                 "Unlimited",
             ];
             const discountValueProps = [
@@ -328,7 +350,13 @@ export const RegisterDiscountCupom = ({ navigation }) => {
                 dataCupom.useCount = 0;
             }
 
-            const resultCreateCupom = await CreateCupom(dataCupom);
+            let resultCreateCupom = false;
+            let failReason = "Tente novamente mais tarde";
+            try {
+                resultCreateCupom = await CreateCupom(dataCupom, dataUser?.email);
+            } catch (e) {
+                failReason = e?.message || failReason;
+            }
 
             if (resultCreateCupom) {
                 Toast.show({
@@ -341,7 +369,7 @@ export const RegisterDiscountCupom = ({ navigation }) => {
                 Toast.show({
                     type: "error",
                     text1: "Não foi possível criar o cupom!",
-                    text2: "Tente novamente mais tarde",
+                    text2: failReason,
                 });
             }
 

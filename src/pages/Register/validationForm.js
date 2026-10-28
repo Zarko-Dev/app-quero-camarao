@@ -29,6 +29,7 @@ export const productroValidationForm = (productorData) => {
     const productorSchema = object({
         name: string().required(fieldErrorMessages.name),
         email: string()
+            .trim()
             .email(fieldErrorMessages.emailValid)
             .required(fieldErrorMessages.email),
         phone: string()
@@ -98,8 +99,9 @@ export const productroValidationForm = (productorData) => {
         state: string().required(fieldErrorMessages.state),
         city: string().required(fieldErrorMessages.city),
         zipCode: string().required("CEP é obrigatório").matches(/^\d{5}-?\d{3}$/, "CEP inválido"), // 12345-678 ou 12345678
-        street: string().required("Rua é obrigatório"),
-        number: string().required("Número é obrigatório"),
+        neighborhood: string().trim().required(fieldErrorMessages.neighborhood),
+        street: string().trim().required("Rua é obrigatório"),
+        number: string().trim().required("Número é obrigatório"),
         password: string()
             .min(6, fieldErrorMessages.minPassword)
             .required(fieldErrorMessages.password),
@@ -132,6 +134,7 @@ export const clientValidationForm = (clientData) => {
     const clientSchema = object({
         name: string().required(fieldErrorMessages.name),
         email: string()
+            .trim()
             .email(fieldErrorMessages.emailValid)
             .required(fieldErrorMessages.email),
         phone: string()
@@ -201,8 +204,9 @@ export const clientValidationForm = (clientData) => {
         state: string().required(fieldErrorMessages.state),
         city: string().required(fieldErrorMessages.city),
         zipCode: string().required("CEP é obrigatório").matches(/^\d{5}-?\d{3}$/, "CEP inválido"), // 12345-678 ou 12345678
-        street: string().required("Rua é obrigatório"),
-        number: string().required("Número é obrigatório"),
+        neighborhood: string().trim().required(fieldErrorMessages.neighborhood),
+        street: string().trim().required("Rua é obrigatório"),
+        number: string().trim().required("Número é obrigatório"),
         password: string()
             .min(6, fieldErrorMessages.minPassword)
             .required(fieldErrorMessages.password),

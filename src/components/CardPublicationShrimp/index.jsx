@@ -1,16 +1,16 @@
-import { FontAwesome, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useDispatch, useSelector } from "react-redux";
-import { memo, useMemo, useState } from "react";
-import { ActivityIndicator, Dimensions, Platform, Text, TouchableOpacity, View } from "react-native";
+import { memo, useMemo, useState, useEffect } from "react";
+import { ActivityIndicator, Dimensions, Linking, Platform, Text, TouchableOpacity, View } from "react-native";
 import { v4 } from "uuid";
 
 import { dataRoutes } from "../../routes/dataRoutes";
 import { GetUserStorage } from "../../services/Storage/UserStorage";
-import { redirectWhatsappLink } from "../../utils/redirectFunctions";
+import { buildWhatsAppAppUrl } from "../../utils/adminPublicationWhatsApp";
 import { ShrimpCardSharedActions } from "../ShrimpCardShared/actions";
 import { setNewVisualizationPublication } from "../../controllers/Publication/setNewVisuaization";
-import { ShareNativeAction } from "./ShareNative";
+import { ShareImageAction } from "./ShareNative";
 import { formatKilo } from "../../utils/formatKilo";
 
 import Carousel from "../SnapCarousel/src";
@@ -21,8 +21,6 @@ import { ModalShrimpImages } from "./ModalShrimpImages";
 import shrimpIcon from "../../assets/images/shrimpIcon.png";
 
 import {
-    ButtonBuy,
-    ButtonBuyText,
     ButtonShare,
     Container,
     ContainerInfo,
@@ -58,7 +56,14 @@ export const CardPublicationShrimp = memo(
         const dispatch = useDispatch();
 
         const navigation = useNavigation();
-        const { isAuthenticated, dataUser } = useSelector((state) => state.login);
+        const { isAuthenticated } = useSelector((state) => state.login);
+        const [localUser, setLocalUser] = useState(null);
+
+        useEffect(() => {
+            if (isAuthenticated) {
+                GetUserStorage().then(user => setLocalUser(user)).catch(() => {});
+            }
+        }, [isAuthenticated]);
 
         const [isLoadingTalkProductor, setIsLoadingTalkProductor] =
             useState(false);
@@ -140,14 +145,14 @@ export const CardPublicationShrimp = memo(
                     );
                 }
 
-                navigation.navigate(dataRoutes.redirect, {
-                    subtext: "Estamos lhe redirecionado ao whatsapp do produtor que selecionou",
-                    actionRediret: redirectWhatsappLink(
-                        contactNumber,
-                        whatsappMessage,
-                        navigation,
-                    ),
-                });
+                const whatsappUrl = buildWhatsAppAppUrl(
+                    contactNumber,
+                    whatsappMessage,
+                );
+
+                if (whatsappUrl) {
+                    await Linking.openURL(whatsappUrl);
+                }
             }
 
             setIsLoadingTalkProductor(false);
@@ -172,8 +177,8 @@ export const CardPublicationShrimp = memo(
             setTimeout(async () => {
                 const dataUri = await sharedRef.current.capture();
 
-                await ShareNativeAction({
-                    id, location, ponds, shrimps,
+                await ShareImageAction({
+                    id, location, ponds: ConvertPondsPlural(), shrimps,
                 }, dataUri);
 
                 setIsSharingLoading(false);
@@ -183,8 +188,7 @@ export const CardPublicationShrimp = memo(
         const openChat = async () => {
             const producerName = item.sellerName ?? item.publicationTitle ?? "Produtor";
             const greetingName = producerName.split(" ")[0];
-            const dataUser = await GetUserStorage();
-            const buyerFirstName = dataUser?.name?.split(" ")[0] || "Comprador";
+            const buyerFirstName = localUser?.name?.split(" ")[0] || "Comprador";
             const shrimpLines = (item.shrimps ?? [])
                 .map((shrimp) => `🦐 Tamanho: ${shrimp.grammage}g / 📦 Quantidade: ${formatKilo(shrimp.kilo)}kg`)
                 .join("\n");
@@ -252,7 +256,7 @@ export const CardPublicationShrimp = memo(
                         </LocationContainer>
                         <RightHeaderContainer>
                             <PondText>{ConvertPondsPlural()}</PondText>
-                            <ButtonShare onPress={handleShareShrimpCard}>
+                            <ButtonShare onPress={handleShareShrimpCard} accessibilityLabel="Compartilhar encarte">
                                 {!isSharingLoading ? (
                                     <MaterialCommunityIcons name="share-outline" size={24} color="#e85d22" />
                                 ) : (
@@ -304,12 +308,12 @@ export const CardPublicationShrimp = memo(
                                     {shrimps.map((shrimp, index) => (
                                         <ContainerShrimp key={index}>
                                             <ShrimpIcon source={shrimpIcon} />
-                                            <TextShrimp sale={shrimp?.sale}>
+                                            <TextShrimp sale={shrimp?.sale} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
                                                 {`${shrimp.grammage}`}
                                                 <TextUnitMeasurement>g</TextUnitMeasurement>
                                                 {" / "}
                                                 {`${formatKilo(shrimp.kilo)}`}
-                                                <TextUnitMeasurement>Kg</TextUnitMeasurement>
+                                                <TextUnitMeasurement>kg</TextUnitMeasurement>
                                             </TextShrimp>
                                         </ContainerShrimp>
                                     ))}
@@ -317,25 +321,8 @@ export const CardPublicationShrimp = memo(
                             </GrammageContainer>
                         </ContentDataShrimp>
                     </ContainerInfo>
-                    {isAuthenticated && dataUser?.email !== item.userId && (
-                        <View style={{ flexDirection: "row", alignItems: "center" }}>
-                            <ButtonBuy
-                                onPress={handleRedirectPage}
-                                style={{
-                                    flex: 1,
-                                    paddingHorizontal: 16,
-                                    justifyContent: "center",
-                                    alignItems: "center",
-                                    gap: 8,
-                                }}
-                            >
-                                {!isLoadingTalkProductor ? (
-                                    <FontAwesome name="whatsapp" size={26} color="white" />
-                                ) : (
-                                    <ActivityIndicator animating size={20} color="white" />
-                                )}
-                                <ButtonBuyText>Falar com o produtor</ButtonBuyText>
-                            </ButtonBuy>
+                    {isAuthenticated && localUser?.email !== item.userId && (
+                        <View style={{ flexDirection: "row", alignItems: "center", margin: 15, marginTop: 12 }}>
                             <TouchableOpacity
                                 onPress={openChat}
                                 activeOpacity={0.8}
@@ -343,10 +330,9 @@ export const CardPublicationShrimp = memo(
                                     flex: 1,
                                     height: 44,
                                     backgroundColor: "#36536e",
-                                    borderRadius: 8,
+                                    borderRadius: 12,
                                     paddingHorizontal: 10,
-                                    marginLeft: 8,
-                                    flexDirection: "row",
+                                                                        flexDirection: "row",
                                     alignItems: "center",
                                     justifyContent: "center",
                                     gap: 6,
@@ -369,7 +355,7 @@ export const CardPublicationShrimp = memo(
                         setShowModalImagesShrimp(false);
                         openChat();
                     }}
-                    showChatButton={isAuthenticated && dataUser?.email !== item.userId}
+                    showChatButton={isAuthenticated && localUser?.email !== item.userId}
                     dataShrimp={shrimpImageData.data}
                     isLoading={isLoadingTalkProductor}
                 />

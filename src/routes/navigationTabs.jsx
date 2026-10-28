@@ -10,6 +10,8 @@ import { theme } from "../styles/Theme";
 import { Charts } from "../pages/Admin/Charts";
 import { Users } from "../pages/Admin/Users";
 
+import { Publications } from "../pages/Admin/Publications";
+
 const { Navigator, Screen } = createBottomTabNavigator();
 
 export const AdminTabNavigation = () => (
@@ -26,6 +28,10 @@ export const AdminTabNavigation = () => (
 
                     case dataRoutes.admin.charts:
                         iconName = "chart-line";
+                        break;
+
+                    case dataRoutes.admin.publications:
+                        iconName = "file-document-outline";
                         break;
 
                     case dataRoutes.admin.users:
@@ -69,6 +75,14 @@ export const AdminTabNavigation = () => (
             component={Charts}
             options={{
                 title: "Gráficos",
+                header: (props) => <Header {...props} />,
+            }}
+        />
+        <Screen
+            name={dataRoutes.admin.publications}
+            component={Publications}
+            options={{
+                title: "Publicações",
                 header: (props) => <Header {...props} />,
             }}
         />

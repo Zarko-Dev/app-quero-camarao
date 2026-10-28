@@ -93,15 +93,15 @@ export const ShrimpPrice = () => {
         if (result) {
             Toast.show({
                 type: "success",
-                text1: "Preco do camarao atualizado!",
+                text1: "Preço do camarão atualizado!",
             });
 
             let title = "";
 
             if (lastDefaultPrice > defaultPriceGrammage) {
-                title = "Preco do camarao baixou!";
+                title = "Preço do camarão baixou!";
             } else if (lastDefaultPrice < defaultPriceGrammage) {
-                title = "Preco do camarao subiu!";
+                title = "Preço do camarão subiu!";
             } else {
                 title = "Camarao manteve o preco!";
             }
@@ -110,7 +110,7 @@ export const ShrimpPrice = () => {
         } else {
             Toast.show({
                 type: "error",
-                text1: "Nao foi possivel atualizar o preco!",
+                text1: "Não foi possível atualizar o preço!",
             });
         }
 
@@ -123,7 +123,7 @@ export const ShrimpPrice = () => {
                 <Header>
                     <Title>Preco do Camarao</Title>
                     <Subtitle>
-                        Informe a seus usuarios o preco do camarao e suas variacoes.
+                        Informe a seus usuários o preço do camarão e suas variações.
                     </Subtitle>
                 </Header>
                 <Body>

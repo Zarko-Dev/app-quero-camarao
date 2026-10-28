@@ -45,8 +45,8 @@ export const DrawPrize = ({ navigation }) => {
         useCallback(() => {
             const getAllDataUsers = async () => {
                 const data = await getDrawPrizeRules();
-                setDataRules(data[0].rules);
-                setDataEspecifcRule(data[0].specifcRules);
+                setDataRules(data?.[0]?.rules ?? []);
+                setDataEspecifcRule(data?.[0]?.specifcRules ?? []);
 
                 setDataUsers(await getAllUsers());
 

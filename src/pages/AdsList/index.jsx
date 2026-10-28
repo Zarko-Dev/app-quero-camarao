@@ -11,7 +11,13 @@ import { redirectWhatsappLink } from "../../utils/redirectFunctions";
 import { formatphone } from "../../utils/formatPhone";
 import { dataRoutes } from "../../routes/dataRoutes";
 
-import { Container, ContainerItem, ImageAdvertising } from "./styles";
+import {
+    Container,
+    ContainerItem,
+    EmptyContainer,
+    EmptyText,
+    ImageAdvertising,
+} from "./styles";
 import { CardSignatureListSkeleton } from "../../components/Skeleton/CardSignatureListSkeleton";
 import { shuffleArray } from "../../utils/shuffleArray";
 
@@ -114,6 +120,11 @@ export const AdsList = () => {
                 renderItem={({ item }) => <RenderItem item={item} />}
                 keyExtractor={(item) => item.id}
                 showsVerticalScrollIndicator={false}
+                ListEmptyComponent={(
+                    <EmptyContainer>
+                        <EmptyText>Nenhuma publicidade disponível no momento.</EmptyText>
+                    </EmptyContainer>
+                )}
             />
         </Container>
     );

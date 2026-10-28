@@ -222,21 +222,21 @@ export const DrawPrizeWinnersResult = ({ route, navigation }) => {
                                         uri: user?.userImage
                                             ? user.userImage
                                             : `https://ui-avatars.com/api/?background=random&rounded=true&bold=true&size=200&name=${
-                                                user.name.split(" ")[0]
+                                                user?.name ? user.name.split(" ")[0] : "Usuario"
                                             }`,
                                     }}
                                 />
-                                <UserNameTitle>{user.name}</UserNameTitle>
+                                <UserNameTitle>{user?.name || "Sem Nome"}</UserNameTitle>
                                 <InfoRow>
                                     <Feather name="phone" size={18} color="black" />
                                     <PhoneTitle>
-                                        Tel: {`(**) ****${user?.phone?.substring(user.phone.length - 6)}`}
+                                        Tel: {user?.phone ? `(**) ****${user.phone.substring(Math.max(0, user.phone.length - 6))}` : "Não informado"}
                                     </PhoneTitle>
                                 </InfoRow>
                                 <InfoRow>
                                     <Feather name="file-text" size={18} color="black" />
                                     <PhoneTitle>
-                                        CPF: ***.***{user?.cpf?.substring(user.cpf.length - 6) ?? "Não informado"}
+                                        CPF: {user?.cpf ? `***.***${user.cpf.substring(Math.max(0, user.cpf.length - 6))}` : "Não informado"}
                                     </PhoneTitle>
                                 </InfoRow>
                                 <InfoRow>

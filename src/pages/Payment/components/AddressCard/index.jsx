@@ -3,6 +3,7 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useCallback, useState } from "react";
 import { GetUserStorage } from "../../../../services/Storage/UserStorage";
 import { dataRoutes } from "../../../../routes/dataRoutes";
+import { getUserAddressValue } from "../../../../utils/userAddress";
 
 import {
     ButtonAddAddress,
@@ -36,22 +37,28 @@ export const AddressCard = () => {
     };
 
     return dataUser?.address ? (
-        <Container onPress={handleUpdateAddress}>
+        <Container onPress={handleUpdateAddress} activeOpacity={0.85}>
             <ContentAddressIcon>
-                <FontAwesome5 name="map-marker-alt" size={15} color="black" />
+                <FontAwesome5 name="map-marker-alt" size={18} color="#e85d22" />
             </ContentAddressIcon>
             <ContentInfo>
-                <TitleAddress>Endereço de cobrança:</TitleAddress>
+                <TitleAddress>Endereço de cobrança</TitleAddress>
                 <TextInfoAddress>{dataUser.name}</TextInfoAddress>
                 <TextInfoAddress>{dataUser.phone}</TextInfoAddress>
                 <TextInfoAddress>
-                    {`${dataUser.address.city}, ${dataUser.address.state}, Brazil`}
+                    {`${dataUser.address.city}, ${dataUser.address.state}, Brasil`}
                 </TextInfoAddress>  
-                <TextInfoAddress>{`Cep: ${dataUser.zipCode}`}</TextInfoAddress>
-                <TextInfoAddress>{dataUser.street}</TextInfoAddress>
+                <TextInfoAddress>
+                    {`CEP ${getUserAddressValue(dataUser, "cep") || "não informado"}`}
+                </TextInfoAddress>
+                <TextInfoAddress>
+                    {[getUserAddressValue(dataUser, "street"), getUserAddressValue(dataUser, "number")]
+                        .filter(Boolean)
+                        .join(", ")}
+                </TextInfoAddress>
             </ContentInfo>
             <ContentButtonAddress>
-                <FontAwesome5 name="chevron-right" size={24} color="black" />
+                <FontAwesome5 name="chevron-right" size={20} color="#e85d22" />
             </ContentButtonAddress>
         </Container>
     ) : (

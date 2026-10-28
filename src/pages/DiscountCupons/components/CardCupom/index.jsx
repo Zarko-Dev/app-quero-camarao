@@ -25,6 +25,7 @@ export const CardCupom = ({
     cupomCode = "CUPOM",
     isDefault,
     heaveDefaultCoupon,
+    adminEmail,
     children,
     refresh,
 }) => {
@@ -34,9 +35,19 @@ export const CardCupom = ({
 
     const handleDeleteCupom = () => {
         setShowAlertVisible(false);
+
+        if (!adminEmail) {
+            Toast.show({
+                type: "error",
+                text1: "Não foi possível excluir o cupom.",
+                text2: "Sessão inválida.",
+            });
+            return;
+        }
+
         setIsLoading(true);
 
-        deleteCupom(cupomCode)
+        deleteCupom(cupomCode, adminEmail)
             .then((data) => {
                 if (data) {
                     Toast.show({
@@ -48,7 +59,7 @@ export const CardCupom = ({
                 } else {
                     Toast.show({
                         type: "error",
-                        text1: "Nao foi possivel excluir o cupom!",
+                        text1: "Não foi possível excluir o cupom!",
                         text2: "Tente novamente mais tarde",
                     });
                 }
@@ -58,7 +69,7 @@ export const CardCupom = ({
             .catch(() => {
                 Toast.show({
                     type: "error",
-                    text1: "Nao foi possivel excluir o cupom!",
+                    text1: "Não foi possível excluir o cupom!",
                     text2: "Tente novamente mais tarde",
                 });
 
@@ -82,7 +93,7 @@ export const CardCupom = ({
             } else {
                 Toast.show({
                     type: "error",
-                    text1: "Nao foi possivel remover o padrao do cupom!",
+                    text1: "Não foi possível remover o padrão do cupom!",
                 });
             }
         } else {
@@ -98,7 +109,7 @@ export const CardCupom = ({
             } else {
                 Toast.show({
                     type: "error",
-                    text1: "Nao foi possivel definir o cupom como padrao!",
+                    text1: "Não foi possível definir o cupom como padrão!",
                 });
             }
         }

@@ -17,3 +17,14 @@ export const ImageAdvertising = styled.Image`
 export const Container = styled.View`
     background-color: #fff;
 `;
+
+export const EmptyContainer = styled.View`
+    padding: 48px 24px;
+    align-items: center;
+`;
+
+export const EmptyText = styled.Text`
+    font-size: ${({ theme }) => theme.size.fontSize(15)};
+    color: #64788a;
+    text-align: center;
+`;

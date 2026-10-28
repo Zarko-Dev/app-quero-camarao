@@ -71,6 +71,19 @@ export const NavigationMenu = () => {
             />
             {isAuthenticated && (
                 <Screen
+                    name={dataRoutes.drawerPrizeLiveClient}
+                    component={DrawerPrizeLiveClient}
+                    options={{
+                        title: "Sorteio ao vivo",
+                        header: (props) => <Header {...props} />,
+                        drawerIcon: ({ color }) => (
+                            <MaterialCommunityIcons name="broadcast" size={21} color={color} />
+                        ),
+                    }}
+                />
+            )}
+            {isAuthenticated && (
+                <Screen
                     name={dataRoutes.profile}
                     component={Profile}
                     options={{
@@ -130,19 +143,6 @@ export const NavigationMenu = () => {
                         header: (props) => <Header {...props} />,
                         drawerIcon: ({ color }) => (
                             <MaterialCommunityIcons name="ticket-percent-outline" size={21} color={color} />
-                        ),
-                    }}
-                />
-            )}
-            {isAuthenticated && (
-                <Screen
-                    name={dataRoutes.drawerPrizeLiveClient}
-                    component={DrawerPrizeLiveClient}
-                    options={{
-                        title: "Sorteio ao vivo",
-                        header: (props) => <Header {...props} />,
-                        drawerIcon: ({ color }) => (
-                            <MaterialCommunityIcons name="broadcast" size={21} color={color} />
                         ),
                     }}
                 />

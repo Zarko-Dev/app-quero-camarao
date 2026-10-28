@@ -13,19 +13,14 @@ export const SelectButton = styled.TouchableOpacity`
     flex-direction: row;
 
     padding: 0 16px;
-    border-radius: 12px;
-    border-width: 1.5px;
-    border-color: ${({ disabled, theme }) =>
-        disabled ? "#ddd" : theme.colors.primary};
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: ${({ disabled }) => (disabled ? "#ddd" : "#f1967a")};
 
-    background-color: ${({ disabled }) => (disabled ? "#f9f9f9" : "#fff7f2")};
+    background-color: ${({ disabled, theme }) =>
+        disabled ? "#f9f9f9" : theme.colors.inputColor};
     opacity: ${({ disabled }) => (disabled ? 0.5 : 1)};
 
-    elevation: 1;
-    shadow-color: #000;
-    shadow-offset: 0px 1px;
-    shadow-opacity: 0.06;
-    shadow-radius: 3px;
 `;
 
 export const TextButton = styled.Text`

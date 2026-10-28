@@ -16,25 +16,27 @@ const getWinnerLocation = (winner) => {
     return `${city}/${state}`;
 };
 
-const buildSingleWinnerShareMessage = (winner) => {
+const buildSingleWinnerShareMessage = (winner, appLink = "") => {
     const drawName = winner?.drawName ?? "Sorteio";
+    const appLinkBlock = appLink ? ["", `Acompanhe pelo app: ${appLink}`] : [];
 
     return [
         "🦐🦐🦐 QUERO CAMARÃO 🦐🦐🦐",
         "",
         "🏆 PARABÉNS AO VENCEDOR(A)!",
         "",
-        `👤 ${winner?.name ?? "Nao informado"}`,
+        `👤 Vencedor(a): ${winner?.name ?? "Nao informado"}`,
         `🎯 Sorteio: ${drawName}`,
         `📞 Telefone: ${normalizePhone(winner?.phone)}`,
         `🪪 CPF: ${winner?.cpf ? `***.***.${String(winner.cpf).slice(-5)}` : "Nao informado"}`,
         `📍 Cidade: ${getWinnerLocation(winner)}`,
+        ...appLinkBlock,
         "",
         "🦐 Este sorteio tem oferecimento de QUERO CAMARÃO 🦐",
     ].join("\n");
 };
 
-const buildWinnersShareMessage = (winners = []) => {
+const buildWinnersShareMessage = (winners = [], appLink = "") => {
     const grouped = winners.reduce((acc, winner) => {
         const key = winner?.drawName ?? "Sorteio";
         if (!acc[key]) acc[key] = [];
@@ -52,8 +54,9 @@ const buildWinnersShareMessage = (winners = []) => {
         .join("\n\n");
 
     const title = winners.length > 1 ? "Vencedores" : "Vencedor";
+    const appLinkBlock = appLink ? `\n\nAcompanhe pelo app: ${appLink}` : "";
 
-    return `🦐🦐🦐 QUERO CAMARÃO 🦐🦐🦐\n\n🏆 ${title} do Sorteio\n\n${drawBlocks}\n\n🦐 Este sorteio tem oferecimento de QUERO CAMARÃO 🦐`;
+    return `🦐🦐🦐 QUERO CAMARÃO 🦐🦐🦐\n\n🏆 ${title} do Sorteio\n\n${drawBlocks}${appLinkBlock}\n\n🦐 Este sorteio tem oferecimento de QUERO CAMARÃO 🦐`;
 };
 
 const buildCongratulatoryMessage = (winner, draw) => {
@@ -74,7 +77,7 @@ const buildCongratulatoryMessage = (winner, draw) => {
     });
     const themeBlock = theme ? `, ${theme}` : "";
     return encodeURIComponent(
-        `🦐🦐🦐 QUERO CAMARÃO 🦐🦐🦐\n\n🏆 Parabéns ${name}, por ganhar o sorteio ${drawName}${themeBlock}, realizado no dia ${formatted}.\n\n🦐 Este sorteio tem oferecimento de QUERO CAMARÃO 🦐`
+        `Parabéns ${name}, por ganhar o sorteio ${drawName}${themeBlock}, realizado no dia ${formatted}.\n\n🦐🦐🦐 QUERO CAMARÃO 🦐🦐🦐\n\n🦐 Este sorteio tem oferecimento de QUERO CAMARÃO 🦐`
     );
 };
 

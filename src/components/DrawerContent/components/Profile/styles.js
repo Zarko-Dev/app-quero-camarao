@@ -46,6 +46,8 @@ export const UserContentIsNotAuthenticated = styled.View`
 `;
 
 export const IdentityBadge = styled.View`
+    flex-direction: row;
+    align-items: center;
     align-self: flex-start;
     margin-top: ${({ theme }) => theme.size.dimentionsSize(1.5)};
     padding: 6px 10px;

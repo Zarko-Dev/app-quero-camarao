@@ -4,72 +4,71 @@ import { ImageComponent } from "../../../../components/ImageComponent";
 
 export const Container = styled.View`
     width: 100%;
-
     justify-content: flex-start;
     align-items: flex-start;
-
-    margin-top: ${({ theme }) => theme.size.dimentionsSize(1)};
-
-    border-radius: 4px;
+    border-radius: 16px;
     padding: 15px;
-
-    background-color: ${({ theme }) => theme.colors.quaternary};
+    background-color: #fff7ee;
+    border-width: 1px;
+    border-color: #ffe2cc;
+    margin-bottom: 12px;
 `;
 
 export const ContentCardInfo = styled.View`
     width: 100%;
-
     flex-direction: row;
+    align-items: center;
 `;
 
 export const Divider = styled.View`
     width: 100%;
-
-    margin-top: ${({ theme }) => theme.size.dimentionsSize(1)};
-    margin-bottom: ${({ theme }) => theme.size.dimentionsSize(1)};
-
+    margin-top: 15px;
+    margin-bottom: 15px;
     height: 1px;
-
-    background-color: #6f6f6f;
+    background-color: #f0d9c8;
 `;
 
-export const ContentImageShrimp = styled.View``;
+export const ContentImageShrimp = styled.View`
+    width: 80px;
+    height: 80px;
+    border-radius: 12px;
+    background-color: #ffead6;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+`;
 
 export const ImageComponentStyle = styled(ImageComponent)`
-    width: ${({ theme }) => theme.size.componentSize(80)};
-    height: ${({ theme }) => theme.size.componentSize(80)};
-
-    border-radius: 4px;
+    width: 60px;
+    height: 60px;
 `;
 
 export const ContentShrimpInfo = styled.View`
-    height: 100%;
-
-    justify-content: flex-start;
-
-    margin-left: ${({ theme }) => theme.size.dimentionsSize(1)};
-    padding: 10px 0;
+    flex: 1;
+    justify-content: center;
+    margin-left: 15px;
 `;
 
 export const TitleShrimpInfo = styled(Text)`
-    font-size: ${({ theme }) => theme.size.fontSize(15)};
+    font-size: 16px;
+    font-weight: bold;
+    color: #000;
+    margin-bottom: 6px;
+`;
 
-    margin-bottom: ${({ theme }) => theme.size.dimentionsSize(1)};
-
-    color: ${({ theme }) => theme.colors.black};
+export const SubTitleShrimpInfo = styled(Text)`
+    font-size: 14px;
+    color: #4a4a4a;
 `;
 
 export const EditButton = styled.TouchableOpacity`
     width: 100%;
-    height: ${({ theme }) => theme.size.componentSize(45)};
-
+    height: 48px;
     justify-content: center;
     align-items: center;
-
-    border-radius: 4px;
-
-    background-color: ${({ theme }) => theme.colors.primary};
-
+    flex-direction: row;
+    border-radius: 8px;
+    background-color: #e85d22;
     elevation: 3;
 `;
 
