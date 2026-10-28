@@ -1,4 +1,4 @@
-import { httpsCallable } from "firebase/functions";
+import { httpsCallable } from "../../services/FirebaseAdapter";
 import * as Sentry from "@sentry/react-native";
 
 import { functions } from "../../services/Firebase";

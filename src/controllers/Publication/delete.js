@@ -1,37 +1,20 @@
-import { deleteDoc, doc } from "firebase/firestore";
-import { deleteObject, ref } from "firebase/storage";
-import * as Sentry from "@sentry/react-native";
-
-import { firestore, storage } from "../../services/Firebase";
-import { models, storageModels } from "../../services/Firebase/models";
+import * as PublicationsRepository from "../../repositories/PublicationsRepository";
+import { storage } from "../../services/StorageRN";
 
 export const deletePublication = async (publicationId) => {
-    try {
-        const shrimpPondsRef = doc(
-            firestore,
-            models.shrimpPonds,
-            publicationId,
-        );
-        await deleteDoc(shrimpPondsRef);
-
-        return true;
-    } catch (error) {
-        Sentry.captureException(error);
-
-        return false;
-    }
+    return PublicationsRepository.deletePublication(publicationId);
 };
 
 export const deletePublicationImages = async (image) => {
-    const deleteRef = ref(storage, `${storageModels.shrimp}/${image}`);
+    const { storageModels } = await import("../../services/Firebase/models");
+
+    const deleteRef = storage().ref(`${storageModels.shrimp}/${image}`);
 
     try {
-        await deleteObject(deleteRef);
+        await deleteRef.delete();
 
         return true;
     } catch (error) {
-        Sentry.captureException(error);
-
         return false;
     }
 };

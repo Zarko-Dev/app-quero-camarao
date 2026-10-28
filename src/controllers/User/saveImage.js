@@ -1,48 +1,13 @@
-import {
-    deleteObject,
-    getDownloadURL,
-    ref,
-    uploadBytes,
-} from "firebase/storage";
-import {
-    collection,
-    doc,
-    getDocs,
-    query,
-    setDoc,
-    where,
-} from "firebase/firestore";
-import Toast from "react-native-toast-message";
-import * as Sentry from "@sentry/react-native";
-
-import { firestore, storage } from "../../services/Firebase";
-import { models, storageModels } from "../../services/Firebase/models";
-import { uriToBlob } from "../../utils/uriToBlob";
-
-const saveUserImage = async (userId, userImage) => {
-    const userDoc = doc(firestore, models.users, userId);
-
-    try {
-        await setDoc(
-            userDoc,
-            { userImage, updatedAt: new Date() },
-            { merge: true },
-        );
-
-        return true;
-    } catch (error) {
-        Toast.show({
-            type: "error",
-            text1: "Algo de errado aconteceu durante a atualização!",
-            text2: "Tente novamente mais tarde!",
-        });
-
-        return false;
-    }
-};
+import * as UsersRepository from "../../repositories/UsersRepository";
+import { storage } from "../../services/StorageRN";
+import { resizeImage } from "../../utils/uriToBlob";
 
 const findIfExistUserImage = async (email) => {
     try {
+        const { collection, getDocs, query, where } = await import("../../services/FirebaseAdapter");
+        const { firestore } = await import("../../services/Firebase");
+        const { models } = await import("../../services/Firebase/models");
+
         const usersRef = collection(firestore, models.users);
         const queryConfig = query(
             usersRef,
@@ -69,8 +34,6 @@ const findIfExistUserImage = async (email) => {
             data: null,
         };
     } catch (error) {
-        Sentry.captureException(error);
-
         return {
             error: true,
             data: null,
@@ -79,17 +42,18 @@ const findIfExistUserImage = async (email) => {
 };
 
 const deleteUserImage = async (dataImage) => {
-    const deleteRef = ref(
-        storage,
+    const { storageModels } = await import("../../services/Firebase/models");
+
+    const deleteRef = storage().ref(
         `${storageModels.user}/${
             dataImage.userImage.split("user%2F")[1].split("?")[0]
         }`,
     );
 
     try {
-        await deleteObject(deleteRef);
+        await deleteRef.delete();
     } catch (error) {
-        Sentry.captureException(error);
+        return false;
     }
 };
 
@@ -102,21 +66,22 @@ export const saveImage = async (email, imageUri) => {
                 await deleteUserImage(dataImage.data[0]);
             }
 
-            const blobFile = await uriToBlob(imageUri);
+            const resizedUri = await resizeImage(imageUri);
 
             const filename = imageUri.substring(imageUri.lastIndexOf("/") + 1);
             const newFilename = `${new Date().getTime()}-${filename}`;
 
-            const storageRef = ref(
-                storage,
+            const { storageModels } = await import("../../services/Firebase/models");
+
+            const newStorageRef = storage().ref(
                 `${storageModels.user}/${newFilename}`,
             );
 
-            await uploadBytes(storageRef, blobFile);
+            await newStorageRef.putFile(resizedUri || imageUri);
 
-            const urlImage = await getDownloadURL(storageRef);
+            const urlImage = await newStorageRef.getDownloadURL();
 
-            const resultSave = await saveUserImage(email, urlImage);
+            const resultSave = await UsersRepository.saveUserImage(email, urlImage);
 
             if (resultSave) {
                 return {
@@ -128,8 +93,6 @@ export const saveImage = async (email, imageUri) => {
                 error: true,
             };
         } catch (error) {
-            Sentry.captureException(error);
-
             return {
                 error: true,
             };

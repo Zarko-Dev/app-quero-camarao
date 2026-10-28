@@ -1,15 +1,18 @@
-import { deleteDoc, doc } from "firebase/firestore";
-import { deleteObject, ref } from "firebase/storage";
+import {
+    deleteDoc,
+    doc,
+} from "../../services/FirebaseAdapter";
 import * as Sentry from "@sentry/react-native";
 
-import { firestore, storage } from "../../services/Firebase";
+import { firestore } from "../../services/Firebase";
+import { storage } from "../../services/StorageRN";
 import { models, storageModels } from "../../services/Firebase/models";
 
 export const deleteAdsImage = async (image) => {
-    const deleteRef = ref(storage, `${storageModels.ads}/${image}`);
+    const deleteRef = storage().ref(`${storageModels.ads}/${image}`);
 
     try {
-        await deleteObject(deleteRef);
+        await deleteRef.delete();
 
         return true;
     } catch (error) {

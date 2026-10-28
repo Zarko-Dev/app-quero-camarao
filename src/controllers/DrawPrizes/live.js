@@ -1,17 +1,16 @@
 import {
     collection,
-    deleteDoc,
     doc,
     getDoc,
     getDocs,
     query,
-    setDoc,
     where,
-} from "firebase/firestore";
+} from "../../services/FirebaseAdapter";
 import * as Sentry from "@sentry/react-native";
 
 import { firestore } from "../../services/Firebase";
 import { models } from "../../services/Firebase/models";
+import * as DrawPrizesRepository from "../../repositories/DrawPrizesRepository";
 
 export const createDrawPrizeLiveByCode = async (
     drawPrizeId,
@@ -19,42 +18,12 @@ export const createDrawPrizeLiveByCode = async (
     drawPrizeName,
     drawPrizeTheme,
 ) => {
-    try {
-        const drawPrizeLiveDoc = doc(
-            firestore,
-            models.drawPrizesLive,
-            drawPrizeId,
-        );
-
-        const response = await getDoc(drawPrizeLiveDoc);
-
-        const existingData = response.exists() ? response.data() : {};
-
-        await setDoc(
-            drawPrizeLiveDoc,
-            {
-                id: drawPrizeId,
-                code: drawPrizeCode,
-                name: drawPrizeName ?? existingData.name ?? "",
-                theme: drawPrizeTheme ?? existingData.theme ?? "",
-
-                names: existingData.names ?? [],
-
-                status: true,
-                participants: existingData.participants ?? [],
-                winners: existingData.winners ?? [],
-
-                createdAt: existingData.createdAt ?? new Date(),
-                updatedAt: new Date(),
-            },
-            { merge: true },
-        );
-
-        return true;
-    } catch (error) {
-        Sentry.captureException(error);
-        return true;
-    }
+    return DrawPrizesRepository.createDrawPrizeLiveByCode(
+        drawPrizeId,
+        drawPrizeCode,
+        drawPrizeName,
+        drawPrizeTheme,
+    );
 };
 
 export const getAllActiveDrawPrizesLive = async () => {
@@ -87,78 +56,15 @@ export const getAllActiveDrawPrizesLive = async () => {
 };
 
 export const updateDrawPrizeCode = async (drawPrizeId, drawPrizeCode) => {
-    try {
-        const drawPrizeLiveDoc = doc(
-            firestore,
-            models.drawPrizesLive,
-            drawPrizeId,
-        );
-
-        await setDoc(
-            drawPrizeLiveDoc,
-            {
-                code: drawPrizeCode,
-                updatedAt: new Date(),
-            },
-            { merge: true },
-        );
-
-        return true;
-    } catch (error) {
-        Sentry.captureException(error);
-        return false;
-    }
+    return DrawPrizesRepository.updateDrawPrizeCode(drawPrizeId, drawPrizeCode);
 };
 
 export const updateDrawPrizeName = async (drawPrizeId, drawPrizeName) => {
-    try {
-        const drawPrizeLiveDoc = doc(
-            firestore,
-            models.drawPrizesLive,
-            drawPrizeId,
-        );
-
-        await setDoc(
-            drawPrizeLiveDoc,
-            {
-                name: drawPrizeName,
-                updatedAt: new Date(),
-            },
-            { merge: true },
-        );
-
-        return true;
-    } catch (error) {
-        Sentry.captureException(error);
-        return false;
-    }
+    return DrawPrizesRepository.updateDrawPrizeName(drawPrizeId, drawPrizeName);
 };
 
 export const CloseDrawPrizeLiveById = async (drawPrizeId) => {
-    try {
-        const drawPrizeLiveDoc = doc(
-            firestore,
-            models.drawPrizesLive,
-            drawPrizeId,
-        );
-
-        await setDoc(
-            drawPrizeLiveDoc,
-            {
-                status: false,
-                updatedAt: new Date(),
-            },
-            {
-                merge: true,
-            },
-        );
-
-        return true;
-    } catch (error) {
-        Sentry.captureException(error);
-
-        return true;
-    }
+    return DrawPrizesRepository.CloseDrawPrizeLiveById(drawPrizeId);
 };
 
 export const getActiveDrawPrizeLive = async () => {
@@ -205,16 +111,11 @@ export const findDrawPrizeLiveByCode = async (drawPrizeCode, participant) => {
         const querySnapshot = await getDocs(queryConfig);
 
         if (!querySnapshot.empty) {
-            const filteredDocs = querySnapshot.docs.filter((dataDoc) => {
-                const data = dataDoc.data();
-                return !data.participants?.includes(participant);
-            });
-
-            if (filteredDocs.length > 0) {
-                return {
-                    error: false,
-                    data: filteredDocs[0].data(),
-                };
+            const docs = querySnapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+            const { filterNotYetParticipating } = await import("./helpers");
+            const filtered = filterNotYetParticipating(docs, participant);
+            if (filtered.length > 0) {
+                return { error: false, data: filtered[0] };
             }
         }
 
@@ -265,61 +166,17 @@ export const getDrawPrizeLiveById = async (drawPrizeId) => {
 };
 
 export const setParticipantDrawPrizeLive = async (drawPrizeId, participant) => {
-    try {
-        const response = await getDrawPrizeLiveById(drawPrizeId);
-
-        if (response.error) {
-            return {
-                error: true,
-            };
-        }
-
-        const drawPrizeLiveDoc = doc(
-            firestore,
-            models.drawPrizesLive,
-            drawPrizeId,
-        );
-
-        await setDoc(
-            drawPrizeLiveDoc,
-            {
-                participants: !response.data?.participants
-                    ? [participant]
-                    : [...response.data.participants, participant],
-                updatedAt: new Date(),
-            },
-            {
-                merge: true,
-            },
-        );
-
-        return true;
-    } catch (error) {
-        Sentry.captureException(error);
-
-        return true;
-    }
+    return DrawPrizesRepository.setParticipantDrawPrizeLive(
+        drawPrizeId,
+        participant,
+    );
 };
 
 export const seedParticipantsDrawPrizeLive = async (drawPrizeId, participantIds) => {
-    try {
-        const response = await getDrawPrizeLiveById(drawPrizeId);
-        if (response.error) return false;
-
-        const existing = response.data?.participants ?? [];
-        const merged = Array.from(new Set([...existing, ...participantIds]));
-
-        const drawPrizeLiveDoc = doc(firestore, models.drawPrizesLive, drawPrizeId);
-        await setDoc(
-            drawPrizeLiveDoc,
-            { participants: merged, updatedAt: new Date() },
-            { merge: true },
-        );
-        return true;
-    } catch (error) {
-        Sentry.captureException(error);
-        return false;
-    }
+    return DrawPrizesRepository.seedParticipantsDrawPrizeLive(
+        drawPrizeId,
+        participantIds,
+    );
 };
 
 export const getAllDrawPrizesLiveWhereParticipant = async (
@@ -342,9 +199,10 @@ export const getAllDrawPrizesLiveWhereParticipant = async (
         const querySnapshot = await getDocs(queryConfig);
 
         if (!querySnapshot.empty) {
-            const data = querySnapshot.docs
-                .map((dataDoc) => dataDoc.data())
-                .filter(item => item.status === true)  // â† filtra só ativos
+            const { filterActiveOnly } = await import("./helpers");
+            const data = filterActiveOnly(
+                querySnapshot.docs.map((dataDoc) => ({ id: dataDoc.id, ...dataDoc.data() })),
+            );
 
             if (data.length === 0) {
                 return { error: true, data: [] };
@@ -367,76 +225,19 @@ export const getAllDrawPrizesLiveWhereParticipant = async (
     }
 };
 
-// Criada para atualizar o array names no Firestore quando executar um novo sorteio.
 export const updateDrawPrizeLiveNames = async (drawPrizeId, prizeName) => {
-    try {
-        const drawPrizeLiveDoc = doc(firestore, models.drawPrizesLive, drawPrizeId);
-        const snapshot = await getDoc(drawPrizeLiveDoc);
-        const existingNames = snapshot.data()?.names ?? [];
-
-        await setDoc(
-            drawPrizeLiveDoc,
-            { names: [...existingNames, prizeName] },
-            { merge: true }
-        );
-
-        return true;
-    } catch (error) {
-        Sentry.captureException(error);
-        return false;
-    }
+    return DrawPrizesRepository.updateDrawPrizeLiveNames(drawPrizeId, prizeName);
 };
 
 export const saveIndicatedParticipants = async (drawPrizeId, participantIds) => {
-    try {
-        const drawPrizeLiveDoc = doc(firestore, models.drawPrizesLive, drawPrizeId);
-        await setDoc(
-            drawPrizeLiveDoc,
-            { indicatedParticipants: participantIds, updatedAt: new Date() },
-            { merge: true },
-        );
-        return true;
-    } catch (error) {
-        Sentry.captureException(error);
-        return false;
-    }
+    return DrawPrizesRepository.saveIndicatedParticipants(
+        drawPrizeId,
+        participantIds,
+    );
 };
 
 export const setWinnerDrawPrizeLive = async (drawPrizeId, winners) => {
-    try {
-        const response = await getDrawPrizeLiveById(drawPrizeId);
-
-        if (response.error) {
-            return {
-                error: true,
-            };
-        }
-
-        const drawPrizeLiveDoc = doc(
-            firestore,
-            models.drawPrizesLive,
-            drawPrizeId,
-        );
-
-        await setDoc(
-            drawPrizeLiveDoc,
-            {
-                winners,
-                updatedAt: new Date(),
-            },
-            {
-                merge: true,
-            },
-        );
-
-        return true;
-    } catch (error) {
-        console.log(error);
-
-        Sentry.captureException(error);
-
-        return true;
-    }
+    return DrawPrizesRepository.setWinnerDrawPrizeLive(drawPrizeId, winners);
 };
 
 export const getUsersByCpfList = async (cpfList) => {
@@ -461,19 +262,5 @@ export const getUsersByCpfList = async (cpfList) => {
 };
 
 export const deleteDrawPrizeLiveById = async (drawPrizeLiveId) => {
-    try {
-        const drawPrizeLiveDoc = doc(
-            firestore,
-            models.drawPrizesLive,
-            drawPrizeLiveId,
-        );
-
-        await deleteDoc(drawPrizeLiveDoc);
-
-        return true;
-    } catch (error) {
-        Sentry.captureException(error);
-
-        return false;
-    }
+    return DrawPrizesRepository.deleteDrawPrizeLiveById(drawPrizeLiveId);
 };

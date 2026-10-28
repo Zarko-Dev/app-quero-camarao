@@ -1,45 +1,15 @@
-/* eslint-disable object-curly-newline */
-import {
-    collection,
-    doc,
-    getDoc,
-    getDocs,
-    query,
-    setDoc,
-} from "firebase/firestore";
-import * as Sentry from "@sentry/react-native";
-
-import { firestore } from "../../services/Firebase";
-import { models } from "../../services/Firebase/models";
+import * as UsersRepository from "../../repositories/UsersRepository";
 
 export const updateUserNotification = async (user, platform, token) => {
-    try {
-        const userDoc = doc(firestore, models.users, user);
-
-        await setDoc(
-            userDoc,
-            {
-                notification: {
-                    platform,
-                    token,
-                },
-                updatedAt: new Date(),
-            },
-            {
-                merge: true,
-            },
-        );
-
-        return true;
-    } catch (error) {
-        Sentry.captureException(error);
-
-        return false;
-    }
+    return UsersRepository.updateUserNotification(user, platform, token);
 };
 
 export const getAllUserTokenNotification = async () => {
     try {
+        const { collection, getDocs, query } = await import("../../services/FirebaseAdapter");
+        const { firestore } = await import("../../services/Firebase");
+        const { models } = await import("../../services/Firebase/models");
+
         const userRef = collection(firestore, models.users);
         const queryConfig = query(userRef);
 
@@ -71,8 +41,6 @@ export const getAllUserTokenNotification = async () => {
             data: dataNotificationToken,
         };
     } catch (error) {
-        Sentry.captureException(error);
-
         return {
             error: true,
             data: [],
@@ -82,6 +50,10 @@ export const getAllUserTokenNotification = async () => {
 
 export const getUserNotificationToken = async (userId) => {
     try {
+        const { doc, getDoc } = await import("../../services/FirebaseAdapter");
+        const { firestore } = await import("../../services/Firebase");
+        const { models } = await import("../../services/Firebase/models");
+
         const usersRef = doc(firestore, models.users, userId);
         const docSnap = await getDoc(usersRef);
 
@@ -106,8 +78,6 @@ export const getUserNotificationToken = async (userId) => {
             data: null,
         };
     } catch (error) {
-        Sentry.captureException(error);
-
         return {
             error: true,
             data: null,

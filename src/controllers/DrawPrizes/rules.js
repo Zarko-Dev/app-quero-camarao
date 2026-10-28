@@ -1,36 +1,15 @@
-/* eslint-disable object-curly-newline */
-import { collection, doc, getDocs, query, setDoc, addDoc, updateDoc, deleteDoc } from "firebase/firestore";
-import * as Sentry from "@sentry/react-native";
-
-import { firestore } from "../../services/Firebase";
-import { models } from "../../services/Firebase/models";
+import * as DrawPrizesRepository from "../../repositories/DrawPrizesRepository";
 
 export const saveDrawPrizeRules = async (dataRules) => {
-    try {
-        const drawPrizesDoc = doc(
-            firestore,
-            models.drawPrizesRules,
-            "lR0dLwDArzxmD4Fp9wMK",
-        );
-
-        await setDoc(
-            drawPrizesDoc,
-            {
-                rules: dataRules,
-            },
-            { merge: true },
-        );
-
-        return true;
-    } catch (error) {
-        Sentry.captureException(error);
-
-        return false;
-    }
+    return DrawPrizesRepository.saveDrawPrizeRules(dataRules);
 };
 
 export const getDrawPrizeRules = async () => {
     try {
+        const { collection, getDocs, query } = await import("../../services/FirebaseAdapter");
+        const { firestore } = await import("../../services/Firebase");
+        const { models } = await import("../../services/Firebase/models");
+
         const drawPrizeRef = collection(firestore, models.drawPrizesRules);
         const drawPrizeQuery = query(drawPrizeRef);
 
@@ -47,15 +26,16 @@ export const getDrawPrizeRules = async () => {
 
         return datDrawPrizes;
     } catch (error) {
-        Sentry.captureException(error);
-
         return [];
     }
 };
 
-// pega a nova regra de sorteio
 export const getNewDrawPrizeRules = async () => {
     try {
+        const { collection, getDocs, query } = await import("../../services/FirebaseAdapter");
+        const { firestore } = await import("../../services/Firebase");
+        const { models } = await import("../../services/Firebase/models");
+
         const drawPrizeRef = collection(firestore, models.newDrawPrizeRules);
         const drawPrizeQuery = query(drawPrizeRef);
 
@@ -64,90 +44,30 @@ export const getNewDrawPrizeRules = async () => {
         const data = [];
 
         querySnapshot.forEach((document) => {
-        data.push({
-        firestoreId: document.id,  // ← ID real do Firestore
-        ...document.data(),
+            data.push({
+                firestoreId: document.id,
+                ...document.data(),
             });
         });
 
         return data;
     } catch (error) {
-        Sentry.captureException(error);
         return [];
     }
 };
 
 export const saveSpecifcDrawPrizeRules = async (dataSpecifcRules) => {
-    try {
-        const drawPrizesDoc = doc(
-            firestore,
-            models.drawPrizesRules,
-            "lR0dLwDArzxmD4Fp9wMK",
-        );
-
-        await setDoc(
-            drawPrizesDoc,
-            {
-                specifcRules: dataSpecifcRules,
-            },
-            { merge: true },
-        );
-
-        return true;
-    } catch (error) {
-        Sentry.captureException(error);
-
-        return false;
-    }
-
-
-    
+    return DrawPrizesRepository.saveSpecifcDrawPrizeRules(dataSpecifcRules);
 };
 
-// Salva a nova regra de sorteio
 export const saveUsersDrawPrizeRules = async (ruleData) => {
-  try {
-    await addDoc(collection(firestore, models.newDrawPrizeRules), {
-      id: ruleData.id,
-      store: ruleData.store,
-      cities: ruleData.cities,
-      cpfs: ruleData.cpfs
-    })
+    return DrawPrizesRepository.saveUsersDrawPrizeRules(ruleData);
+};
 
-    return true
-  } catch (error) {
-    Sentry.captureException(error)
-    return false
-  }
-}
-/*exemplo de objeto no firebase 
-drawPrizesRules
-   └── lR0dLwDArzxmD4Fp9wMK
-         └── specificUsersRules
-               ├── store
-               ├── city
-               └── users[] */
+export const blockWinners = async (ruleId, updatedCpfs) => {
+    return DrawPrizesRepository.blockWinners(ruleId, updatedCpfs);
+};
 
-
-// Faz o bloqueio de sorteados pra nao participar mais de sorteio
- export const blockWinners = async (ruleId, updatedCpfs) => {
-    try {
-        const ruleRef = doc(firestore, models.newDrawPrizeRules, ruleId)
-        await updateDoc(ruleRef, { cpfs: updatedCpfs })
-        return true
-    } catch (error) {
-        Sentry.captureException(error)
-        return false
-    }
-}
-
-// Deleta regras. Usado no draw prize new
 export const deleteDrawPrizeRule = async (firestoreId) => {
-    try {
-        await deleteDoc(doc(firestore, models.newDrawPrizeRules, firestoreId))
-        return true
-    } catch (error) {
-        Sentry.captureException(error)
-        return false
-    }
-}
+    return DrawPrizesRepository.deleteDrawPrizeRule(firestoreId);
+};

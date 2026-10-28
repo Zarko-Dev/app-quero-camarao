@@ -1,11 +1,19 @@
-import { doc, getDoc, updateDoc } from "firebase/firestore";
 import * as Sentry from "@sentry/react-native";
+import {
+    doc,
+    getDoc,
+    updateDoc,
+} from "../../services/FirebaseAdapter";
 
 import { firestore } from "../../services/Firebase";
 import { models } from "../../services/Firebase/models";
 import { getUserNotificationToken } from "../User/notification";
 import { sendNotification } from "../../services/ExpoNotification/sendNotification";
 import { canSendAttention, appendAttention } from "../../utils/attentionLimits";
+import {
+    buildAttentionNotificationData,
+    isPushNotificationAccepted,
+} from "../../utils/attentionNotification";
 
 const safeId = (userId) => String(userId).replace(/[@.]/g, "_");
 
@@ -17,11 +25,13 @@ export const sendAttention = async ({
     publicationId,
     sellerId,
     buyerId,
+    sellerName,
+    buyerName,
 }) => {
     try {
         const chatRef = doc(firestore, models.chats, chatId);
         const chatSnap = await getDoc(chatRef);
-        if (!chatSnap.exists()) return { ok: false, reason: "error" };
+        if (!chatSnap.exists()) return { ok: false, reason: "not_found" };
         if (chatSnap.data()?.status === "closed") return { ok: false, reason: "closed" };
 
         const safeSender = safeId(senderId);
@@ -40,19 +50,25 @@ export const sendAttention = async ({
         });
 
         const tokenResult = await getUserNotificationToken(recipientId);
-        if (!tokenResult.error && tokenResult.data) {
-            await sendNotification(
-                tokenResult.data,
-                `🔔 ${senderName || "Alguém"} está chamando sua atenção.`,
-                "Toque para abrir a conversa.",
-                {
-                    type: "attention",
-                    chatId,
-                    publicationId,
-                    sellerId,
-                    buyerId,
-                },
-            );
+        if (tokenResult.error || !tokenResult.data) {
+            return { ok: false, reason: "notification_unavailable" };
+        }
+
+        const pushResult = await sendNotification(
+            tokenResult.data,
+            `🔔 ${senderName || "Alguém"} está chamando sua atenção.`,
+            "Toque para abrir a conversa.",
+            buildAttentionNotificationData({
+                chatId,
+                publicationId,
+                sellerId,
+                buyerId,
+                sellerName,
+                buyerName,
+            }),
+        );
+        if (!isPushNotificationAccepted(pushResult)) {
+            return { ok: false, reason: "notification_failed" };
         }
 
         return { ok: true };

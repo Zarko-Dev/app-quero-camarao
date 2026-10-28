@@ -7,7 +7,7 @@ import {
     query,
     setDoc,
     where,
-} from "firebase/firestore";
+} from "../../services/FirebaseAdapter";
 import * as Sentry from "@sentry/react-native";
 
 import { firestore } from "../../services/Firebase";
@@ -127,7 +127,6 @@ export const getShirimpSaleLastTen = async () => {
         const shirimpSaleRef = collection(firestore, models.shirimpSale);
         const queryConfig = query(
             shirimpSaleRef,
-            orderBy("createdAt", "desc"),
             limit(10),
         );
 
@@ -139,6 +138,7 @@ export const getShirimpSaleLastTen = async () => {
 
         return shirimpSaleSnapshot.docs.map((dataDoc) => dataDoc.data());
     } catch (error) {
+        console.error("DEBUG ERROR IN getShirimpSaleLastTen:", error);
         Sentry.captureException(error);
 
         return [];
@@ -167,6 +167,25 @@ export const getShirimpSaleByCreatedAtLastThirtyDays = async () => {
     } catch (error) {
         Sentry.captureException(error);
 
+        return [];
+    }
+};
+
+export const getAllShirimpSales = async () => {
+    try {
+        const shirimpSaleRef = collection(firestore, models.shirimpSale);
+        // Pode colocar um limit grande (ex: 200) por segurança ou ordenar se preferir
+        const queryConfig = query(shirimpSaleRef, orderBy("createdAt", "desc"), limit(200));
+
+        const shirimpSaleSnapshot = await getDocs(queryConfig);
+
+        if (shirimpSaleSnapshot.empty) {
+            return [];
+        }
+
+        return shirimpSaleSnapshot.docs.map((dataDoc) => dataDoc.data());
+    } catch (error) {
+        Sentry.captureException(error);
         return [];
     }
 };

@@ -6,7 +6,7 @@ import {
     getDocs,
     orderBy,
     query,
-} from "firebase/firestore";
+} from "../../services/FirebaseAdapter";
 import * as Sentry from "@sentry/react-native";
 
 import { firestore } from "../../services/Firebase";

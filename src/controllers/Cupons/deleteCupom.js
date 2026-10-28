@@ -1,18 +1,12 @@
-import { deleteDoc, doc } from "firebase/firestore";
-import * as Sentry from "@sentry/react-native";
+import * as CuponsRepository from "../../repositories/CuponsRepository";
+import { isAdmin } from "./isAdmin";
 
-import { firestore } from "../../services/Firebase";
-import { models } from "../../services/Firebase/models";
+export const deleteCupom = async (cuponCode, email) => {
+    const admin = await isAdmin(email);
 
-export const deleteCupom = async (cuponCode) => {
-    try {
-        const cuponsRef = doc(firestore, models.cupons, cuponCode);
-        await deleteDoc(cuponsRef);
-
-        return true;
-    } catch (error) {
-        Sentry.captureException(error);
-
+    if (!admin) {
         return false;
     }
+
+    return CuponsRepository.deleteCupom(cuponCode);
 };

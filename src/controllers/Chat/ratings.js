@@ -3,7 +3,7 @@ import {
     getDoc,
     serverTimestamp,
     setDoc,
-} from "firebase/firestore";
+} from "../../services/FirebaseAdapter";
 import * as Sentry from "@sentry/react-native";
 import { firestore } from "../../services/Firebase";
 import { models } from "../../services/Firebase/models";

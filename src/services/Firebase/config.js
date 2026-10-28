@@ -16,4 +16,5 @@ export const config = {
     messagingSenderId: MESSAGING_SENDER_ID,
     appId: APP_ID,
     measurementId: MEASUREMENT_ID,
+    databaseURL: PROJECT_ID ? `https://${PROJECT_ID}.firebaseio.com` : "https://api-quero-camarao.firebaseio.com",
 };

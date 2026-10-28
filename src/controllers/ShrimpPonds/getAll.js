@@ -8,7 +8,7 @@ import {
     startAfter,
     limit,
     where,
-} from "firebase/firestore";
+} from "../../services/FirebaseAdapter";
 import * as Sentry from "@sentry/react-native";
 
 import { firestore } from "../../services/Firebase";
@@ -41,6 +41,7 @@ export const getAllShrimpPondsRealTime = async (actionCallback) => {
 
         actionCallback(dataShrimpPondsFilterNotSale);
     } catch (error) {
+        console.error("DEBUG ERROR IN getAllShrimpPondsRealTime:", error);
         Sentry.captureException(error);
 
         actionCallback([]);

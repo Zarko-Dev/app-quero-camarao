@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react-native";
 import {
     collection,
     deleteDoc,
@@ -7,17 +8,17 @@ import {
     query,
     setDoc,
     where,
-} from "firebase/firestore";
-import * as Sentry from "@sentry/react-native";
+} from "../../services/FirebaseAdapter";
+import * as OrdersReader from "../../repositories/OrdersReader";
+import {
+    ORDER_STATUS,
+    normalizeOrder,
+    validateOrder,
+} from "../../contracts/orders";
 
 import { firestore } from "../../services/Firebase";
 import { models } from "../../services/Firebase/models";
 import { convertSecondsToDate } from "../../utils/convertSecondsToDate";
-
-let cachedApprovedOrders = [];
-let cachedApprovedOrdersAt = 0;
-const APPROVED_ORDERS_CACHE_TTL_MS = 60000;
-const cachedApprovedOrdersByYear = {};
 
 const normalizeFirestoreDate = (value) => {
     if (!value) return null;
@@ -32,8 +33,7 @@ const normalizeFirestoreDate = (value) => {
 const normalizeAndFilterApprovedOrders = (dataOrders) => {
     const orders = dataOrders.map((order) => {
         const createdAt = normalizeFirestoreDate(order.createdAt);
-        const updatedAtRaw =
-            normalizeFirestoreDate(order.updatedAt) || createdAt;
+        const updatedAtRaw = normalizeFirestoreDate(order.updatedAt) || createdAt;
 
         const normalizedCreatedAt = createdAt || new Date();
         const normalizedUpdatedAt = updatedAtRaw || new Date();
@@ -58,19 +58,34 @@ const normalizeAndFilterApprovedOrders = (dataOrders) => {
     return orders
         .filter(
             (order) =>
-                order?.idOrder &&
-                typeof order?.paymentValue === "number" &&
-                order?.createdAt instanceof Date,
+                order?.idOrder
+                && typeof order?.paymentValue === "number"
+                && order?.createdAt instanceof Date,
         )
         .sort((a, b) => b.createdAt - a.createdAt);
 };
 
 export const savePaymentOrder = async (dataOrder) => {
     try {
+        const validation = validateOrder(dataOrder);
+        if (!validation.valid) {
+            Sentry.captureException(
+                new Error(`Order inválida: ${validation.errors.join("; ")}`),
+            );
+            return false;
+        }
+
+        const normalized = normalizeOrder(dataOrder);
+        // Preserva campos fora do whitelist do contrato (user, endereço etc.).
+        const payload = {
+            ...dataOrder,
+            ...normalized.order,
+            user: dataOrder.user,
+        };
         const userDoc = doc(firestore, models.orders, dataOrder.idOrder);
 
         await setDoc(userDoc, {
-            ...dataOrder,
+            ...payload,
             createdAt: new Date(),
             updatedAt: new Date(),
         });
@@ -83,6 +98,8 @@ export const savePaymentOrder = async (dataOrder) => {
     }
 };
 
+const sanitizePayload = (payload) => JSON.parse(JSON.stringify(payload));
+
 export const savePublicationPaymentOrder = async (
     orderId,
     paymentUrl,
@@ -92,14 +109,16 @@ export const savePublicationPaymentOrder = async (
     try {
         const userDoc = doc(firestore, models.orders, orderId);
 
+        const payload = sanitizePayload({
+            paymentUrl: paymentUrl || null,
+            dataPublication: dataPublication || null,
+            dataCupomPayment: dataCupomPayment || null,
+        });
+        payload.updatedAt = new Date();
+
         await setDoc(
             userDoc,
-            {
-                paymentUrl,
-                dataPublication,
-                dataCupomPayment,
-                updatedAt: new Date(),
-            },
+            payload,
             { merge: true },
         );
 
@@ -120,14 +139,16 @@ export const savePublicationPaymentPixOrder = async (
     try {
         const userDoc = doc(firestore, models.orders, orderId);
 
+        const payload = sanitizePayload({
+            paymentLog: paymentLog || null,
+            dataPublication: dataPublication || null,
+            dataCupomPayment: dataCupomPayment || null,
+        });
+        payload.updatedAt = new Date();
+
         await setDoc(
             userDoc,
-            {
-                paymentLog,
-                dataPublication,
-                dataCupomPayment,
-                updatedAt: new Date(),
-            },
+            payload,
             { merge: true },
         );
 
@@ -147,10 +168,6 @@ export const getPaymentUrl = async (orderId) => {
             )
         ).json();
 
-        if (!response.error) {
-            return response;
-        }
-
         return response;
     } catch (error) {
         Sentry.captureException(error);
@@ -158,6 +175,7 @@ export const getPaymentUrl = async (orderId) => {
         return {
             error: true,
             data: null,
+            message: error?.message || "Não foi possível gerar o pagamento.",
         };
     }
 };
@@ -170,10 +188,6 @@ export const getPaymentPix = async (orderId) => {
             )
         ).json();
 
-        if (!response.error) {
-            return response;
-        }
-
         return response;
     } catch (error) {
         Sentry.captureException(error);
@@ -181,6 +195,7 @@ export const getPaymentPix = async (orderId) => {
         return {
             error: true,
             data: null,
+            message: error?.message || "Não foi possível gerar o Pix.",
         };
     }
 };
@@ -219,6 +234,14 @@ export const getPaymentOrder = async (orderId) => {
 
 export const updateOrderStatus = async (orderId, status) => {
     try {
+        const validStatuses = Object.values(ORDER_STATUS);
+        if (!validStatuses.includes(status)) {
+            Sentry.captureException(
+                new Error(`Status de ordem inválido: ${status}`),
+            );
+            return false;
+        }
+
         const userDoc = doc(firestore, models.orders, orderId);
 
         await setDoc(
@@ -240,14 +263,40 @@ export const updateOrderStatus = async (orderId, status) => {
 
 export const updateOrder = async (orderId, dataOrder) => {
     try {
+        // updateOrder grava só status/published/paymentLog (merge) e recebe
+        // payloads parciais (p.ex. { status: "approved" } no CardOrder). Valida
+        // esses campos, coerente com a regra onlyChanges do firestore.
+        const { status, published, paymentLog } = dataOrder;
+        const errors = [];
+        if (status !== undefined && typeof status !== "string") {
+            errors.push("status deve ser string");
+        }
+        if (published !== undefined && typeof published !== "boolean") {
+            errors.push("published deve ser boolean");
+        }
+        if (paymentLog !== undefined && paymentLog !== null && typeof paymentLog !== "object") {
+            errors.push("paymentLog deve ser objeto ou null");
+        }
+        if (errors.length > 0) {
+            Sentry.captureException(
+                new Error(`Order inválida: ${errors.join("; ")}`),
+            );
+            return false;
+        }
+
         const userDoc = doc(firestore, models.orders, orderId);
+        const allowedFields = ["status", "published", "paymentLog"];
+        const updateData = {};
+        for (const field of allowedFields) {
+            if (dataOrder[field] !== undefined) {
+                updateData[field] = dataOrder[field];
+            }
+        }
+        updateData.updatedAt = new Date();
 
         await setDoc(
             userDoc,
-            {
-                ...dataOrder,
-                updatedAt: new Date(),
-            },
+            updateData,
             { merge: true },
         );
 
@@ -272,140 +321,8 @@ export const deleteOrder = async (orderId) => {
     }
 };
 
-export const getAllUserOrders = async (userId) => {
-    try {
-        const ordersRef = collection(firestore, models.orders);
-        const queryConfig = query(
-            ordersRef,
-            where("userId", "==", userId),
-            orderBy("createdAt", "desc"),
-        );
+export const getAllUserOrders = async (userId) => OrdersReader.getAllUserOrders(userId);
 
-        const querySnapshot = await getDocs(queryConfig);
-        const dataOrders = [];
+export const getApprovedOrdersByYear = async (year) => OrdersReader.getApprovedOrdersByYear(year);
 
-        querySnapshot.forEach((order) => {
-            dataOrders.push(order.data());
-        });
-
-        return {
-            error: false,
-            data: dataOrders,
-        };
-    } catch (error) {
-        Sentry.captureException(error);
-
-        return {
-            error: true,
-            data: [],
-        };
-    }
-};
-
-export const getAllApprovedOrders = async () => {
-    try {
-        const now = Date.now();
-        if (
-            cachedApprovedOrders.length > 0 &&
-            now - cachedApprovedOrdersAt < APPROVED_ORDERS_CACHE_TTL_MS
-        ) {
-            return {
-                error: false,
-                data: cachedApprovedOrders,
-            };
-        }
-
-        const ordersRef = collection(firestore, models.orders);
-        const queryConfig = query(ordersRef, where("status", "==", "approved"));
-
-        const querySnapshot = await getDocs(queryConfig);
-        const dataOrders = [];
-
-        querySnapshot.forEach((order) => {
-            dataOrders.push(order.data());
-        });
-
-        const validOrders = normalizeAndFilterApprovedOrders(dataOrders);
-
-        cachedApprovedOrders = validOrders;
-        cachedApprovedOrdersAt = now;
-
-        return {
-            error: false,
-            data: validOrders,
-        };
-    } catch (error) {
-        Sentry.captureException(error);
-
-        return {
-            error: true,
-            data: [],
-            message: error?.message || "unknown_error",
-        };
-    }
-};
-
-export const getApprovedOrdersByYear = async (year) => {
-    try {
-        const normalizedYear = Number(year);
-        const now = Date.now();
-        const cacheKey = String(normalizedYear);
-        const cached = cachedApprovedOrdersByYear[cacheKey];
-
-        if (cached && now - cached.at < APPROVED_ORDERS_CACHE_TTL_MS) {
-            return {
-                error: false,
-                data: cached.data,
-            };
-        }
-
-        const start = new Date(normalizedYear, 0, 1);
-        const end = new Date(normalizedYear + 1, 0, 1);
-        const ordersRef = collection(firestore, models.orders);
-
-        const queryConfig = query(
-            ordersRef,
-            where("status", "==", "approved"),
-            where("createdAt", ">=", start),
-            where("createdAt", "<", end),
-            orderBy("createdAt", "desc"),
-        );
-
-        const querySnapshot = await getDocs(queryConfig);
-        const dataOrders = [];
-        querySnapshot.forEach((order) => {
-            dataOrders.push(order.data());
-        });
-
-        const validOrders = normalizeAndFilterApprovedOrders(dataOrders);
-        cachedApprovedOrdersByYear[cacheKey] = {
-            at: now,
-            data: validOrders,
-        };
-
-        return {
-            error: false,
-            data: validOrders,
-        };
-    } catch (error) {
-        Sentry.captureException(error);
-
-        const fallback = await getAllApprovedOrders();
-        if (!fallback.error) {
-            const filtered = fallback.data.filter(
-                (order) => order.createdAt.getFullYear() === Number(year),
-            );
-            return {
-                error: false,
-                data: filtered,
-                fallback: true,
-            };
-        }
-
-        return {
-            error: true,
-            data: [],
-            message: error?.message || "unknown_error",
-        };
-    }
-};
+export const getAllOrdersByYear = async (year) => OrdersReader.getAllOrdersByYear(year);

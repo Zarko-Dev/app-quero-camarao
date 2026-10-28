@@ -1,5 +1,10 @@
 /* eslint-disable object-curly-newline */
-import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import {
+    collection,
+    getDocs,
+    orderBy,
+    query,
+} from "../../services/FirebaseAdapter";
 import * as Sentry from "@sentry/react-native";
 
 import { firestore } from "../../services/Firebase";
@@ -21,15 +26,26 @@ export const getAllDrawPrizes = async () => {
 
         querySnapshot.forEach((document) => {
             const data = document.data();
+            const createdAtDate =
+                data.createdAt?.seconds != null
+                    ? convertSecondsToDate(data.createdAt.seconds)
+                    : data.createdAt?.toDate
+                        ? data.createdAt.toDate()
+                        : data.createdAt instanceof Date
+                            ? data.createdAt
+                            : data.createdAt
+                                ? new Date(data.createdAt)
+                                : new Date();
+
             datDrawPrizes.push({
                 id: document.id,
                 ...data,
-                createdAt: convertSecondsToDate(data.createdAt.seconds),
+                createdAt: createdAtDate,
                 usersWinner: (data.usersWinner ?? []).map((user) => ({
                     ...user,
                     createdAt: user.createdAt?.toDate?.() ?? null,
                     updatedAt: user.updatedAt?.toDate?.() ?? null,
-                })), // 👈 converte os timestamps dos ganhadores
+                })),
             });
         });
 

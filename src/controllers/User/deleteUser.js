@@ -1,52 +1,45 @@
-import { deleteDoc, doc, setDoc } from "firebase/firestore";
-import { deleteObject, ref } from "firebase/storage";
-import { v4 } from "uuid";
 import * as Sentry from "@sentry/react-native";
+import { httpsCallable } from "../../services/FirebaseAdapter";
 
-import { firestore, storage } from "../../services/Firebase";
-import { models, storageModels } from "../../services/Firebase/models";
+import * as UsersRepository from "../../repositories/UsersRepository";
+import { functions } from "../../services/Firebase";
+import { storage } from "../../services/StorageRN";
 
 export const deleteUserImage = async (image) => {
-    const deleteRef = ref(storage, `${storageModels.user}/${image}`);
+    const { storageModels } = await import("../../services/Firebase/models");
+
+    const deleteRef = storage().ref(`${storageModels.user}/${image}`);
 
     try {
-        await deleteObject(deleteRef);
+        await deleteRef.delete();
 
         return true;
     } catch (error) {
+        return false;
+    }
+};
+
+// Apaga a conta de login (Firebase Auth) de outro usuário. Só admin; a function checa.
+export const deleteUserLogin = async (email) => {
+    try {
+        const fn = httpsCallable(functions, "adminDeleteUser");
+        await fn({ email });
+
+        return { error: false };
+    } catch (error) {
         Sentry.captureException(error);
 
-        return false;
+        return {
+            error: true,
+            message: error?.message || "Não foi possível excluir o login.",
+        };
     }
 };
 
 export const deleteUser = async (userId) => {
-    try {
-        const shrimpPondsRef = doc(firestore, models.users, userId);
-        await deleteDoc(shrimpPondsRef);
-
-        return true;
-    } catch (error) {
-        Sentry.captureException(error);
-
-        return false;
-    }
+    return UsersRepository.deleteUser(userId);
 };
 
 export const saveUserFeedback = async (feedBack, userName) => {
-    try {
-        const feddbackDoc = doc(firestore, models.feedBack, v4());
-
-        await setDoc(feddbackDoc, {
-            userName,
-            feedBack,
-            createdAt: new Date(),
-        });
-
-        return true;
-    } catch (error) {
-        Sentry.captureException(error);
-
-        return false;
-    }
+    return UsersRepository.saveUserFeedback(feedBack, userName);
 };

@@ -1,69 +1,21 @@
 import {
     collection,
-    doc,
     getDocs,
     query,
-    setDoc,
     where,
-} from "firebase/firestore";
+} from "../../services/FirebaseAdapter";
 import * as Sentry from "@sentry/react-native";
 
 import { firestore } from "../../services/Firebase";
 import { models } from "../../services/Firebase/models";
+import * as CuponsRepository from "../../repositories/CuponsRepository";
 
 export const SetDefaultCoupon = async (couponCode, heaveDefaultCoupon) => {
-    try {
-        if (heaveDefaultCoupon) {
-            const couponDoc = doc(firestore, models.cupons, heaveDefaultCoupon);
-
-            await setDoc(
-                couponDoc,
-                {
-                    isDefault: false,
-                    updatedAt: new Date(),
-                },
-                { merge: true },
-            );
-        }
-
-        const couponDoc = doc(firestore, models.cupons, couponCode);
-
-        await setDoc(
-            couponDoc,
-            {
-                isDefault: true,
-                updatedAt: new Date(),
-            },
-            { merge: true },
-        );
-
-        return true;
-    } catch (error) {
-        Sentry.captureException(error);
-
-        return false;
-    }
+    return CuponsRepository.SetDefaultCoupon(couponCode, heaveDefaultCoupon);
 };
 
 export const RemoveDefaultCoupon = async (couponCode) => {
-    try {
-        const couponDoc = doc(firestore, models.cupons, couponCode);
-
-        await setDoc(
-            couponDoc,
-            {
-                isDefault: false,
-                updatedAt: new Date(),
-            },
-            { merge: true },
-        );
-
-        return true;
-    } catch (error) {
-        Sentry.captureException(error);
-
-        return false;
-    }
+    return CuponsRepository.RemoveDefaultCoupon(couponCode);
 };
 
 export const getDefaultCouponCode = async () => {

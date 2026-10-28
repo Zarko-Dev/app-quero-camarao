@@ -1,5 +1,11 @@
 /* eslint-disable object-curly-newline */
-import { collection, doc, getDoc, getDocs, query } from "firebase/firestore";
+import {
+    collection,
+    doc,
+    getDoc,
+    getDocs,
+    query,
+} from "../../services/FirebaseAdapter";
 import * as Sentry from "@sentry/react-native";
 
 import { firestore } from "../../services/Firebase";

@@ -1,5 +1,5 @@
+import * as Sentry from "@sentry/react-native";
 import {
-    addDoc,
     collection,
     doc,
     getDoc,
@@ -8,15 +8,16 @@ import {
     orderBy,
     query,
     serverTimestamp,
-    setDoc,
     updateDoc,
     where,
-} from "firebase/firestore";
-import * as Sentry from "@sentry/react-native";
+    writeBatch,
+} from "../../services/FirebaseAdapter";
 import { firestore } from "../../services/Firebase";
+
 import { models } from "../../services/Firebase/models";
 import { getUserNotificationToken } from "../User/notification";
 import { sendNotification } from "../../services/ExpoNotification/sendNotification";
+import { commitChatWrites } from "../../utils/chatAtomicWrite";
 
 export const chatDocId = (publicationId, buyerId) =>
     `${publicationId}_${String(buyerId).replace(/[@.]/g, "_")}`;
@@ -87,10 +88,15 @@ export const sendChatMessage = async ({
     sellerName = "",
     buyerName = "",
     publicationTitle = "",
+    location = null,
+    videoUrl = null,
+    videoDuration = null,
 }) => {
     try {
         const id = chatDocId(publicationId, buyerId);
-        console.log("[Chat] sendChatMessage id=", id, "publicationId=", publicationId, "buyerId=", buyerId, "senderId=", senderId);
+        console.log(
+            `[Chat] sendChatMessage id=${id} publicationId=${publicationId} buyerId=${buyerId} senderId=${senderId}`,
+        );
         const chatRef = doc(firestore, models.chats, id);
         const snap = await getDoc(chatRef);
         const trimmed = text ? text.trim() : "";
@@ -98,39 +104,35 @@ export const sendChatMessage = async ({
         if (audioUrl) lastMessage = "🎵 Áudio";
         else if (imageUrl) lastMessage = "📷 Foto";
         else if (fileUrl) lastMessage = "📎 Documento";
+        else if (location) lastMessage = "📍 Localização";
 
-        if (!snap.exists()) {
-            await setDoc(chatRef, {
-                id,
-                publicationId,
-                sellerId,
-                buyerId,
-                sellerName,
-                buyerName,
-                publicationTitle,
-                publicationLocation,
-                publicationSummary,
-                status: "active",
-                lastMessage,
-                lastMessageAt: serverTimestamp(),
-                lastMessageSenderId: senderId,
-                lastSeenAt: {},
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
-            });
-        } else {
-            if (snap.data()?.status === "closed") return false;
-            await updateDoc(chatRef, {
-                lastMessage,
-                lastMessageAt: serverTimestamp(),
-                lastMessageSenderId: senderId,
-                ...(publicationLocation ? { publicationLocation } : {}),
-                ...(publicationSummary ? { publicationSummary } : {}),
-                updatedAt: serverTimestamp(),
-            });
-        }
+        const existingChat = snap.exists() ? snap.data() : null;
+        if (existingChat?.status === "closed") return false;
 
-        const msgData = { senderId, createdAt: serverTimestamp() };
+        const chatData = {
+            id,
+            publicationId,
+            sellerId,
+            buyerId,
+            sellerName,
+            buyerName,
+            publicationTitle,
+            publicationLocation,
+            publicationSummary,
+            status: "active",
+            lastMessage,
+            lastMessageAt: serverTimestamp(),
+            lastMessageSenderId: senderId,
+            lastSeenAt: {},
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            ...(videoUrl ? { videoUrl } : {}),
+        };
+
+        const msgData = {
+            senderId,
+            createdAt: serverTimestamp(),
+        };
         if (audioUrl) {
             msgData.audioUrl = audioUrl;
             if (audioDuration != null) msgData.audioDuration = audioDuration;
@@ -143,69 +145,114 @@ export const sendChatMessage = async ({
         } else {
             msgData.text = trimmed;
         }
+        if (location) msgData.location = location;
+        if (videoUrl) msgData.videoUrl = videoUrl;
+        if (videoDuration != null) msgData.videoDuration = videoDuration;
         if (replyTo) msgData.replyTo = replyTo;
         if (forwarded) msgData.forwarded = true;
-        await addDoc(messagesRef(id), msgData);
+
+        const existingChatUpdate = {
+            lastMessage,
+            lastMessageAt: serverTimestamp(),
+            lastMessageSenderId: senderId,
+            ...(publicationLocation ? { publicationLocation } : {}),
+            ...(publicationSummary ? { publicationSummary } : {}),
+            updatedAt: serverTimestamp(),
+        };
+
+        const messageDocRef = doc(messagesRef(id));
+        await commitChatWrites({
+            firestore,
+            chatRef,
+            messageRef: messageDocRef,
+            chatExists: snap.exists(),
+            chatData: snap.exists() ? existingChatUpdate : chatData,
+            messageData: msgData,
+            writeBatch,
+        });
 
         const recipientId = senderId === sellerId ? buyerId : sellerId;
-        const senderNameForNotification = senderId === sellerId ? sellerName : buyerName;
-        const tokenResult = await getUserNotificationToken(recipientId);
-        if (!tokenResult.error && tokenResult.data) {
-            const unreadBadge = await countUnreadChats(recipientId);
-            await sendNotification(
-                tokenResult.data,
-                senderNameForNotification || "Nova mensagem",
-                lastMessage.length > 80 ? lastMessage.slice(0, 77) + "..." : lastMessage,
-                {
-                    type: "chat",
-                    chatId: id,
-                    publicationId,
-                    sellerId,
-                    buyerId,
-                    sellerName,
-                    buyerName,
-                },
-                unreadBadge,
-            );
+        const safeRecipientId = String(recipientId).replace(/[@.]/g, "_");
+        const isMuted = existingChat?.mutedBy?.includes(safeRecipientId);
+
+        if (!isMuted) {
+            const senderNameForNotification = senderId === sellerId ? sellerName : buyerName;
+            const tokenResult = await getUserNotificationToken(recipientId);
+            if (!tokenResult.error && tokenResult.data) {
+                const unreadBadge = await countUnreadChats(recipientId);
+                await sendNotification(
+                    tokenResult.data,
+                    senderNameForNotification || "Nova mensagem",
+                    lastMessage.length > 80 ? `${lastMessage.slice(0, 77)}...` : lastMessage,
+                    {
+                        type: "chat",
+                        chatId: id,
+                        publicationId,
+                        sellerId,
+                        buyerId,
+                        sellerName,
+                        buyerName,
+                    },
+                    unreadBadge,
+                );
+            }
         }
 
         return true;
     } catch (error) {
+        if (__DEV__) console.log("[Chat] sendChatMessage failed:", error?.code, error?.message);
         Sentry.captureException(error);
         return false;
     }
 };
 
-export const subscribeToChat = ({ publicationId, buyerId, onMessages, onChatMeta, onError }) => {
+export const subscribeToChat = ({
+    publicationId,
+    buyerId,
+    onMessages,
+    onChatMeta,
+    onError,
+}) => {
     const id = chatDocId(publicationId, buyerId);
     console.log("[Chat] subscribeToChat id=", id, "publicationId=", publicationId, "buyerId=", buyerId);
     const q = query(messagesRef(id), orderBy("createdAt", "asc"));
-    const unsubMessages = onSnapshot(q, { includeMetadataChanges: true }, (snap) => {
-        console.log("[Chat] snapshot docs=", snap.docs.length);
-        onMessages(snap.docs.map((d) => ({
-            id: d.id,
-            pending: d.metadata.hasPendingWrites,
-            ...d.data(),
-        })));
-    }, (error) => {
-        console.error("[Chat] subscribeToChat error:", error.code, error.message);
-        Sentry.captureException(error);
-        onError?.(error);
-    });
-
     const chatRef = doc(firestore, models.chats, id);
+    let unsubMessages = null;
     const unsubChat = onSnapshot(chatRef, (snap) => {
-        if (snap.exists()) {
-            onChatMeta?.(snap.data());
+        if (!snap.exists()) {
+            onChatMeta?.(null);
+            onMessages?.([]);
+            return;
         }
+        onChatMeta?.(snap.data());
+        if (unsubMessages) return;
+        unsubMessages = onSnapshot(q, { includeMetadataChanges: true }, (messageSnap) => {
+            console.log("[Chat] snapshot docs=", messageSnap.docs.length);
+            onMessages(messageSnap.docs.map((d) => ({
+                id: d.id,
+                pending: d.metadata.hasPendingWrites,
+                ...d.data(),
+            })));
+        }, (error) => {
+            // Sem console.error: ele abre o LogBox. Trata como "sem mensagens" e
+            // libera a re-assinatura quando o doc do chat mudar (ex.: 1ª mensagem criada).
+            if (__DEV__) console.log("[Chat] messages listener error:", error.code);
+            Sentry.captureException(error);
+            unsubMessages?.();
+            unsubMessages = null;
+            onMessages?.([]);
+            onError?.(error);
+        });
     }, (error) => {
-        console.error("[Chat] subscribeToChat chat-doc error:", error.code, error.message);
+        if (__DEV__) console.log("[Chat] chat-doc listener error:", error.code);
         Sentry.captureException(error);
+        onChatMeta?.(null);
+        onMessages?.([]);
         onError?.(error);
     });
 
     return () => {
-        unsubMessages();
+        unsubMessages?.();
         unsubChat();
     };
 };

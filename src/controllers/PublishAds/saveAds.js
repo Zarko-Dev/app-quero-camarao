@@ -1,47 +1,33 @@
-import { doc, setDoc } from "firebase/firestore";
 import {
-    getDownloadURL,
-    ref,
-    uploadBytes,
-    uploadBytesResumable,
-} from "firebase/storage";
+    doc,
+    setDoc,
+} from "../../services/FirebaseAdapter";
+import { storage } from "../../services/StorageRN";
 import { v4 } from "uuid";
 import { Platform } from "react-native";
 import * as Sentry from "@sentry/react-native";
 
-import { firestore, storage } from "../../services/Firebase";
+import { firestore } from "../../services/Firebase";
 import { models, storageModels } from "../../services/Firebase/models";
-import { uriToBlob } from "../../utils/uriToBlob";
-
-const uploadFileIsVideoIOS = async (storageRef, file) => {
-    const response = await fetch(file);
-    const blob = await response.blob();
-
-    await uploadBytesResumable(storageRef, blob);
-};
+import { resizeImage } from "../../utils/uriToBlob";
 
 export const saveImagePublishAds = async (imageUri, isVideo) => {
     let resultUrlImage;
 
     if (imageUri) {
         try {
-            const blobFile = await uriToBlob(imageUri, isVideo);
+            const resizedUri = isVideo ? imageUri : await resizeImage(imageUri);
 
             const filename = imageUri.substring(imageUri.lastIndexOf("/") + 1);
             const newFilename = `${new Date().getTime()}-${filename}`;
 
-            const storageRef = ref(
-                storage,
+            const storageRef = storage().ref(
                 `${storageModels.ads}/${newFilename}`,
             );
 
-            if (isVideo && Platform.OS === "ios") {
-                await uploadFileIsVideoIOS(storageRef, imageUri);
-            } else {
-                await uploadBytes(storageRef, blobFile);
-            }
+            await storageRef.putFile(resizedUri || imageUri);
 
-            const urlImage = await getDownloadURL(storageRef);
+            const urlImage = await storageRef.getDownloadURL();
 
             resultUrlImage = urlImage;
 

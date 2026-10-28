@@ -1,26 +1,36 @@
 import { getAllUserTokenNotification } from "../User/notification";
 import { SendNotifications } from "./sendNotifications";
-import { buildPublicationSummary } from "../../utils/publicationSummary";
+import { buildNotificationBody } from "../../utils/buildNotificationBody";
+
+const sentPublicationNotifications = new Set();
 
 const getClientTokensExcluding = async (excludeUserId) => {
     const resultDataTokens = await getAllUserTokenNotification();
     if (resultDataTokens.error) return [];
     return resultDataTokens.data
-        .filter((item) => item.userType === "client" && item.id !== excludeUserId)
+        .filter(
+            (item) => item.userType === "client" && item.id !== excludeUserId,
+        )
         .map((item) => item.notification.token);
 };
 
 export const sendNotificationNewPublication = async ({
-    publisherId, publicationId, location, shrimps,
+    publisherId,
+    publicationId,
+    location,
+    shrimps,
 } = {}) => {
+    if (publicationId && sentPublicationNotifications.has(publicationId)) {
+        return;
+    }
+    if (publicationId) {
+        sentPublicationNotifications.add(publicationId);
+    }
+
     const notificationTokens = await getClientTokensExcluding(publisherId);
     if (notificationTokens.length === 0) return;
 
-    const summary = buildPublicationSummary(shrimps);
-    const details = [summary, location].filter(Boolean).join(" • ");
-    const body = details
-        ? `${details}. Toque para conferir.`
-        : "Um novo camarão 🦐 foi publicado, venha conferir!";
+    const body = buildNotificationBody({ shrimps, location });
 
     SendNotifications(
         notificationTokens,
@@ -31,14 +41,19 @@ export const sendNotificationNewPublication = async ({
     );
 };
 
-export const sendNotificationEditPublication = async ({ publisherId, publicationId } = {}) => {
+export const sendNotificationEditPublication = async ({
+    publisherId,
+    publicationId,
+} = {}) => {
     const notificationTokens = await getClientTokensExcluding(publisherId);
     if (notificationTokens.length === 0) return;
+
+    const body = buildNotificationBody({ shrimps, location });
 
     SendNotifications(
         notificationTokens,
         "🎉 Quero Camarão Informa",
-        "Uma publicação foi alterada, venha conferir!",
+        body,
         () => {},
         { type: "publication", publicationId },
     );

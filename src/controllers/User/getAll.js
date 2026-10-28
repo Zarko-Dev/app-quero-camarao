@@ -1,22 +1,19 @@
 /* eslint-disable object-curly-newline */
-import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
+import {
+    collection,
+    getDocs,
+    orderBy,
+    query,
+    where,
+} from "../../services/FirebaseAdapter";
 import * as Sentry from "@sentry/react-native";
 
 import { firestore } from "../../services/Firebase";
 import { models } from "../../services/Firebase/models";
 import { convertSecondsToDate } from "../../utils/convertSecondsToDate";
 
-let cachedUsers = [];
-let cachedUsersAt = 0;
-const USERS_CACHE_TTL_MS = 120000;
-
 export const getAllUsers = async () => {
     try {
-        const now = Date.now();
-        if (cachedUsers.length > 0 && now - cachedUsersAt < USERS_CACHE_TTL_MS) {
-            return cachedUsers;
-        }
-
         const UsersRef = collection(firestore, models.users);
         const usersQuery = query(UsersRef, orderBy("createdAt", "desc"));
 
@@ -33,9 +30,6 @@ export const getAllUsers = async () => {
                     : null,
             });
         });
-
-        cachedUsers = dataUsers;
-        cachedUsersAt = now;
 
         return dataUsers;
     } catch (error) {

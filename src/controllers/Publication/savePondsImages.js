@@ -1,26 +1,24 @@
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import * as Sentry from "@sentry/react-native";
 
-import { storage } from "../../services/Firebase";
+import { storage } from "../../services/StorageRN";
 import { storageModels } from "../../services/Firebase/models";
-import { uriToBlob } from "../../utils/uriToBlob";
+import { resizeImage } from "../../utils/uriToBlob";
 
 export const savePondsImages = async (imageUri) => {
     if (imageUri) {
         try {
-            const blobFile = await uriToBlob(imageUri);
+            const resizedUri = await resizeImage(imageUri);
 
             const filename = imageUri.substring(imageUri.lastIndexOf("/") + 1);
             const newFilename = `${new Date().getTime()}-${filename}`;
 
-            const storageRef = ref(
-                storage,
+            const storageRef = storage().ref(
                 `${storageModels.shrimp}/${newFilename}`,
             );
 
-            await uploadBytes(storageRef, blobFile);
+            await storageRef.putFile(resizedUri || imageUri);
 
-            const urlImage = await getDownloadURL(storageRef);
+            const urlImage = await storageRef.getDownloadURL();
 
             if (urlImage) {
                 return {

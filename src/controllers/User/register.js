@@ -1,106 +1,93 @@
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
 import Toast from "react-native-toast-message";
 import * as Sentry from "@sentry/react-native";
-
-import { firebaseApp, firestore } from "../../services/Firebase";
-import { models } from "../../services/Firebase/models";
+import {
+    getAuth,
+    httpsCallable,
+    signInWithCustomToken,
+    signInWithEmailAndPassword,
+    signOut,
+} from "../../services/FirebaseAdapter";
+import { ensureFirebaseReady } from "../../services/Firebase";
 import { SetUserStorage } from "../../services/Storage/UserStorage";
+import { reportDiscordError } from "../../services/DiscordAlerts/context";
 
-const VerifyIfEmailExists = async (email) => {
-    try {
-        const usersRef = doc(firestore, models.users, email);
-        const docSnap = await getDoc(usersRef);
-
-        if (docSnap.exists()) {
-            return true;
-        }
-
-        return false;
-    } catch (error) {
-        Sentry.captureException(error);
-
-        return false;
-    }
-};
-
-const CreateLoginUser = async (user, password) => {
+const callRegisterFunction = async (dataUser) => {
+    const { functions, firebaseApp } = await ensureFirebaseReady();
     const auth = getAuth(firebaseApp);
-
-    try {
-        await createUserWithEmailAndPassword(auth, user, password);
-
-        return true;
-    } catch (error) {
-        Sentry.captureException(error);
-
-        return false;
+    // Sessão de outra conta (ex.: após Sair) faria o servidor recusar o cadastro.
+    // Sessão por custom token pode vir sem e-mail: também é tratada como de outra conta.
+    const currentEmail = auth.currentUser?.email?.toLowerCase();
+    if (__DEV__) console.log("[Register] session", auth.currentUser?.uid, currentEmail);
+    if (auth.currentUser && currentEmail !== dataUser.email) {
+        await signOut(auth);
     }
+    return httpsCallable(functions, "registerUser")(dataUser);
 };
 
-const CreateDataUser = async (dataUser) => {
-    try {
-        const userDoc = doc(firestore, models.users, dataUser.email);
-
-        delete dataUser.password;
-
-        if (dataUser.userType === "productor") {
-            await setDoc(userDoc, {
-                ...dataUser,
-                address: {
-                    state: dataUser.state,
-                    city: dataUser.city,
-                },
-                userImage: "",
-                rules: ["Normal"],
-                createdAt: new Date(),
-                updatedAt: new Date(),
-            });
-        } else {
-            await setDoc(userDoc, {
-                ...dataUser,
-                userImage: "",
-                rules: ["Normal"],
-                createdAt: new Date(),
-                updatedAt: new Date(),
-            });
-        }
-
-        return true;
-    } catch (error) {
-        Sentry.captureException(error);
-
-        return false;
-    }
+const saveRegisteredUser = async (dataUser) => {
+    const storageUser = { ...dataUser };
+    delete storageUser.password;
+    await SetUserStorage({ ...storageUser, activeBiometric: false, lastAccess: new Date() });
+    return true;
 };
+
+const isEmailAlreadyRegistered = (error) =>
+    error?.code === "functions/already-exists"
+    || error?.code === "already-exists";
 
 export const RegisterUser = async (dataUser) => {
-    if (await VerifyIfEmailExists(dataUser.email)) {
-        Toast.show({
-            type: "error",
-            text1: "Email já cadastrado!",
-        });
-
-        return false;
-    }
-
-    if (await CreateLoginUser(dataUser.email, dataUser.password)) {
-        if (await CreateDataUser(dataUser)) {
-            await SetUserStorage({
-                ...dataUser,
-                activeBiometric: false,
-                lastAccess: new Date(),
-            });
-
-            return true;
+    try {
+        const result = await callRegisterFunction(dataUser);
+        if (result.data?.customToken) {
+            const { firebaseApp } = await ensureFirebaseReady();
+            await signInWithCustomToken(getAuth(firebaseApp), result.data.customToken);
         }
+        if (result.data?.ok && !result.data.customToken && dataUser.password) {
+            const { firebaseApp } = await ensureFirebaseReady();
+            const auth = getAuth(firebaseApp);
+            await signInWithEmailAndPassword(auth, dataUser.email, dataUser.password);
+        }
+        if (result.data?.ok) return saveRegisteredUser(dataUser);
+    } catch (error) {
+        if (__DEV__) console.error("[Register] failed:", error?.code, error?.message);
+        if (isEmailAlreadyRegistered(error)) {
+            try {
+                const { firebaseApp } = await ensureFirebaseReady();
+                const auth = getAuth(firebaseApp);
+                await signInWithEmailAndPassword(auth, dataUser.email, dataUser.password);
+                const recoveryResult = await callRegisterFunction({
+                    ...dataUser,
+                    password: undefined,
+                });
+                if (recoveryResult.data?.ok) return saveRegisteredUser(dataUser);
+            } catch (recoveryError) {
+                Sentry.captureException(recoveryError);
+                reportDiscordError({
+                    source: "user.register.recovery",
+                    feature: "registration",
+                    action: "orphan-recovery-failed",
+                    error: recoveryError,
+                    user: dataUser,
+                    extra: { callable: "registerUser", sensitiveData: "omitted" },
+                }).catch(() => {});
+            }
+        }
+
+        Sentry.captureException(error);
+        reportDiscordError({
+            source: "user.register.client",
+            feature: "registration",
+            action: "callable-failed",
+            error,
+            user: dataUser,
+            extra: { userType: dataUser.userType, callable: "registerUser", sensitiveData: "omitted" },
+        }).catch(() => {});
     }
 
     Toast.show({
         type: "error",
-        text1: "Algo de errado ocorreu!",
-        text2: "Tente novamente mais tarde!",
+        text1: "Não foi possível concluir o cadastro.",
+        text2: "O problema foi registrado e será analisado.",
     });
-
     return false;
 };

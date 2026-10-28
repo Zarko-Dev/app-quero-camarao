@@ -1,5 +1,6 @@
 const { createDiscordAlertReporter } = require(".");
 const { DISCORD_ERROR_WEBHOOK_URL } = require("./config");
+const { maskEmail, maskPhone } = require("../../utils/sanitizeForObservability");
 
 let configuredReporter = createDiscordAlertReporter({
     webhookUrl: DISCORD_ERROR_WEBHOOK_URL,
@@ -13,8 +14,8 @@ function normalizeUser(user = {}) {
     return {
         userId: valueOrUnknown(user.userId || user.id || user.uid || user._id),
         userName: valueOrUnknown(user.userName || user.name || user.fullName || user.username),
-        email: valueOrUnknown(user.email),
-        phone: valueOrUnknown(user.phone || user.phoneNumber || user.telephone),
+        email: maskEmail(valueOrUnknown(user.email)),
+        phone: maskPhone(valueOrUnknown(user.phone || user.phoneNumber || user.telephone)),
     };
 }
 

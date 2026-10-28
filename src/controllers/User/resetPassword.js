@@ -1,13 +1,12 @@
-import { getAuth, sendPasswordResetEmail } from "firebase/auth";
 import * as Sentry from "@sentry/react-native";
-
-import { firebaseApp } from "../../services/Firebase";
+import { ensureFirebaseReady } from "../../services/Firebase";
+import { getAuth, sendPasswordResetEmail } from "../../services/FirebaseAdapter";
 
 export const resetUserPassword = async (email) => {
-    const auth = getAuth(firebaseApp);
-
     try {
-        await sendPasswordResetEmail(auth, email);
+        const { firebaseApp } = await ensureFirebaseReady();
+        const authInstance = getAuth(firebaseApp);
+        await sendPasswordResetEmail(authInstance, email);
 
         return true;
     } catch (error) {

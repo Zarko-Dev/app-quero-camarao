@@ -1,9 +1,4 @@
-import { doc, setDoc } from "firebase/firestore";
-import Toast from "react-native-toast-message";
-
-import { firestore } from "../../services/Firebase";
-import { models } from "../../services/Firebase/models";
-import { sendNotificationEditPublication } from "../Notifications/sendNotificationNewPublication";
+import * as PublicationsRepository from "../../repositories/PublicationsRepository";
 
 export const updateShrimpsPublication = async (
     publicationId,
@@ -11,27 +6,12 @@ export const updateShrimpsPublication = async (
     edited,
     publisherId,
 ) => {
-    const publicationDoc = doc(firestore, models.shrimpPonds, publicationId);
-
-    try {
-        await setDoc(
-            publicationDoc,
-            { shrimps, edited, updatedAt: new Date() },
-            { merge: true },
-        );
-
-        await sendNotificationEditPublication({ publisherId, publicationId });
-
-        return true;
-    } catch (error) {
-        Toast.show({
-            type: "error",
-            text1: "Não foi possível realizar a atualização!",
-            text2: "Tente novamente mais tarde!",
-        });
-
-        return false;
-    }
+    return PublicationsRepository.updateShrimpsPublication(
+        publicationId,
+        shrimps,
+        edited,
+        publisherId,
+    );
 };
 
 export const updatePondsPublication = async (
@@ -39,50 +19,19 @@ export const updatePondsPublication = async (
     newShrimps,
     publisherId,
 ) => {
-    const publicationDoc = doc(firestore, models.shrimpPonds, publicationId);
-
-    try {
-        await setDoc(
-            publicationDoc,
-            { shrimps: newShrimps, updatedAt: new Date() },
-            { merge: true },
-        );
-
-        await sendNotificationEditPublication({ publisherId, publicationId });
-
-        return true;
-    } catch (error) {
-        Toast.show({
-            type: "error",
-            text1: "Não foi possível realizar a atualização!",
-            text2: "Tente novamente mais tarde!",
-        });
-
-        return false;
-    }
+    return PublicationsRepository.updatePondsPublication(
+        publicationId,
+        newShrimps,
+        publisherId,
+    );
 };
 
 export const updatePublicationWithShirimpSalle = async (
     publicationId,
     shirimpUpdated,
 ) => {
-    const publicationDoc = doc(firestore, models.shrimpPonds, publicationId);
-
-    try {
-        await setDoc(
-            publicationDoc,
-            { shrimps: shirimpUpdated, updatedAt: new Date() },
-            { merge: true },
-        );
-
-        return true;
-    } catch (error) {
-        Toast.show({
-            type: "error",
-            text1: "Não foi possível realizar a atualização!",
-            text2: "Tente novamente mais tarde!",
-        });
-
-        return false;
-    }
+    return PublicationsRepository.updatePublicationWithShirimpSalle(
+        publicationId,
+        shirimpUpdated,
+    );
 };

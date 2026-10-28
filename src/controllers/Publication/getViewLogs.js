@@ -1,25 +1,17 @@
 /* eslint-disable object-curly-newline */
-import { collection, getDocs, query } from "firebase/firestore";
+import {
+    collection,
+    getDocs,
+    query,
+} from "../../services/FirebaseAdapter";
 import * as Sentry from "@sentry/react-native";
 
 import { firestore } from "../../services/Firebase";
 import { models } from "../../services/Firebase/models";
 import { convertSecondsToDate } from "../../utils/convertSecondsToDate";
 
-let cachedViewLogs = [];
-let cachedViewLogsAt = 0;
-const VIEW_LOGS_CACHE_TTL_MS = 120000;
-
 export const getViewLogs = async () => {
     try {
-        const now = Date.now();
-        if (cachedViewLogs.length > 0 && now - cachedViewLogsAt < VIEW_LOGS_CACHE_TTL_MS) {
-            return {
-                error: false,
-                data: cachedViewLogs,
-            };
-        }
-
         const ViewLogsRef = collection(firestore, models.logPublicationsViews);
         const queryConfig = query(ViewLogsRef);
 
@@ -50,8 +42,6 @@ export const getViewLogs = async () => {
             const sortedData = dataViewLogs.sort(
                 (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
             );
-            cachedViewLogs = sortedData;
-            cachedViewLogsAt = now;
 
             return {
                 error: false,

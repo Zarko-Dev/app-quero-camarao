@@ -1,4 +1,8 @@
-import { collection, getDocs, query } from "firebase/firestore";
+import {
+    collection,
+    getDocs,
+    query,
+} from "../../services/FirebaseAdapter";
 import * as Sentry from "@sentry/react-native";
 
 import { firestore } from "../../services/Firebase";
