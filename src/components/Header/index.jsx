@@ -30,10 +30,10 @@ export const Header = (props) => {
             <LogoImage source={logo} />
             {isAuthenticated ? (
                 <ChatButton onPress={handleOpenChats}>
-                    <Feather name="message-circle" size={22} color="white" />
+                    <Feather name="message-circle" size={30} color="white" />
                     <UnreadBadge
                         count={unreadCount}
-                        style={{ position: "absolute", top: -4, right: -4 }}
+                        style={{ position: "absolute", top: -2, right: -2 }}
                     />
                 </ChatButton>
             ) : (

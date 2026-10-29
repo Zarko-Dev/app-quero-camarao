@@ -17,7 +17,7 @@ export const Container = styled.View`
 export const MenuButton = styled.TouchableOpacity``;
 
 export const RightSpacer = styled.View`
-    width: 40px;
+    width: 52px;
 `;
 
 export const LogoImage = styled.Image`
@@ -44,9 +44,9 @@ export const NotificationBadge = styled(Badge)`
 `;
 
 export const ChatButton = styled.TouchableOpacity`
-    width: 40px;
-    height: 40px;
-    border-radius: 20px;
+    width: 52px;
+    height: 52px;
+    border-radius: 26px;
     background-color: ${({ theme }) => theme.colors.green};
     justify-content: center;
     align-items: center;
