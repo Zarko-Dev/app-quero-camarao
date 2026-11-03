@@ -26,6 +26,14 @@ service firebase.storage {
       allow write: if request.auth != null;
     }
 
+    // Encartes PNG gerados pela Cloud Function (og:image do link compartilhado).
+    // Leitura pública (o crawler do WhatsApp não tem login); escrita só pelo
+    // Admin SDK, que ignora as regras.
+    match /encartes/{fileName} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // Anexos de chat (fotos, áudios, documentos). O upload de uma foto/áudio/
     // documento acontece ANTES do doc do chat no Firestore existir (a tela
     // sobe o arquivo primeiro pra ter a URL, só depois grava a mensagem) -

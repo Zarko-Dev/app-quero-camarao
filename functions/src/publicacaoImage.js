@@ -105,3 +105,4 @@ exports.publicacaoImage = onRequest({ memory: "512MiB", timeoutSeconds: 30 }, (r
 exports.handlePublicacaoImage = handlePublicacaoImage;
 exports.extractImageId = extractImageId;
 exports.renderPng = renderPng;
+exports.fetchPhoto = fetchPhoto;

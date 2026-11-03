@@ -177,6 +177,8 @@ const { publicacao } = require("./publicacao");
 exports.publicacao = publicacao;
 const { publicacaoImage } = require("./publicacaoImage");
 exports.publicacaoImage = publicacaoImage;
+const { onPublicationEncarte } = require("./encarteStorage");
+exports.onPublicationEncarte = onPublicationEncarte;
 
 const { adminDeleteUser } = require("./adminDeleteUser");
 exports.adminDeleteUser = adminDeleteUser;

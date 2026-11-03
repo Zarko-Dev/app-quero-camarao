@@ -10,7 +10,7 @@ import { GetUserStorage } from "../../services/Storage/UserStorage";
 import { buildWhatsAppAppUrl } from "../../utils/adminPublicationWhatsApp";
 import { ShrimpCardSharedActions } from "../ShrimpCardShared/actions";
 import { setNewVisualizationPublication } from "../../controllers/Publication/setNewVisuaization";
-import { ShareImageAction } from "./ShareNative";
+import { ShareNativeAction } from "./ShareNative";
 import { formatKilo } from "../../utils/formatKilo";
 
 import Carousel from "../SnapCarousel/src";
@@ -175,11 +175,9 @@ export const CardPublicationShrimp = memo(
             });
 
             setTimeout(async () => {
-                const dataUri = await sharedRef.current.capture();
-
-                await ShareImageAction({
+                await ShareNativeAction({
                     id, location, ponds: ConvertPondsPlural(), shrimps,
-                }, dataUri);
+                });
 
                 setIsSharingLoading(false);
             }, 2000);
@@ -329,10 +327,10 @@ export const CardPublicationShrimp = memo(
                                 style={{
                                     flex: 1,
                                     height: 44,
-                                    backgroundColor: "#36536e",
+                                    backgroundColor: "#25D366",
                                     borderRadius: 12,
                                     paddingHorizontal: 10,
-                                                                        flexDirection: "row",
+                                    flexDirection: "row",
                                     alignItems: "center",
                                     justifyContent: "center",
                                     gap: 6,
@@ -340,7 +338,7 @@ export const CardPublicationShrimp = memo(
                             >
                                 <Feather name="message-circle" size={16} color="#fff" />
                                 <Text style={{ color: "#fff", fontSize: 13, fontWeight: "700" }}>
-                                    CHAT
+                                    Falar com o Produtor
                                 </Text>
                             </TouchableOpacity>
                         </View>
