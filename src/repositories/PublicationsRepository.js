@@ -49,7 +49,21 @@ export const updateShrimpsPublication = async (
 
         await setDoc(
             publicationRef,
-            { shrimps, edited, updatedAt: new Date() },
+            { shrimps, edited, updatedAt: new Date(), ...(location && { location }) },
+            { merge: true },
+        );
+
+        return true;
+    } catch (error) {
+        return false;
+    }
+};
+
+export const setPublicationImageHidden = async (publicationId, hidden) => {
+    try {
+        await setDoc(
+            docRef(models.shrimpPonds, publicationId),
+            { imageHidden: Boolean(hidden), updatedAt: new Date() },
             { merge: true },
         );
 

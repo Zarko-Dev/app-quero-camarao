@@ -35,3 +35,10 @@ export const updatePublicationWithShirimpSalle = async (
         shirimpUpdated,
     );
 };
+
+export const setPublicationImageHidden = async (publicationId, hidden) => {
+    return PublicationsRepository.setPublicationImageHidden(
+        publicationId,
+        hidden,
+    );
+};

@@ -9,6 +9,8 @@ import { dataRoutes } from "../../routes/dataRoutes";
 import { GetUserStorage } from "../../services/Storage/UserStorage";
 import { buildWhatsAppAppUrl } from "../../utils/adminPublicationWhatsApp";
 import { ShrimpCardSharedActions } from "../ShrimpCardShared/actions";
+import { isAdmin } from "../../controllers/Cupons/isAdmin";
+import { setPublicationImageHidden } from "../../controllers/Publication/updatePublication";
 import { setNewVisualizationPublication } from "../../controllers/Publication/setNewVisuaization";
 import { ShareNativeAction } from "./ShareNative";
 import { formatKilo } from "../../utils/formatKilo";
@@ -44,6 +46,17 @@ import { getPublicationViewLogs } from "../../controllers/Publication/getPublica
 import { getUserNotificationToken } from "../../controllers/User/notification";
 import { SendNotifications } from "../../controllers/Notifications/sendNotifications";
 
+const adminCheckCache = new Map();
+
+// Uma leitura por e-mail: a lista renderiza muitos cards.
+const getCachedIsAdmin = (email) => {
+    if (!adminCheckCache.has(email)) {
+        adminCheckCache.set(email, isAdmin(email));
+    }
+
+    return adminCheckCache.get(email);
+};
+
 export const CardPublicationShrimp = memo(
     ({
         item,
@@ -58,12 +71,35 @@ export const CardPublicationShrimp = memo(
         const navigation = useNavigation();
         const { isAuthenticated } = useSelector((state) => state.login);
         const [localUser, setLocalUser] = useState(null);
+        const [userIsAdmin, setUserIsAdmin] = useState(false);
+        const [imageHidden, setImageHidden] = useState(Boolean(item.imageHidden));
+
+        useEffect(() => {
+            setImageHidden(Boolean(item.imageHidden));
+        }, [item.imageHidden]);
 
         useEffect(() => {
             if (isAuthenticated) {
-                GetUserStorage().then(user => setLocalUser(user)).catch(() => {});
+                GetUserStorage()
+                    .then((user) => {
+                        setLocalUser(user);
+                        return getCachedIsAdmin(user?.email);
+                    })
+                    .then(setUserIsAdmin)
+                    .catch(() => {});
             }
         }, [isAuthenticated]);
+
+        const handleToggleImageHidden = async () => {
+            const next = !imageHidden;
+            setImageHidden(next);
+
+            const saved = await setPublicationImageHidden(item.id, next);
+
+            if (!saved) {
+                setImageHidden(!next);
+            }
+        };
 
         const [isLoadingTalkProductor, setIsLoadingTalkProductor] =
             useState(false);
@@ -206,6 +242,10 @@ export const CardPublicationShrimp = memo(
         );
 
         const generateShrimpImage = () => {
+            if (imageHidden) {
+                return { data: [{ ...shrimps[0], imageShrimpUri: null }], emptyImage: false };
+            }
+
             const hasNonNullImageUri = shrimps.some(
                 (itemSome) =>
                     itemSome.imageShrimpUri !== null &&
@@ -232,7 +272,7 @@ export const CardPublicationShrimp = memo(
 
             return { data: [shrimps[0]], emptyImage: hasNonNullImageUri };
         };
-        const shrimpImageData = useMemo(() => generateShrimpImage(), [shrimps]);
+        const shrimpImageData = useMemo(() => generateShrimpImage(), [shrimps, imageHidden]);
         const shouldUseCarousel =
             Platform.OS !== "android" && shrimpImageData.data.length > 1;
 
@@ -253,6 +293,18 @@ export const CardPublicationShrimp = memo(
                             </LocationText>
                         </LocationContainer>
                         <RightHeaderContainer>
+                            {userIsAdmin && (
+                                <ButtonShare
+                                    onPress={handleToggleImageHidden}
+                                    accessibilityLabel={imageHidden ? "Mostrar imagem" : "Ocultar imagem"}
+                                >
+                                    <Feather
+                                        name={imageHidden ? "eye" : "eye-off"}
+                                        size={22}
+                                        color={imageHidden ? "#25D366" : "#d32f2f"}
+                                    />
+                                </ButtonShare>
+                            )}
                             <PondText>{ConvertPondsPlural()}</PondText>
                             <ButtonShare onPress={handleShareShrimpCard} accessibilityLabel="Compartilhar encarte">
                                 {!isSharingLoading ? (
@@ -268,7 +320,7 @@ export const CardPublicationShrimp = memo(
                         <ContentImageShrimp
                             activeOpacity={0.5}
                             onPress={
-                                shrimps.some(
+                                !imageHidden && shrimps.some(
                                     (itemSome) =>
                                         itemSome.imageShrimpUri !== null &&
                                         itemSome.imageShrimpUri !== "",
