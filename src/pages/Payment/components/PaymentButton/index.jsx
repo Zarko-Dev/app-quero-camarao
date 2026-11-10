@@ -127,7 +127,7 @@ export const PaymentButton = ({ loading }) => {
         const dataConfigureOrder = {
             idOrder,
             userId: dataUser.email,
-            paymentValue: dataPayment.resumeConfig.total,
+            paymentValue: Math.round(dataPayment.resumeConfig.total * 100) / 100,
             user: {
                 name: dataUser.name.split(" ")[0],
                 surname: dataUser.name.split(" ").slice(1).join(" "),
@@ -154,7 +154,7 @@ export const PaymentButton = ({ loading }) => {
         const dataConfigureOrder = {
             idOrder,
             userId: dataUser.email,
-            paymentValue: dataPayment.resumeConfig.total,
+            paymentValue: Math.round(dataPayment.resumeConfig.total * 100) / 100,
             user: {
                 name: dataUser.name.split(" ")[0],
                 surname: dataUser.name.split(" ").slice(1).join(" "),

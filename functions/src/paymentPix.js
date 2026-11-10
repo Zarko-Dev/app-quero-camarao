@@ -37,7 +37,7 @@ const buildMercadoPagoPixPayload = (orderId, orderData) => {
     }
 
     return {
-        transaction_amount: Number(orderData?.paymentValue || 0),
+        transaction_amount: Math.round(Number(orderData?.paymentValue || 0) * 100) / 100,
         description: "Publicação para venda de camarões no aplicativo Quero Camarão",
         payment_method_id: "pix",
         payer,
