@@ -2,7 +2,7 @@ import { Text, View } from "react-native";
 
 import { formatUnreadBadge } from "../../utils/formatUnreadBadge";
 
-export const UnreadBadge = ({ count, style }) => {
+export const UnreadBadge = ({ count, size = 18, style }) => {
     const label = formatUnreadBadge(count);
 
     if (!label) return null;
@@ -11,18 +11,18 @@ export const UnreadBadge = ({ count, style }) => {
         <View
             style={[
                 {
-                    minWidth: 18,
-                    height: 18,
-                    borderRadius: 9,
+                    minWidth: size,
+                    height: size,
+                    borderRadius: size / 2,
                     backgroundColor: "#e53935",
-                    paddingHorizontal: 4,
+                    paddingHorizontal: size / 4,
                     alignItems: "center",
                     justifyContent: "center",
                 },
                 style,
             ]}
         >
-            <Text style={{ color: "#fff", fontSize: 10, fontWeight: "700" }}>
+            <Text style={{ color: "#fff", fontSize: size * 0.6, fontWeight: "700" }}>
                 {label}
             </Text>
         </View>

@@ -7,6 +7,7 @@
 import { FlatList } from "react-native";
 import { useState } from "react";
 import { v4 } from "uuid";
+import Toast from "react-native-toast-message";
 import { Feather, FontAwesome } from "@expo/vector-icons";
 
 import { dataRoutes } from "../../../routes/dataRoutes";
@@ -62,6 +63,16 @@ export const UsersList = ({ navigation, route }) => {
     };
 
     const redirectWhatsapp = (contactNumber) => {
+        // Visualizações gravadas sem telefone: avisa em vez de abrir WhatsApp vazio.
+        if (!contactNumber) {
+            Toast.show({
+                type: "info",
+                text1: "Telefone não disponível",
+                text2: "Esta visualização não tem contato salvo.",
+            });
+            return;
+        }
+
         const whatsappMessage =
             "Olá, venho através do aplicativo *Quero Camarão* 🦐";
 

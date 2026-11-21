@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "eleitorando-api",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "/Users/pedroroger/Documents/sistema-eleitoral/api"],
+      "port": 3333
+    },
+    {
+      "name": "eleitorando-front",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "/Users/pedroroger/Documents/sistema-eleitoral/front"],
+      "port": 5174
+    }
+  ]
+}

@@ -80,6 +80,7 @@ export const ModalShrimpImages = ({
                                     onPress={actionBuy}
                                     style={{
                                         flex: 1,
+                                        backgroundColor: "#25D366",
                                         paddingHorizontal: 16,
                                         justifyContent: "center",
                                         alignItems: "center",
@@ -94,7 +95,7 @@ export const ModalShrimpImages = ({
                                     ) : (
                                         <ActivityIndicator animating size={20} color="white" />
                                     )}
-                                    <TextButton style={{ margin: 0 }}>Falar com o produtor</TextButton>
+                                    <TextButton style={{ margin: 0 }}>WhatsApp</TextButton>
                                 </ButtonBuyShrimp>
                             )}
                             {showChatButton && (
@@ -104,7 +105,7 @@ export const ModalShrimpImages = ({
                                     style={{
                                         flex: 1,
                                         height: 44,
-                                        backgroundColor: "#25D366",
+                                        backgroundColor: "#e85d22",
                                         borderRadius: 12,
                                         paddingHorizontal: 10,
                                         marginLeft: showWhatsappButton ? 10 : 0,
@@ -116,7 +117,7 @@ export const ModalShrimpImages = ({
                                 >
                                     <Feather name="message-circle" size={18} color="#fff" />
                                     <Text style={{ color: "#fff", fontSize: 13, fontWeight: "700" }}>
-                                        Falar com o produtor
+                                        Fale com Produtor
                                     </Text>
                                 </TouchableOpacity>
                             )}

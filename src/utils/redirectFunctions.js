@@ -9,7 +9,7 @@ export const redirectWhatsappLink = (
 ) => {
     setTimeout(async () => {
         try {
-            Linking.openURL(
+            await Linking.openURL(
                 `whatsapp://send?phone=${number}&text=${whatsappMessage}`,
             );
         } catch (error) {

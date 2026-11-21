@@ -87,16 +87,22 @@ const resolveResetPasswordIdentity = (userRecords = [], identifier, dateBirth) =
         return { status: "not-found", record: null };
     }
 
-    if (matchingRecords.length > 1) {
+    // Duplicados de CPF/telefone: desempata pela data de nascimento.
+    const dateMatches = matchingRecords.filter((record) => {
+        const userData = record?.userData ?? record ?? {};
+
+        return normalizeDateBirth(userData?.dateBirth) === normalizeDateBirth(dateBirth);
+    });
+
+    if (dateMatches.length === 0) {
+        return { status: "date-mismatch", record: null };
+    }
+
+    if (dateMatches.length > 1) {
         return { status: "ambiguous", record: null };
     }
 
-    const matchedRecord = matchingRecords[0];
-    const userData = matchedRecord?.userData ?? matchedRecord ?? {};
-
-    if (normalizeDateBirth(userData?.dateBirth) !== normalizeDateBirth(dateBirth)) {
-        return { status: "date-mismatch", record: null };
-    }
+    const matchedRecord = dateMatches[0];
 
     return { status: "matched", record: matchedRecord };
 };

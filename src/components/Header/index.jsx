@@ -33,7 +33,8 @@ export const Header = (props) => {
                     <Feather name="message-circle" size={30} color="white" />
                     <UnreadBadge
                         count={unreadCount}
-                        style={{ position: "absolute", top: -2, right: -2 }}
+                        size={24}
+                        style={{ position: "absolute", top: -6, right: -6, borderWidth: 2, borderColor: "#fff" }}
                     />
                 </ChatButton>
             ) : (

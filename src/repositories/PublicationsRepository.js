@@ -1,7 +1,9 @@
 import {
+    arrayUnion,
     deleteDoc,
     doc,
     getDoc,
+    increment,
     setDoc,
 } from "../services/FirebaseAdapter";
 
@@ -43,6 +45,7 @@ export const updateShrimpsPublication = async (
     shrimps,
     edited,
     publisherId,
+    location,
 ) => {
     try {
         const publicationRef = docRef(models.shrimpPonds, publicationId);
@@ -124,11 +127,11 @@ export const deletePublication = async (publicationId) => {
     }
 };
 
+// Atômico (increment/arrayUnion): sem ler-e-reescrever, uma leitura negada
+// ou duas visitas simultâneas não apagam visualizações anteriores.
 export const setNewVisualizationPublication = async (
     publicationId,
     publicationViewsId,
-    views,
-    dataViews,
     dataUserView,
     dataPublication,
 ) => {
@@ -139,7 +142,7 @@ export const setNewVisualizationPublication = async (
         await setDoc(
             shrimpPondsRef,
             {
-                views: views + 1,
+                views: increment(1),
                 publicationViewsId,
                 updatedAt: new Date(),
             },
@@ -154,16 +157,7 @@ export const setNewVisualizationPublication = async (
                 location: dataPublication.location,
                 shrimps: dataPublication.shrimps,
                 userId: dataPublication.userId,
-                views: [
-                    ...dataViews,
-                    {
-                        ...dataUserView,
-                        userImage:
-                            dataUserView.userImage === undefined
-                                ? ""
-                                : dataUserView.userImage,
-                    },
-                ],
+                views: arrayUnion(dataUserView),
                 createdAt: new Date(),
             },
             { merge: true },

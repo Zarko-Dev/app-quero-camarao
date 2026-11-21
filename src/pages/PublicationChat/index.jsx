@@ -44,7 +44,7 @@ import { shouldSendInitialChatMessage } from "../../utils/initialChatMessage";
 import { setActiveChatId } from "../../utils/activeChatTracker";
 import { buildChatTranscript } from "../../utils/chatTranscript";
 import { buildLocationPayload } from "../../utils/locationMessage";
-import { openInGoogleMaps, openInWaze } from "../../utils/locationMapsUrl";
+import { openInGoogleMaps, openInGoogleMapsApp, openInWaze } from "../../utils/locationMapsUrl";
 import { MapPickerModal } from "../../components/MapPickerModal";
 import { getChatLocation } from "../../controllers/Chat/getLocation";
 import { dataRoutes } from "../../routes/dataRoutes";
@@ -1539,6 +1539,7 @@ export const PublicationChat = ({ route, navigation }) => {
                     visible={Boolean(mapTarget)}
                     onClose={() => setMapTarget(null)}
                     onSelectMaps={() => openInGoogleMaps(mapTarget.lat, mapTarget.lng, linking)}
+                    onSelectGoogleMaps={() => openInGoogleMapsApp(mapTarget.lat, mapTarget.lng, linking)}
                     onSelectWaze={() => openInWaze(mapTarget.lat, mapTarget.lng, linking)}
                 />
             </GestureHandlerRootView>

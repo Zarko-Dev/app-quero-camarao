@@ -6,6 +6,8 @@ const buildLocationMapsUrl = (lat, lng, platform = Platform.OS) => {
     return `maps:0,0?q=${q}&ll=${q}`;
 };
 
+const buildGoogleMapsAppUrl = (lat, lng) => `comgooglemaps://?q=${lat},${lng}`;
+
 const buildWazeUrl = (lat, lng) => `waze://?ll=${lat},${lng}&navigate=yes`;
 
 const buildWazeFallbackUrl = (lat, lng) => `https://waze.com/ul?ll=${lat},${lng}&navigate=yes`;
@@ -26,6 +28,15 @@ const openInGoogleMaps = async (lat, lng, { openURL, platform } = {}) => {
     }
 };
 
+// iOS: app do Google Maps se instalado, senão a versão web.
+const openInGoogleMapsApp = async (lat, lng, { openURL } = {}) => {
+    try {
+        await openURL(buildGoogleMapsAppUrl(lat, lng));
+    } catch {
+        await openURL(buildGoogleMapsFallbackUrl(lat, lng)).catch(() => {});
+    }
+};
+
 const openInWaze = async (lat, lng, { canOpenURL, openURL } = {}) => {
     const appUrl = buildWazeUrl(lat, lng);
     const webUrl = buildWazeFallbackUrl(lat, lng);
@@ -37,8 +48,10 @@ module.exports = {
     buildLocationMapsUrl,
     buildWazeUrl,
     buildWazeFallbackUrl,
+    buildGoogleMapsAppUrl,
     buildGoogleMapsFallbackUrl,
     isValidCoords,
     openInGoogleMaps,
+    openInGoogleMapsApp,
     openInWaze,
 };

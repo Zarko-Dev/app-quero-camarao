@@ -189,8 +189,8 @@ export const Publication = ({ navigation, route }) => {
         if (state === "" || city === "") {
             Toast.show({
                 type: "error",
-                text1: "LocalizaÃ§Ã£o Ã© obrigatÃ³ria",
-                text2: "Verifique se seu Estado ou Cidade estÃ£o vazios",
+                text1: "Localização é obrigatória",
+                text2: "Verifique se seu Estado ou Cidade estão vazios",
             });
         } else if (
             dataPonds.some((item) => item.grammage === "" || item.kilo === "")
@@ -233,50 +233,60 @@ export const Publication = ({ navigation, route }) => {
             ...route.params.dataPublication,
             shrimps: route.params.dataPublication.shrimps.map((shrimp) => ({
                 ...shrimp,
-                imageShrimpUri:
-                    shrimp.imageShrimpUri === ""
-                        ? undefined
-                        : shrimp.imageShrimpUri,
+                imageShrimpUri: shrimp.imageShrimpUri || undefined,
             })),
         };
 
-        for (let index = 0; index < shrimps.length; index++) {
-            if (
-                shrimps[index].imageShrimpUri !==
-                dataPonds[index].imageShrimpUri
-            ) {
-                if (shrimps[index].imageShrimpUri !== undefined) {
-                    const imageUri = shrimps[index].imageShrimpUri
-                        .split("Shrimp%2F")[1]
-                        .split("?alt=")[0];
-                    await deletePublicationImages(imageUri);
+        try {
+            const pondsToSave = dataPonds.map((pond) => ({ ...pond }));
+
+            for (let index = 0; index < pondsToSave.length; index++) {
+                const oldUri = shrimps[index]?.imageShrimpUri;
+                const newUri = pondsToSave[index].imageShrimpUri;
+
+                if (oldUri === newUri) continue;
+
+                const oldPath = oldUri?.split("Shrimp%2F")[1]?.split("?alt=")[0];
+                if (oldPath) await deletePublicationImages(oldPath);
+
+                if (newUri) {
+                    const urlImage = await savePondsImages(newUri);
+                    pondsToSave[index].imageShrimpUri = urlImage.urlImage;
+                } else {
+                    pondsToSave[index].imageShrimpUri = undefined;
                 }
-
-                const urlImage = await savePondsImages(
-                    dataPonds[index].imageShrimpUri,
-                );
-
-                dataPonds[index].imageShrimpUri = urlImage.urlImage;
             }
-        }
 
-        const result = await updateShrimpsPublication(
-            id,
-            formatToEditPonds(dataPonds),
-            edited ? edited + 1 : 1,
-            route.params.dataPublication.userId,
-        );
+            const location =
+                state && city ? `${city}/${state}` : undefined;
 
-        if (result) {
+            const result = await updateShrimpsPublication(
+                id,
+                formatToEditPonds(pondsToSave),
+                edited ? edited + 1 : 1,
+                route.params.dataPublication.userId,
+                location,
+            );
+
+            if (result) {
+                Toast.show({
+                    type: "success",
+                    text1: "Publicação atualizada com sucesso!",
+                });
+
+                navigation.goBack();
+            } else {
+                throw new Error("updateShrimpsPublication retornou false");
+            }
+        } catch (error) {
             Toast.show({
-                type: "success",
-                text1: "PublicaÃ§Ã£o atualizada com sucesso!",
+                type: "error",
+                text1: "Não foi possível atualizar a publicação",
+                text2: "Tente novamente",
             });
-
-            navigation.goBack();
+        } finally {
+            setIsLoadingEditable(false);
         }
-
-        setIsLoadingEditable(false);
     };
 
     return (
@@ -361,7 +371,7 @@ export const Publication = ({ navigation, route }) => {
                     >
                         {!isLoadingEditable ? (
                             <TextButtonSendPayment>
-                                Editar PublicaÃ§Ã£o
+                                Editar publicação
                             </TextButtonSendPayment>
                         ) : (
                             <ActivityIndicator animating color="white" />
@@ -371,7 +381,7 @@ export const Publication = ({ navigation, route }) => {
             )}
             <DialogComponent
                 visible={dialogVisible}
-                title="AtenÃ§Ã£o"
+                title="Atenção"
                 text="Deseja realmente excluir este viveiro?"
                 textActionButton="Excluir"
                 hideDialog={hideDialog}

@@ -124,11 +124,11 @@ export const Routes = () => {
             <Screen
                 name={dataRoutes.publication}
                 component={Publication}
-                options={{
-                    title: "Publicar meu Camarão",
+                options={({ route }) => ({
+                    title: route.params?.editable ? "Editar publicação" : "Publicar meu Camarão",
                     headerStyle: { backgroundColor: theme.colors.primary },
                     headerTitleStyle: { color: theme.colors.white },
-                }}
+                })}
             />
             <Screen
                 name={dataRoutes.redirect}

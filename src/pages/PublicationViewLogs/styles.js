@@ -22,7 +22,7 @@ export const CardUser = styled.TouchableOpacity`
 
     margin-top: 10px;
     margin-bottom: 5px;
-    padding: 8px 5px;
+    padding: 8px 10px;
     border-radius: 10px;
 
     background-color: ${({ theme }) => theme.colors.tertiary};
@@ -31,7 +31,8 @@ export const CardUser = styled.TouchableOpacity`
 `;
 
 export const ContentUserImageInfo = styled.View`
-    justify-content: center;
+    flex: 1;
+    justify-content: flex-start;
     align-items: center;
     flex-direction: row;
 `;
@@ -44,11 +45,12 @@ export const UserImage = styled.Image`
 `;
 
 export const ContentInfo = styled.View`
+    flex: 1;
+    margin-right: 8px;
     margin-left: ${({ theme }) => theme.size.dimentionsSize(1)};
 `;
 
 export const Title = styled.Text`
-    width: ${({ theme }) => theme.size.componentSize(200)};
     font-size: ${({ theme }) => theme.size.fontSize(15)};
     font-weight: bold;
 
@@ -70,5 +72,5 @@ export const WhatsAppIcon = styled.View`
 
     border-radius: ${({ theme }) => theme.size.componentSize(50)};
 
-    background-color: ${({ theme }) => theme.colors.primary};
+    background-color: #25d366;
 `;

@@ -1,1 +1,1 @@
-export const formatphone = (phone) => phone.replace(/\D/g, "");
+export const formatphone = (phone) => String(phone ?? "").replace(/\D/g, "");

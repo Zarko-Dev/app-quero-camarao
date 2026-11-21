@@ -5,12 +5,14 @@ export const updateShrimpsPublication = async (
     shrimps,
     edited,
     publisherId,
+    location,
 ) => {
     return PublicationsRepository.updateShrimpsPublication(
         publicationId,
         shrimps,
         edited,
         publisherId,
+        location,
     );
 };
 

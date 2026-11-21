@@ -70,26 +70,37 @@ test("resolveResetPasswordIdentity accepts a single matching record", () => {
     assert.deepEqual(result.record, userRecords[0]);
 });
 
-test("resolveResetPasswordIdentity rejects duplicated identifier with different birth dates", () => {
+test("resolveResetPasswordIdentity disambiguates duplicated identifier by birth date", () => {
     const userRecords = [
-        {
-            cpf: "123.456.789-09",
-            phone: "(85) 99999-1111",
-            dateBirth: "01/02/2003",
-        },
-        {
-            cpf: "123.456.789-09",
-            phone: "(85) 99999-2222",
-            dateBirth: "02/02/2003",
-        },
+        { cpf: "123.456.789-09", phone: "(85) 99999-1111", dateBirth: "01/02/2003" },
+        { cpf: "123.456.789-09", phone: "(85) 99999-2222", dateBirth: "02/02/2003" },
     ];
 
-    const result = resolveResetPasswordIdentity(
-        userRecords,
-        "12345678909",
-        "01/02/2003",
-    );
+    const result = resolveResetPasswordIdentity(userRecords, "12345678909", "01/02/2003");
+
+    assert.equal(result.status, "matched");
+    assert.deepEqual(result.record, userRecords[0]);
+});
+
+test("resolveResetPasswordIdentity stays ambiguous when duplicates share the birth date", () => {
+    const userRecords = [
+        { cpf: "123.456.789-09", dateBirth: "01/02/2003" },
+        { cpf: "123.456.789-09", dateBirth: "01/02/2003" },
+    ];
+
+    const result = resolveResetPasswordIdentity(userRecords, "12345678909", "01/02/2003");
 
     assert.equal(result.status, "ambiguous");
     assert.equal(result.record, null);
+});
+
+test("resolveResetPasswordIdentity reports date-mismatch for duplicates with no matching date", () => {
+    const userRecords = [
+        { cpf: "123.456.789-09", dateBirth: "01/02/2003" },
+        { cpf: "123.456.789-09", dateBirth: "02/02/2003" },
+    ];
+
+    const result = resolveResetPasswordIdentity(userRecords, "12345678909", "09/09/2003");
+
+    assert.equal(result.status, "date-mismatch");
 });

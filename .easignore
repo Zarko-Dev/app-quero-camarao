@@ -476,3 +476,14 @@ verifyPackageVersion.sh
 android
 ios
 api-quero-camarao-c4ef8022ba49.json
+
+# VPS microservices (nao fazem parte do bundle do app)
+microservices/
+
+# Arquivos locais/sensiveis que nao vao para o build (users.json = export do Firebase Auth)
+users.json
+verification-log.txt
+scratch*
+lala
+.baseline-lint-tmp/
+baseline-lint.jsx

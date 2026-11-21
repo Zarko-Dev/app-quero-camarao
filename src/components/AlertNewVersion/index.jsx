@@ -7,6 +7,7 @@ import { nativeApplicationVersion, nativeBuildVersion } from "expo-application";
 import { useDispatch } from "react-redux";
 
 import { getConfigData } from "../../controllers/Config/find";
+import { compareDotVersions, isBelowMinimumVersion } from "../../utils/versionCheck";
 
 import { DialogComponent } from "../Dialog";
 
@@ -16,22 +17,6 @@ import { ConfigDataActions } from "./actions";
 const sanitizeVersion = (value) => `${value ?? ""}`.trim();
 
 const isNumericVersion = (value) => /^[0-9]+(\.[0-9]+)*$/.test(value);
-
-const compareDotVersions = (remote, local) => {
-    const remoteParts = remote.split(".").map((item) => Number(item));
-    const localParts = local.split(".").map((item) => Number(item));
-    const maxLength = Math.max(remoteParts.length, localParts.length);
-
-    for (let index = 0; index < maxLength; index += 1) {
-        const remoteValue = remoteParts[index] ?? 0;
-        const localValue = localParts[index] ?? 0;
-
-        if (remoteValue > localValue) return 1;
-        if (remoteValue < localValue) return -1;
-    }
-
-    return 0;
-};
 
 const shouldForceUpdate = ({ remoteVersion, appVersion, buildVersion }) => {
     const remote = sanitizeVersion(remoteVersion);
@@ -64,6 +49,7 @@ export const AlertNewVersion = () => {
         useState(false);
     const [dialogNotificationMessage, setDialogNotificationMessage] =
         useState("");
+    const [mandatoryUpdate, setMandatoryUpdate] = useState(false);
     const [urls, setUrls] = useState({ android: "", ios: "" });
 
     useEffect(() => {
@@ -89,7 +75,17 @@ export const AlertNewVersion = () => {
                     configData: resultConfig.data,
                 });
 
-                if (
+                // Bloqueio só com forceUpdate === true no Firestore (config/APe8eG...)
+                // e versão abaixo de minimumVersion; caso contrário é só aviso.
+                const belowMinimum = isBelowMinimumVersion(
+                    resultConfig.data.minimumVersion,
+                    nativeApplicationVersion,
+                );
+                if (belowMinimum && resultConfig.data.forceUpdate === true) {
+                    setMandatoryUpdate(true);
+                    setDialogVersionVisible(true);
+                } else if (
+                    belowMinimum ||
                     shouldForceUpdate({
                         remoteVersion: resultConfig.data.versionNumber,
                         appVersion: nativeApplicationVersion,
@@ -124,14 +120,14 @@ export const AlertNewVersion = () => {
                 if (urls.android) {
                     Linking.openURL(urls.android);
                 }
-                setDialogVersionVisible(false);
+                if (!mandatoryUpdate) setDialogVersionVisible(false);
                 break;
 
             case "ios":
                 if (urls.ios) {
                     Linking.openURL(urls.ios);
                 }
-                setDialogVersionVisible(false);
+                if (!mandatoryUpdate) setDialogVersionVisible(false);
                 break;
 
             default:
@@ -147,13 +143,16 @@ export const AlertNewVersion = () => {
         <Container>
             <DialogComponent
                 visible={dialogVersionVisible && !dialogNotificationVisible}
-                title="Nova versão disponível!"
-                text="Atualize a Quero Camarão e não perca nenhuma novidade!"
+                title={mandatoryUpdate ? "Atualização necessária" : "Nova versão disponível!"}
+                text={mandatoryUpdate
+                    ? "Esta versão do Quero Camarão não é mais compatível. Atualize para continuar usando o app."
+                    : "Atualize a Quero Camarão e não perca nenhuma novidade!"}
                 textActionButton="Atualizar"
                 actionButton={() => handleRedirectUpdateApp()}
-                textSecondaryActionButton="Continuar"
+                textSecondaryActionButton={mandatoryUpdate ? undefined : "Continuar"}
                 secondaryActionButton={() => setDialogVersionVisible(false)}
                 dismissable={false}
+                showCancelButton={false}
                 inverterActionsButtons
             />
             <DialogComponent

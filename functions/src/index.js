@@ -127,10 +127,18 @@ exports.resetPasswordByIdentifier = onCall(
 
 const { handlePaymentPix } = require("./paymentPix");
 const { handlePaymentWebhook } = require("./paymentWebhook");
+const { handlePaymentGenerateUrl } = require("./paymentGenerateUrl");
 
 exports.paymentpix = onRequest(
     { region: "us-central1", cors: true },
     handlePaymentPix
+);
+
+// Nome em minúsculas mantém a URL que o app chama:
+// https://paymentgenerateurl-73bqtyvvfq-uc.a.run.app?orderId=...
+exports.paymentgenerateurl = onRequest(
+    { region: "us-central1", cors: true },
+    (req, res) => handlePaymentGenerateUrl(req, res)
 );
 
 exports.paymentwebhook = onRequest(

@@ -4,7 +4,7 @@
     "slug": "mobile-quero-camarao",
     "owner": "querocamarao",
     "scheme": "querocamarao",
-    "version": "3.0.1",
+    "version": "3.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -25,7 +25,10 @@
         "NSPhotoLibraryUsageDescription": "Permitir que a Quero Camarão acesse sua biblioteca de fotos para selecionar imagens utilizadas no aplicativo.",
         "NSDocumentsFolderUsageDescription": "Permitir que a Quero Camarão salve arquivos no dispositivo.",
         "NSDownloadsFolderUsageDescription": "Permitir que a Quero Camarão salve arquivos no dispositivo.",
-        "LSApplicationQueriesSchemes": ["waze"],
+        "LSApplicationQueriesSchemes": [
+          "waze",
+          "waze"
+        ],
         "ITSAppUsesNonExemptEncryption": false
       },
       "bundleIdentifier": "com.logicphire.querocamarao",
@@ -46,10 +49,22 @@
         "android.permission.RECORD_AUDIO",
         "android.permission.USE_BIOMETRIC",
         "android.permission.USE_FINGERPRINT",
-        "RECEIVE_BOOT_COMPLETED",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
-        "com.google.android.gms.permission.AD_ID"
+        "com.google.android.gms.permission.AD_ID",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "com.google.android.gms.permission.AD_ID",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
       ],
       "googleServicesFile": "./google-services.json",
       "intentFilters": [
@@ -120,12 +135,6 @@
         }
       ],
       [
-        "expo-tracking-transparency",
-        {
-          "userTrackingPermission": "Para proporcionar uma experiência personalizada e segura, coletamos informações, como seu endereço de e-mail e informações de pagamento. Esses dados são usados exclusivamente para fins de autenticação, pagamento e comunicação. "
-        }
-      ],
-      [
         "expo-notifications",
         {
           "icon": "./assets/notificationicon.png",
@@ -172,7 +181,10 @@
       ],
       "expo-asset",
       "@sentry/react-native",
-      ["react-native-share", {}],
+      [
+        "react-native-share",
+        {}
+      ],
       "@react-native-firebase/app"
     ],
     "extra": {
@@ -182,6 +194,9 @@
     },
     "updates": {
       "url": "https://u.expo.dev/9b561f08-e352-4697-940d-bca41e1c5cc6"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
     }
   }
 }

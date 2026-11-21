@@ -1,6 +1,7 @@
 /* eslint-disable indent */
 import { FontAwesome } from "@expo/vector-icons";
-import { FlatList } from "react-native";
+import { FlatList, Linking } from "react-native";
+import Toast from "react-native-toast-message";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useState } from "react";
 import { v4 } from "uuid";
@@ -9,8 +10,7 @@ import { ActivityIndicator } from "react-native-paper";
 import { getPublicationViewLogsById } from "../../controllers/Publication/getPublicationViewsLogs";
 import { convertSecondsToDate } from "../../utils/convertSecondsToDate";
 import { convertDate } from "../../utils/convertDate";
-import { dataRoutes } from "../../routes/dataRoutes";
-import { redirectWhatsappLink } from "../../utils/redirectFunctions";
+import { buildWhatsAppAppUrl } from "../../utils/adminPublicationWhatsApp";
 
 import {
     CardUser,
@@ -25,48 +25,60 @@ import {
 } from "./styles";
 import { BoxShadowIos } from "../../styles/IosShadow";
 
-const RenderItem = ({ dataUser, navigation }) => {
-    const handleRedirectWhatsApp = () => {
-        navigation.navigate(dataRoutes.redirect, {
-            subtext:
-                "Estamos lhe redirecionado ao whatsapp do cliente que selecionou",
-            actionRediret: redirectWhatsappLink(
-                `+55${dataUser.userPhone.replace(/[^0-9]/g, "")}`,
-                "Olá, vi que você clicou na minha publicação de camarão pela Quero Camarão, você tem interesse em negociar?",
-                navigation,
-            ),
-        });
-    };
+const contactViewer = async (phone) => {
+    const url = buildWhatsAppAppUrl(
+        phone,
+        "Olá, vi que você clicou na minha publicação de camarão pela Quero Camarão, você tem interesse em negociar?",
+    );
 
-    return (
-        <CardUser style={BoxShadowIos} onPress={handleRedirectWhatsApp}>
+    try {
+        if (!url) throw new Error("sem telefone");
+        await Linking.openURL(url);
+    } catch {
+        Toast.show({
+            type: "error",
+            text1: url ? "Não conseguimos abrir seu WhatsApp!" : "Telefone não disponível",
+            text2: url ? "Verifique se o WhatsApp está instalado." : "Esta visualização não tem contato salvo.",
+        });
+    }
+};
+
+const RenderItem = ({ dataUser }) => (
+        <CardUser
+            style={BoxShadowIos}
+            disabled={!dataUser?.userPhone}
+            onPress={() => contactViewer(dataUser.userPhone)}
+        >
             <ContentUserImageInfo>
                 <UserImage
                     source={{
                         uri: dataUser?.userImage
                             ? dataUser.userImage
                             : `https://ui-avatars.com/api/?background=random&rounded=true&bold=true&size=200&name=${
-                                  dataUser.userName.split(" ")[0]
+                                  (dataUser?.userName ?? "?").split(" ")[0]
                               }`,
                     }}
                 />
                 <ContentInfo>
                     <Title>{dataUser.userName}</Title>
                     <Subtitle>
-                        {convertDate(
-                            convertSecondsToDate(dataUser.createdAt.seconds),
-                        )}
+                        {dataUser?.createdAt?.seconds
+                            ? convertDate(
+                                  convertSecondsToDate(dataUser.createdAt.seconds),
+                              )
+                            : ""}
                     </Subtitle>
                 </ContentInfo>
             </ContentUserImageInfo>
-            <WhatsAppIcon>
-                <FontAwesome name="whatsapp" size={28} color="white" />
-            </WhatsAppIcon>
+            {dataUser?.userPhone ? (
+                <WhatsAppIcon>
+                    <FontAwesome name="whatsapp" size={28} color="white" />
+                </WhatsAppIcon>
+            ) : null}
         </CardUser>
-    );
-};
+);
 
-export const PublicationViewLogs = ({ route, navigation }) => {
+export const PublicationViewLogs = ({ route }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [dataLogs, setDataLogs] = useState();
 
@@ -81,8 +93,8 @@ export const PublicationViewLogs = ({ route, navigation }) => {
 
                 setDataLogs({
                     ...result,
-                    views: result.views
-                        .sort((a, b) => b.createdAt.seconds - a.createdAt.seconds)
+                    views: (result?.views ?? [])
+                        .sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0))
                         .map((item) => ({ ...item, id: v4() })),
                 });
 
@@ -99,7 +111,7 @@ export const PublicationViewLogs = ({ route, navigation }) => {
                 <FlatList
                     data={dataLogs?.views}
                     renderItem={({ item }) => (
-                        <RenderItem dataUser={item} navigation={navigation} />
+                        <RenderItem dataUser={item} />
                     )}
                     keyExtractor={(item) => item.id}
                 />

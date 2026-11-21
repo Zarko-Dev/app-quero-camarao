@@ -75,10 +75,10 @@ const CancelText = styled(Text)`
     color: #64788a;
 `;
 
-// iOS abre o Apple Maps (scheme maps:), Android o app de mapas padrão (geo:).
-const mapsLabel = Platform.OS === "ios" ? "Apple Maps" : "Google Maps";
+// iOS: Apple Maps (onSelectMaps) e Google Maps (onSelectGoogleMaps). Android: só o app padrão (onSelectMaps, geo:).
+const isIos = Platform.OS === "ios";
 
-export const MapPickerModal = ({ visible, onClose, onSelectMaps, onSelectWaze }) => {
+export const MapPickerModal = ({ visible, onClose, onSelectMaps, onSelectGoogleMaps, onSelectWaze }) => {
     const choose = (action) => {
         onClose();
         action();
@@ -91,11 +91,25 @@ export const MapPickerModal = ({ visible, onClose, onSelectMaps, onSelectWaze })
                     <Handle />
                     <Title>Abrir localização</Title>
                     <Subtitle>Escolha o aplicativo para ver o caminho</Subtitle>
-                    <AppRow activeOpacity={0.7} onPress={() => choose(onSelectMaps)} accessibilityRole="button" accessibilityLabel={`Abrir no ${mapsLabel}`}>
+                    {isIos && (
+                        <AppRow activeOpacity={0.7} onPress={() => choose(onSelectMaps)} accessibilityRole="button" accessibilityLabel="Abrir no Apple Maps">
+                            <IconBox color="#34a853">
+                                <Feather name="map-pin" size={22} color="#fff" />
+                            </IconBox>
+                            <AppLabel>Apple Maps</AppLabel>
+                            <Feather name="chevron-right" size={20} color="#64788a" />
+                        </AppRow>
+                    )}
+                    <AppRow
+                        activeOpacity={0.7}
+                        onPress={() => choose(isIos ? onSelectGoogleMaps : onSelectMaps)}
+                        accessibilityRole="button"
+                        accessibilityLabel="Abrir no Google Maps"
+                    >
                         <IconBox color="#34a853">
                             <Feather name="map-pin" size={22} color="#fff" />
                         </IconBox>
-                        <AppLabel>{mapsLabel}</AppLabel>
+                        <AppLabel>Google Maps</AppLabel>
                         <Feather name="chevron-right" size={20} color="#64788a" />
                     </AppRow>
                     <AppRow activeOpacity={0.7} onPress={() => choose(onSelectWaze)} accessibilityRole="button" accessibilityLabel="Abrir no Waze">

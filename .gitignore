@@ -395,3 +395,4 @@ storage.rules.strict
 functions/check_admin.js
 functions/test_auth.js
 src/Captura de Tela*.png
+docs/audits/*.json

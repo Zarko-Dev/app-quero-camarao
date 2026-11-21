@@ -1,5 +1,9 @@
 /* eslint-disable object-curly-newline */
 /* eslint-disable import/no-mutable-exports */
+import { onSnapshot as rnfbOnSnapshot } from "@react-native-firebase/firestore";
+import * as Sentry from "@sentry/react-native";
+
+import { withSnapshotErrorHandler } from "../utils/snapshotArgs";
 
 export {
     initializeApp,
@@ -21,6 +25,7 @@ export {
     initializeFirestore,
     serverTimestamp,
     increment,
+    arrayUnion,
     doc,
     setDoc,
     getDoc,
@@ -32,7 +37,6 @@ export {
     addDoc,
     updateDoc,
     deleteDoc,
-    onSnapshot,
     writeBatch,
     disableNetwork,
     enableNetwork,
@@ -57,3 +61,11 @@ export {
     getFunctions,
     httpsCallable,
 } from "@react-native-firebase/functions";
+
+// Ver src/utils/snapshotArgs.js: sem onError, uma regra negada (ex.: sessão
+// nativa vazia após o update 2.0.x -> 3.0.x) vira snapshot null no callback
+// e fecha o app na abertura (crash "Cannot read property 'docs' of null").
+export const onSnapshot = (reference, ...args) => rnfbOnSnapshot(
+    reference,
+    ...withSnapshotErrorHandler(args, (error) => Sentry.captureException(error)),
+);
