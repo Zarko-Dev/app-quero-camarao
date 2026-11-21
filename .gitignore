@@ -369,3 +369,29 @@ android-old
 ios-old
 android
 ios
+
+# Local / scratch (não versionar)
+.claude/settings.local.json
+users.json
+lala
+scratch.js
+scratch.py
+scratch_test.cjs
+verification-log.txt
+baseline-lint.jsx
+.baseline-lint-tmp/
+.opencode/
+.codex/
+.firebase/
+.loop/
+.agent/STOP
+docs/qa/
+firebase.rules-only.json
+firestore.rules.deploy
+firestore.rules.pre-deploy
+firestore.rules.prod-backup
+firestore.rules.strict
+storage.rules.strict
+functions/check_admin.js
+functions/test_auth.js
+src/Captura de Tela*.png
