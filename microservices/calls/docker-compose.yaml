@@ -1,0 +1,22 @@
+# Stack de ligações: roda numa VPS COM IP PÚBLICO, separada do notifier.
+# (O Cloudflare Tunnel não carrega o áudio TURN, só HTTP/WebSocket.)
+services:
+  coturn:
+    image: coturn/coturn
+    restart: unless-stopped
+    network_mode: host
+    command: >
+      -n
+      --realm=${TURN_REALM:?defina TURN_REALM}
+      --use-auth-secret
+      --static-auth-secret=${TURN_SECRET:?defina TURN_SECRET}
+      --external-ip=${PUBLIC_IP:?defina PUBLIC_IP}
+      --listening-port=3478
+      --min-port=49160 --max-port=49200
+      --fingerprint --no-multicast-peers --no-cli
+      --no-tcp-relay
+      --denied-peer-ip=10.0.0.0-10.255.255.255
+      --denied-peer-ip=172.16.0.0-172.31.255.255
+      --denied-peer-ip=192.168.0.0-192.168.255.255
+      --denied-peer-ip=127.0.0.0-127.255.255.255
+      --total-quota=100 --user-quota=12

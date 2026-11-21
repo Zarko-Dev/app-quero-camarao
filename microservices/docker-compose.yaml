@@ -1,0 +1,49 @@
+# Desenvolvimento local. Em produção, usar .env real e proxy TLS na frente.
+services:
+  waha:
+    image: devlikeapro/waha
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3001:3000"
+    environment:
+      WHATSAPP_DEFAULT_ENGINE: NOWEB
+      WHATSAPP_API_KEY: ${WAHA_API_KEY:?defina WAHA_API_KEY no .env}
+      # Cada mensagem recebida vai para o notifier (trata o "SAIR").
+      WHATSAPP_HOOK_URL: http://notifier:3000/webhook/waha?secret=${WEBHOOK_SECRET:?defina WEBHOOK_SECRET no .env}
+      WHATSAPP_HOOK_EVENTS: message
+    volumes:
+      # Sem este volume o login do WhatsApp (QR) se perde a cada restart.
+      - ./waha-sessions:/app/.sessions
+
+  notifier:
+    build: ./notifier
+    restart: unless-stopped
+    depends_on: [waha, redis]
+    ports:
+      - "127.0.0.1:3100:3000"
+    environment:
+      NOTIFIER_API_KEY: ${NOTIFIER_API_KEY:?defina NOTIFIER_API_KEY no .env}
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET:?defina WEBHOOK_SECRET no .env}
+      WAHA_API_KEY: ${WAHA_API_KEY}
+      WPP_GROUP_IDS: ${WPP_GROUP_IDS:-}
+      ENCARTE_BASE_URL: ${ENCARTE_BASE_URL:-}
+      SEND_INTERVAL_MS: ${SEND_INTERVAL_MS:-8000}
+
+  # Túnel Cloudflare: conexão de saída, sem IP público nem porta aberta.
+  # Hostname público (ex.: notifier.querocamarao.com.br) -> http://notifier:3000
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?defina TUNNEL_TOKEN no .env}
+    depends_on: [notifier]
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    # AOF: opt-out e debounce sobrevivem a restart/queda de energia.
+    command: redis-server --appendonly yes
+    volumes:
+      - ./redis-data:/data
+

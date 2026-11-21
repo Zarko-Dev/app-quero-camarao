@@ -27,6 +27,23 @@ const generateEncarte = async (id, pub, bucket = admin.storage().bucket()) => {
     });
 };
 
+// Só grupos (sem recipients): clientes exigem opt-in no app (LGPD). Falha aqui nunca derruba o encarte.
+const notifyWhatsapp = async (id, pub) => {
+    const { NOTIFIER_URL, NOTIFIER_API_KEY } = process.env;
+    if (!NOTIFIER_URL || !NOTIFIER_API_KEY) return;
+    try {
+        const res = await fetch(`${NOTIFIER_URL}/notify/publication`, {
+            method: "POST",
+            signal: AbortSignal.timeout(5000), // notifier travado não pode segurar a function
+            headers: { "Content-Type": "application/json", "x-api-key": NOTIFIER_API_KEY },
+            body: JSON.stringify({ publicationId: id, location: pub.location, shrimps: pub.shrimps }),
+        });
+        if (!res.ok) console.error("[encarteStorage] notifier", res.status);
+    } catch (error) {
+        console.error("[encarteStorage] notifier failed", id, error?.message);
+    }
+};
+
 const handleEncarteWrite = async (event, bucket = admin.storage().bucket()) => {
     const { id } = event.params;
     const before = event.data?.before?.data();
@@ -41,6 +58,8 @@ const handleEncarteWrite = async (event, bucket = admin.storage().bucket()) => {
 
     try {
         await generateEncarte(id, after, bucket);
+        // Só na criação; o PNG já está no Storage quando o notifier buscar.
+        if (!before) await notifyWhatsapp(id, after);
     } catch (error) {
         console.error("[encarteStorage] failed", id, error?.message);
     }
@@ -53,6 +72,7 @@ exports.onPublicationEncarte = onDocumentWritten(
     (event) => handleEncarteWrite(event),
 );
 exports.handleEncarteWrite = handleEncarteWrite;
+exports.notifyWhatsapp = notifyWhatsapp;
 exports.generateEncarte = generateEncarte;
 exports.encartePath = encartePath;
 exports.encarteUrl = encarteUrl;

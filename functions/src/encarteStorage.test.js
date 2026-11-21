@@ -51,3 +51,23 @@ test("helpers", () => {
     expect(encarteUrl("b", "a")).toBe("https://firebasestorage.googleapis.com/v0/b/b/o/encartes%2Fa.png?alt=media");
     expect(relevantKey(pub)).toBe(relevantKey({ ...pub, views: 3 }));
 });
+
+describe("notifyWhatsapp", () => {
+    const { notifyWhatsapp } = require("./encarteStorage");
+    afterEach(() => { delete process.env.NOTIFIER_URL; delete process.env.NOTIFIER_API_KEY; });
+
+    test("sem NOTIFIER_URL não chama", async () => {
+        global.fetch = jest.fn();
+        await notifyWhatsapp("p1", {});
+        expect(global.fetch).not.toHaveBeenCalled();
+    });
+    test("envia só publicação (sem recipients) e engole erro", async () => {
+        process.env.NOTIFIER_URL = "https://n.test";
+        process.env.NOTIFIER_API_KEY = "k";
+        global.fetch = jest.fn(async () => { throw new Error("down"); });
+        await expect(notifyWhatsapp("p1", { location: "X/CE", shrimps: [] })).resolves.toBeUndefined();
+        const [url, init] = global.fetch.mock.calls[0];
+        expect(url).toBe("https://n.test/notify/publication");
+        expect(JSON.parse(init.body).recipients).toBeUndefined();
+    });
+});

@@ -1,0 +1,4 @@
+waha-sessions/
+redis-data/
+.env
+node_modules/
